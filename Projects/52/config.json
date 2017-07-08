@@ -1,0 +1,26 @@
+{
+    "short_names": [
+        "house mouse",
+        "dog"
+    ],
+    "type": "accn",
+    "accn_numbers": [
+        "NM_009417",
+        "NM_001003009"
+    ],
+    "gi_numbers": [
+        "927442695",
+        "350529408"
+    ],
+    "names": [
+        "house mouse",
+        "dog"
+    ],
+    "project_name": "mahi",
+    "aw_type": "maw",
+    "kmer_min": "9",
+    "kmer_max": "13",
+    "inversion": false,
+    "dissimilarity_index": "MAW_LWI_SDIFF",
+    "maw_type": "dna"
+}

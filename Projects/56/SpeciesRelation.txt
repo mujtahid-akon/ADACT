@@ -1,0 +1,6 @@
+alligator: -> tiger  -> leopard  -> wolf  -> ant  -> silkworm  -> alligator
+    ant: -> silkworm  -> wolf  -> leopard  -> tiger  -> alligator  -> ant
+leopard: -> tiger  -> wolf  -> alligator  -> ant  -> silkworm  -> leopard
+silkworm: -> ant  -> leopard  -> wolf  -> tiger  -> alligator  -> silkworm
+  tiger: -> leopard  -> wolf  -> alligator  -> ant  -> silkworm  -> tiger
+   wolf: -> leopard  -> tiger  -> alligator  -> ant  -> silkworm  -> wolf

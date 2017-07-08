@@ -1,0 +1,6 @@
+alligator
+ant
+leopard
+silkworm
+tiger
+wolf

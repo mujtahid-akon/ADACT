@@ -1,0 +1,28 @@
+html, body, .container-table {
+    height: 100%;
+    width: 100%;
+    font-family: Cambria, font86573;
+    color: #777;
+    cursor: default;
+}
+.container-table {
+    display: table;
+}
+.vertical-center-row {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+
+.title a{
+    color: unset;
+    text-decoration: none;
+}
+
+td{
+    vertical-align: middle !important;
+}
+
+a, a:hover, a:active, a:visited{
+    color: #333;
+}

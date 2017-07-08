@@ -1,0 +1,26 @@
+{
+    "short_names": [
+        "alligator",
+        "ant",
+        "leopard",
+        "silkworm",
+        "tiger",
+        "wolf"
+    ],
+    "names": [
+        "alligator",
+        "ant",
+        "leopard",
+        "silkworm",
+        "tiger",
+        "wolf"
+    ],
+    "type": "file",
+    "project_name": "testzip",
+    "aw_type": "maw",
+    "kmer_min": "9",
+    "kmer_max": "13",
+    "inversion": false,
+    "dissimilarity_index": "MAW_LWI_SDIFF",
+    "maw_type": "dna"
+}
