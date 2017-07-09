@@ -9,6 +9,8 @@ use \AWorDS\Config;
 // Debug
 error_log("---------- NEW REQUEST ----------");
 
+date_default_timezone_set('UTC');
+
 // If SSL is enabled but request is in HTTP, redirect to HTTPS
 if(Config::USE_ONLY_SSL AND !((!empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443'))){
     header("Location: https://{$_SERVER['SERVER_NAME']}{$_SERVER['REQUEST_URI']}");

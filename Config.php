@@ -37,7 +37,7 @@ interface Config{
   const WEB_DIRECTORY     = '/';
 
   /**
-   * TODO AND NOTE: File upload Limit isn't set yet
+   * File upload Limit
    */
   const MAX_UPLOAD_SIZE = 100000000;    // 100MB
 

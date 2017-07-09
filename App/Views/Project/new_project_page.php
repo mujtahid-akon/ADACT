@@ -156,6 +156,7 @@ project_config['short_names'] = [];
 var file_method_on = false;
 var file_method    = 'upload_file';
 var file_done      = false;
+var databases      = [];
 
 /**
  * Upload file to server
@@ -304,6 +305,27 @@ var change_method = function(id){
 //    $('#method').attr('disabled', '');
 //    $('#change_method').html('Change');
     file_method = id;
+};
+
+/**
+ * Get databases
+ */
+var get_db = function(){
+    $.ajax({
+        method: 'get',
+        url: 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/einfo.fcgi',
+        data: 'retmode=json',
+        cache: true,
+        dataType: 'json',
+        success: function(res){
+            if(res.hasOwnProperty('einforesult') && res.einforesult.hasOwnProperty('dblist')){
+                databases = res.einforesult.dblist;
+            }
+        },
+        error: function(){
+            databases = [];
+        }
+    });
 };
 
 /**

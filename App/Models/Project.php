@@ -19,6 +19,9 @@ use \AWorDS\Config;
 class Project extends Model{
     private $fasta_count = 0;
     private $ref_index   = 0;
+    private $dm_exec     = 'dm';
+    private $maw_exec    = 'maw';
+    private $eagle_exec  = 'eagle';
     protected $config    = [];
 
     /**
@@ -289,6 +292,12 @@ class Project extends Model{
      * @return int|null inserted project id on success or null on failure
      */
     private function execute($new){
+        // Change executable names according to the platform it's running: default is Linux
+        if(exec('uname -s') == 'Darwin'){ // macOS
+            $this->maw_exec   = 'maw_mac';
+            $this->dm_exec    = 'dm_mac';
+            $this->eagle_exec = 'eagle_mac';
+        }
         extract($this->config);
         /**
          * variables extracted from $this->config
@@ -483,7 +492,7 @@ class Project extends Model{
             foreach($this->files as $file){
                 // Filename: {species_name}.maw.txt
                 $output_file = $this->maw_dir . '/' . $this->get_basename($file) . '.maw.txt';
-                exec("{$this->exec_location}/maw -a {$maw_type} -i '{$file}' -o '{$output_file}' -k {$kmer_min} -K {$kmer_max}" . ($inversion ? ' -r 1' : ''), $output);
+                exec("{$this->exec_location}/{$this->maw_exec} -a {$maw_type} -i '{$file}' -o '{$output_file}' -k {$kmer_min} -K {$kmer_max}" . ($inversion ? ' -r 1' : ''), $output);
                 error_log(implode("\n", $output));
             }
         }elseif($aw_type == 'raw'){
@@ -501,7 +510,7 @@ class Project extends Model{
         $this->gen_species_full($this->files, $target);
         // Run Distance Matrix Generator
         $aw_type = strtoupper($aw_type);
-        exec("{$this->exec_location}/dm {$aw_type} {$dissimilarity_index} {$target} {$target}", $output);
+        exec("{$this->exec_location}/{$this->dm_exec} {$aw_type} {$dissimilarity_index} {$target} {$target}", $output);
         error_log(implode("\n", $output));
         // Generate trees
         exec("cd {$this->exec_location} && java Match7 \"{$target}/\"", $output);
@@ -553,7 +562,7 @@ class Project extends Model{
         if(!file_exists($ref_file_dir)) mkdir($ref_file_dir);
         // 5. Generate {species_name}.raw.txt in the /tmp/Projects/{project_id}/Files/original directory
         foreach($modified_files as $file){
-            exec("{$this->exec_location}/EAGLE -min {$kmer_min} -max {$kmer_max}" . ($inversion ? ' -i' : '') . " -r {$ref_file} {$file}", $output);
+            exec("{$this->exec_location}/{$this->eagle_exec} -min {$kmer_min} -max {$kmer_max}" . ($inversion ? ' -i' : '') . " -r {$ref_file} {$file}", $output);
             error_log(implode("\n", $output));
             // Move the *.raw.txt files to the /tmp/Projects/{project_id}/Files/generated/raw/{species_name} directory
             passthru("mv '{$this->original_dir}'/*.raw.txt '{$ref_file_dir}'");

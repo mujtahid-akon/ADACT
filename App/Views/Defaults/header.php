@@ -8,7 +8,7 @@
             <span class="icon-bar"></span>
         </button>
         <a href="home" class="navbar-brand"><?php print $title ?></a>
-        <a class="btn btn-default <?php if($active_tab == 'new') print "active" ?>" href="projects/new" style="margin-top: 8px;color: crimson;">New Project</a>
+        <a class="btn btn-default navbar-left <?php if($active_tab == 'new') print "active" ?>" href="projects/new" style="margin-top: 8px;color: crimson;">New Project</a>
         <!--ul class="nav navbar-nav">
             <li <//?php if($active_tab == 'new') print $active ?>><a href="projects/new">New Project</a></li>
         </ul-->

@@ -42,7 +42,7 @@ function get_species_from_species_relation($relations){
     <caption>Project Info</caption>
     <?php // FIXME: More enhancement is needed
     foreach($config as $key => $value){
-        print "<tr><th>".ucwords(preg_replace('/_/', ' ', $key))."</th><td>" . $value . "</td></tr>";
+        print "<tr><th>".ucwords(preg_replace('/_/', ' ', $key))."</th><td>" . (is_array($value) ? implode(', ', $value) : $value) . "</td></tr>";
     }
     ?>
 </table>

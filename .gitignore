@@ -1,0 +1,4 @@
+# Remove project files
+.idea/
+# Remove all the generated files
+Projects/*
