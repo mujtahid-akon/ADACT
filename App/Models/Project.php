@@ -314,6 +314,7 @@ class Project extends Model{
          * @var string $type         FASTA file getting method (file|gin|accn)
          * @var array  $accn_numbers Accession numbers
          * @var array  $gi_numbers   GI numbers
+         * @var array  $uniprot_accn UniProt ACCN
          */
         $this->project_id = null;
         // 1. Save project info in the DB, and get inserted id (which is the project id)
@@ -358,7 +359,7 @@ class Project extends Model{
                 unset($_SESSION['file_dir']);
             }else{
                 // 4.3.1 Download the FASTA files
-                $this->download_fasta($this->original_dir);
+                $this->download_fasta($this->original_dir, $type);
             }
 
             // 5. Run scripts & Place files in the PROJECT_DIRECTORY/{project_id}/Files/
@@ -469,6 +470,7 @@ class Project extends Model{
          * @var string $type         FASTA file getting method (file|gin|accn)
          * @var array  $accn_numbers Accession numbers
          * @var array  $gi_numbers   GI numbers
+         * @var array  $uniprot_accn UniProt ACCN
          */
 
         $this->exec_location = __DIR__ . '/../../exec';
@@ -544,6 +546,7 @@ class Project extends Model{
          * @var string $type         FASTA file getting method (file|gin|accn)
          * @var array  $accn_numbers Accession numbers
          * @var array  $gi_numbers   GI numbers
+         * @var array  $uniprot_accn UniProt ACCN
          */
 
         // 1. Copy $this->files to $modified_files to prevent any data loss
@@ -562,7 +565,7 @@ class Project extends Model{
         if(!file_exists($ref_file_dir)) mkdir($ref_file_dir);
         // 5. Generate {species_name}.raw.txt in the /tmp/Projects/{project_id}/Files/original directory
         foreach($modified_files as $file){
-            exec("{$this->exec_location}/{$this->eagle_exec} -min {$kmer_min} -max {$kmer_max}" . ($inversion ? ' -i' : '') . " -r {$ref_file} {$file}", $output);
+            exec("{$this->exec_location}/{$this->eagle_exec} -min {$kmer_min} -max {$kmer_max}" . ($inversion ? ' -i' : '') . " -r '{$ref_file}' '{$file}'", $output);
             error_log(implode("\n", $output));
             // Move the *.raw.txt files to the /tmp/Projects/{project_id}/Files/generated/raw/{species_name} directory
             passthru("mv '{$this->original_dir}'/*.raw.txt '{$ref_file_dir}'");
@@ -641,9 +644,10 @@ class Project extends Model{
          * @var string $dissimilarity_index Dissimilarity Index for MAW or RAW
          * @var array  $names        Full Species names
          * @var array  $short_names  Short Species names
-         * @var string $type         FASTA file getting method (file|gin|accn)
+         * @var string $type         FASTA file getting method (file|gin|accn|uniprot)
          * @var array  $accn_numbers Accession numbers
          * @var array  $gi_numbers   GI numbers
+         * @var array  $uniprot_accn UniProt ACCN
          */
 
         $d_i_maw = ['MAW_LWI_SDIFF', 'MAW_LWI_INTERSECT', 'MAW_GCC_SDIFF', 'MAW_GCC_INTERSECT', 'MAW_JD', 'MAW_TVD'];
@@ -659,10 +663,11 @@ class Project extends Model{
             AND (($aw_type == 'maw' AND in_array($dissimilarity_index, $d_i_maw))
                 OR ($aw_type == 'raw' AND in_array($dissimilarity_index, $d_i_raw)))
             AND isset($names, $short_names)
-            AND isset($type) AND in_array($type, ['file', 'gin', 'accn'])
+            AND isset($type) AND in_array($type, ['file', 'gin', 'accn', 'uniprot'])
             AND (($type == 'file' AND isset($_SESSION['file_dir']))
                 OR ($type == 'gin' AND isset($gi_numbers))
-                OR ($type == 'accn' AND isset($gi_numbers, $accn_numbers))))
+                OR ($type == 'accn' AND isset($gi_numbers, $accn_numbers))
+                OR ($type == 'uniprot' AND isset($uniprot_accn))))
             return true;
 
         return false;
@@ -674,13 +679,23 @@ class Project extends Model{
      * Download fasta from NCBI DB
      *
      * @param string $target
+     * @param string $type (uniprot, gin, accn)
      */
-    private function download_fasta($target){
+    private function download_fasta($target, $type){
         $short_names = $this->config['short_names'];
-        $gi_numbers  = $this->config['gi_numbers'];
-        $gin_count   = count($gi_numbers);
-        for($i = 0; $i < $gin_count; ++$i){
-            copy("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id={$gi_numbers[$i]}&rettype=fasta&retmode=text", $target . '/' . $short_names[$i] . '.fasta');
+
+        if($type == Constants::PROJECT_TYPE_UNIPROT){
+            $uniprot_ids = $this->config['uniprot_accn'];
+            $uniprot_count = count($uniprot_ids);
+            for($i = 0; $i < $uniprot_count; ++$i){
+                copy("http://www.uniprot.org/uniprot/?query=accession:{$uniprot_ids[$i]}&format=fasta", $target . '/' . $short_names[$i] . '.fasta');
+            }
+        }else{
+            $gi_numbers  = $this->config['gi_numbers'];
+            $gin_count   = count($gi_numbers);
+            for($i = 0; $i < $gin_count; ++$i){
+                copy("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id={$gi_numbers[$i]}&rettype=fasta&retmode=text", $target . '/' . $short_names[$i] . '.fasta');
+            }
         }
     }
 

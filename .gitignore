@@ -1,4 +1,9 @@
 # Remove project files
 .idea/
+.DS_Store
 # Remove all the generated files
 Projects/*
+
+# remove scripts for now
+scripts/
+run_server*

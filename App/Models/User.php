@@ -6,7 +6,7 @@ use \AWorDS\App\Constants;
 
 class User extends Model{
     /**
-     * Method login
+     * InputMethod login
      *
      * @param string $email
      * @param string $pass

@@ -60,9 +60,10 @@ class Constants{
     const PROJECT_DELETE_FAILED  = 1;
     const PROJECT_DOES_NOT_EXIST = 2;
 
-    const PROJECT_TYPE_FILE = 'file';
-    const PROJECT_TYPE_GIN  = 'gin';
-    const PROJECT_TYPE_ACCN = 'accn';
+    const PROJECT_TYPE_FILE    = 'file';
+    const PROJECT_TYPE_GIN     = 'gin';
+    const PROJECT_TYPE_ACCN    = 'accn';
+    const PROJECT_TYPE_UNIPROT = 'uniprot';
 
     /**
      * Export related constants

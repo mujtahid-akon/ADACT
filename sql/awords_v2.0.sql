@@ -32,16 +32,6 @@ CREATE TABLE IF NOT EXISTS `active_sessions` (
   `type` varchar(15) NOT NULL COMMENT 'session or cookie'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `active_sessions`
---
-
-INSERT INTO `active_sessions` (`user_id`, `session_id`, `type`) VALUES
-(1, 'ecd3969137625af4', 'session'),
-(1, 'f953c0fa77e46143', 'cookie'),
-(1, 'd62095fa79929feb', 'cookie'),
-(1, '6eb9904669caab32', 'cookie');
-
 -- --------------------------------------------------------
 
 --

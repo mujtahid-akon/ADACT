@@ -43,7 +43,7 @@ class Route
     static $matches = [];
 
     /**
-     * Method add.
+     * InputMethod add.
      *
      * Adds route(s)
      *

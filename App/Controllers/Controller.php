@@ -40,8 +40,6 @@ class Controller
         $this->_action      = $action;
         $this->_method      = $method;
         $this->_url_params  = $url_params;
-//      $parameters = [];
-//      $parameters_o = [];
         
         if(in_array($method, [Route::GET, Route::POST])){
             if($method == Route::GET){
@@ -55,7 +53,9 @@ class Controller
                 $filter_type = $value;
                 switch($filter_type){
                     case Route::BOOLEAN:
-                        $value = isset($parameters[$param]) ? (preg_match(Route::BOOLEAN, $parameters[$param]) ? true : false) : false; break;
+                        $value = isset($parameters[$param]) ?
+                            (preg_match(Route::BOOLEAN, $parameters[$param]) ? true : false) : false;
+                        break;
                     case Route::EMAIL:
                     case Route::FLOAT:
                     case Route::INTEGER:
@@ -71,14 +71,14 @@ class Controller
         }
         $this->_params= $params;
  
-        if($this->_GUI AND $this->_GUI_load_view) $this->_template =& new Template($controller, $action);
+        if($this->_GUI AND $this->_GUI_load_view) $this->_template = new Template($controller, $action);
     }
   
     function set_model($model = null){
         if($model == null) $model = $this->_controller;
         $model = '\\AWorDS\\App\\Models\\' . $model;
         $this->_model = $model;
-        $this->$model =& new $model;
+        $this->$model = new $model;
     }
 
     function set($name, $value){
