@@ -4,6 +4,7 @@ namespace AWorDS\App\Models;
 
 use \AWorDS\App\Constants;
 use \AWorDS\Config;
+use const Grpc\CALL_ERROR_NOT_ON_SERVER;
 
 /**
  * @property int|null project_id
@@ -75,19 +76,21 @@ class Project extends Model{
             // 5.1 Does it contain SpeciesOrder.txt and SpeciesFull.txt? : skip (will be generated instead)
             // count(preg_grep('/SpeciesOrder\.txt$/', $files)) != Constants::COUNT_ONE AND 
             //if(count(preg_grep('/SpeciesFull\.txt$/', $files)) != Constants::COUNT_ONE) return ['status' => Constants::FILE_INVALID_FILE];
-            // 5.2 Each file size limit check
+            // 5.2 Each file size limit check + extract FASTA from multi FASTA
+            $data = [];
             foreach($files as &$file){
                 // If a single file size exceeds the MAX_FILE_SIZE, show error
                 if(filesize($file) > Config::MAX_FILE_SIZE) return ['status' => Constants::FILE_SIZE_EXCEEDED];
-                $file = $this->get_basename($file);
+                $data = array_merge($data, $this->extractFASTA($file, $tmp_dir));
+                //$file = $this->get_basename($file);
             }
             // Reindex files (now only file names)
-            sort($files);
+            //sort($files);
             // Everything's in order
             // Set file session containing the extracted directory
             $_SESSION['file_dir'] = $tmp_dir;
             // Return success
-            return ['status' => Constants::FILE_UPLOAD_SUCCESS, 'names' => $files];
+            return ['status' => Constants::FILE_UPLOAD_SUCCESS, 'data' => $data];
         }
         // In any other case, return invalid file
         return ['status' => Constants::FILE_INVALID_FILE];
@@ -130,7 +133,7 @@ class Project extends Model{
      *
      * @param int $project_id The project ID of which content is needed to be shown
      * @param int $type       Which type of file is requested
-     * @return null
+     * @return null|array     array containing mime, name, path on success, null on failure
      */
     function export($project_id, $type){
         $file = null;
@@ -160,8 +163,21 @@ class Project extends Model{
                 break;
             case Constants::EXPORT_ALL:
                 $file['mime'] = 'application/zip';
-                $file['name'] = 'project_' . $project_id; // e.g. project_29
-                $file['path'] = 'path/to/dir'; // FIXME: path isn't defined
+                $file['name'] = 'project_' . $project_id . '.zip'; // e.g. project_29
+                $file['path'] = '/tmp/'. $file['name'];
+                // Create zip
+                $zip = new \ZipArchive();
+                if ($zip->open($file['path'], \ZipArchive::CREATE)!==TRUE) {
+                    return null;
+                }
+                // Add files to zip
+                $project_dir = Config::PROJECT_DIRECTORY . '/' . $project_id;
+                $zip->addFile($project_dir . '/' . Constants::SPECIES_RELATION, '/' . Constants::SPECIES_RELATION);
+                $zip->addFile($project_dir . '/' . Constants::DISTANT_MATRIX, '/DistanceMatrix.txt');
+                $zip->addFile($project_dir . '/' . Constants::NEIGHBOUR_TREE, '/' . Constants::NEIGHBOUR_TREE);
+                $zip->addFile($project_dir . '/' . Constants::UPGMA_TREE, '/' . Constants::UPGMA_TREE);
+                $zip->addFile($project_dir . '/config.json', '/config.json');
+                $zip->close();
         }
         // set $file to null if the file isn't found
         if(!file_exists($file['path'])) $file = null;
@@ -302,19 +318,11 @@ class Project extends Model{
         /**
          * variables extracted from $this->config
          *
-         * @var string $project_name Name of the project
-         * @var string $aw_type      Absent Word Type (maw|raw)
-         * @var string $maw_type     Minimal Absent Word Type (dna|protein)
-         * @var int    $kmer_min     K-Mer minimum
-         * @var int    $kmer_max     K-Mer maximum
-         * @var bool   $inversion    Use Inversion?
-         * @var string $dissimilarity_index Dissimilarity Index for MAW or RAW
-         * @var array  $names        Full Species names
-         * @var array  $short_names  Short Species names
-         * @var string $type         FASTA file getting method (file|gin|accn)
-         * @var array  $accn_numbers Accession numbers
-         * @var array  $gi_numbers   GI numbers
-         * @var array  $uniprot_accn UniProt ACCN
+         * @var string $project_name  Name of the project
+         * @var string $aw_type       Absent Word Type (maw|raw)
+         * @var string $sequence_type Minimal Absent Word Type (nucleotide|protein)
+         * @var array  $data
+         * @var string $type          (file|accn_gin)
          */
         $this->project_id = null;
         // 1. Save project info in the DB, and get inserted id (which is the project id)
@@ -334,7 +342,7 @@ class Project extends Model{
             // 3. Create a new temporary project using the project id in the /tmp/Projects dir
             // 3.1 Check the existence of the temporary directory as it may not exist
             if(!file_exists('/tmp/Projects/')) mkdir('/tmp/Projects/');
-            // 3.2 Delete previous project folder if existed by any chance (although it's nearly 0%)
+            // 3.2 Delete previous project folder if existed by any chance (although it's nearly 0.0%)
             //     and create a new directory
             $this->project_dir = '/tmp/Projects/' . $this->project_id;
             if(!file_exists($this->project_dir)) passthru('rm -rf ' . $this->project_dir);
@@ -350,16 +358,17 @@ class Project extends Model{
             if($type == Constants::PROJECT_TYPE_FILE){
                 // 4.3.1 Move extracted files to the Files/original
                 $files = $this->dir_list($_SESSION['file_dir']);
-                $f_names = $this->to_assoc($names, $short_names);
+                $f_names = $this->full_name_to_short_name($data); // FIXME
                 foreach ($files as $file){
                     passthru('mv "' . $file . '" "' . $this->original_dir . '/' . $f_names[$this->get_basename($file)] . '.fasta"');
                 }
                 // 4.3.2 Delete the directory where the extracted files are previously stored, along with session
                 passthru("rmdir {$_SESSION['file_dir']}");
                 unset($_SESSION['file_dir']);
+                //return 0;
             }else{
                 // 4.3.1 Download the FASTA files
-                $this->download_fasta($this->original_dir, $type);
+                $this->download_fasta($this->original_dir, $sequence_type);
             }
 
             // 5. Run scripts & Place files in the PROJECT_DIRECTORY/{project_id}/Files/
@@ -457,20 +466,14 @@ class Project extends Model{
         extract($this->config);
         /**
          * variables extracted from $this->config
+         * (Only the relevant ones)
          *
-         * @var string $project_name Name of the project
-         * @var string $aw_type      Absent Word Type (maw|raw)
-         * @var string $maw_type     Minimal Absent Word Type (dna|protein)
-         * @var int    $kmer_min     K-Mer minimum
-         * @var int    $kmer_max     K-Mer maximum
-         * @var bool   $inversion    Use Inversion?
+         * @var string $aw_type       Absent Word Type (maw|raw)
+         * @var string $sequence_type Minimal Absent Word Type (nucleotide|protein)
+         * @var array  $kmer          K-Mer [min, max]
+         * @var bool   $inversion     Use Inversion ?
          * @var string $dissimilarity_index Dissimilarity Index for MAW or RAW
-         * @var array  $names        Full Species names
-         * @var array  $short_names  Short Species names
-         * @var string $type         FASTA file getting method (file|gin|accn)
-         * @var array  $accn_numbers Accession numbers
-         * @var array  $gi_numbers   GI numbers
-         * @var array  $uniprot_accn UniProt ACCN
+         * @var array  $data
          */
 
         $this->exec_location = __DIR__ . '/../../exec';
@@ -489,12 +492,12 @@ class Project extends Model{
         
         // 3. Generate *.[m|r]aw.txt files
         if($aw_type == 'maw'){
-            $maw_type = ($maw_type == 'dna') ? 'DNA' : 'PROT';
+            $sequence_type = ($sequence_type == 'nucleotide') ? 'DNA' : 'PROT';
             // Generate {species_name}.maw.txt from the input fasta files
             foreach($this->files as $file){
                 // Filename: {species_name}.maw.txt
                 $output_file = $this->maw_dir . '/' . $this->get_basename($file) . '.maw.txt';
-                exec("{$this->exec_location}/{$this->maw_exec} -a {$maw_type} -i '{$file}' -o '{$output_file}' -k {$kmer_min} -K {$kmer_max}" . ($inversion ? ' -r 1' : ''), $output);
+                exec("{$this->exec_location}/{$this->maw_exec} -a {$sequence_type} -i '{$file}' -o '{$output_file}' -k {$kmer["min"]} -K {$kmer["max"]}" . ($inversion ? ' -r 1' : ''), $output);
                 error_log(implode("\n", $output));
             }
         }elseif($aw_type == 'raw'){
@@ -533,20 +536,10 @@ class Project extends Model{
         extract($this->config);
         /**
          * variables extracted from $this->config
+         * (Only the relevant ones)
          *
-         * @var string $project_name Name of the project
-         * @var string $aw_type      Absent Word Type (maw|raw)
-         * @var string $maw_type     Minimal Absent Word Type (dna|protein)
-         * @var int    $kmer_min     K-Mer minimum
-         * @var int    $kmer_max     K-Mer maximum
-         * @var bool   $inversion    Use Inversion?
-         * @var string $dissimilarity_index Dissimilarity Index for MAW or RAW
-         * @var array  $names        Full Species names
-         * @var array  $short_names  Short Species names
-         * @var string $type         FASTA file getting method (file|gin|accn)
-         * @var array  $accn_numbers Accession numbers
-         * @var array  $gi_numbers   GI numbers
-         * @var array  $uniprot_accn UniProt ACCN
+         * @var array  $kmer         K-Mer [max, min]
+         * @var bool   $inversion    Use Inversion ?
          */
 
         // 1. Copy $this->files to $modified_files to prevent any data loss
@@ -565,7 +558,7 @@ class Project extends Model{
         if(!file_exists($ref_file_dir)) mkdir($ref_file_dir);
         // 5. Generate {species_name}.raw.txt in the /tmp/Projects/{project_id}/Files/original directory
         foreach($modified_files as $file){
-            exec("{$this->exec_location}/{$this->eagle_exec} -min {$kmer_min} -max {$kmer_max}" . ($inversion ? ' -i' : '') . " -r '{$ref_file}' '{$file}'", $output);
+            exec("{$this->exec_location}/{$this->eagle_exec} -min {$kmer["min"]} -max {$kmer["max"]}" . ($inversion ? ' -i' : '') . " -r '{$ref_file}' '{$file}'", $output);
             error_log(implode("\n", $output));
             // Move the *.raw.txt files to the /tmp/Projects/{project_id}/Files/generated/raw/{species_name} directory
             passthru("mv '{$this->original_dir}'/*.raw.txt '{$ref_file_dir}'");
@@ -635,19 +628,14 @@ class Project extends Model{
         /**
          * variables extracted from $this->config
          *
-         * @var string $project_name Name of the project
-         * @var string $aw_type      Absent Word Type (maw|raw)
-         * @var string $maw_type     Minimal Absent Word Type (dna|protein)
-         * @var int    $kmer_min     K-Mer minimum
-         * @var int    $kmer_max     K-Mer maximum
-         * @var bool   $inversion    Use Inversion?
+         * @var string $project_name  Name of the project
+         * @var string $aw_type       Absent Word Type (maw|raw)
+         * @var string $sequence_type Minimal Absent Word Type (nucleotide|protein)
+         * @var array  $kmer          K-Mer [max, min]
+         * @var bool   $inversion     Use Inversion ?
          * @var string $dissimilarity_index Dissimilarity Index for MAW or RAW
-         * @var array  $names        Full Species names
-         * @var array  $short_names  Short Species names
-         * @var string $type         FASTA file getting method (file|gin|accn|uniprot)
-         * @var array  $accn_numbers Accession numbers
-         * @var array  $gi_numbers   GI numbers
-         * @var array  $uniprot_accn UniProt ACCN
+         * @var array  $data          Containing all the InputAnalyzer.results data
+         * @var string $type          FASTA file getting method (file|accn_gin)
          */
 
         $d_i_maw = ['MAW_LWI_SDIFF', 'MAW_LWI_INTERSECT', 'MAW_GCC_SDIFF', 'MAW_GCC_INTERSECT', 'MAW_JD', 'MAW_TVD'];
@@ -655,19 +643,17 @@ class Project extends Model{
 
         if(isset($project_name) AND $project_name != null
             AND isset($aw_type) AND in_array($aw_type, ['maw', 'raw'])
-            AND isset($kmer_min) AND preg_match('/\d+/', $kmer_min)
-            AND isset($kmer_max) AND preg_match('/\d+/', $kmer_max)
+            AND isset($kmer, $kmer['min'], $kmer['max'])
             AND isset($inversion)
-            AND ((($aw_type == 'maw') AND in_array($maw_type, ['dna', 'protein'])) OR $aw_type == 'raw')
+            AND ($aw_type == 'maw' OR $aw_type == 'raw')
+            AND isset($sequence_type) AND in_array($sequence_type, ['nucleotide', 'protein'])
             AND isset($dissimilarity_index)
             AND (($aw_type == 'maw' AND in_array($dissimilarity_index, $d_i_maw))
                 OR ($aw_type == 'raw' AND in_array($dissimilarity_index, $d_i_raw)))
-            AND isset($names, $short_names)
-            AND isset($type) AND in_array($type, ['file', 'gin', 'accn', 'uniprot'])
-            AND (($type == 'file' AND isset($_SESSION['file_dir']))
-                OR ($type == 'gin' AND isset($gi_numbers))
-                OR ($type == 'accn' AND isset($gi_numbers, $accn_numbers))
-                OR ($type == 'uniprot' AND isset($uniprot_accn))))
+            AND isset($type) AND in_array($type, ['file', 'accn_gin'])
+            AND (($type == 'file' AND isset($_SESSION['file_dir'])) OR ($type == 'accn_gin'))
+            AND isset($data)
+        )
             return true;
 
         return false;
@@ -676,34 +662,55 @@ class Project extends Model{
     /**
      * download_fasta
      *
-     * Download fasta from NCBI DB
+     * Download FASTA from NCBI DB
      *
-     * @param string $target
-     * @param string $type (uniprot, gin, accn)
+     * @param string $target Target directory
+     * @param string $type   Which type of DB should be used (protein|nucleotide)
      */
     private function download_fasta($target, $type){
-        $short_names = $this->config['short_names'];
-
-        if($type == Constants::PROJECT_TYPE_UNIPROT){
-            $uniprot_ids = $this->config['uniprot_accn'];
-            $uniprot_count = count($uniprot_ids);
-            for($i = 0; $i < $uniprot_count; ++$i){
-                copy("http://www.uniprot.org/uniprot/?query=accession:{$uniprot_ids[$i]}&format=fasta", $target . '/' . $short_names[$i] . '.fasta');
-            }
-        }else{
-            $gi_numbers  = $this->config['gi_numbers'];
-            $gin_count   = count($gi_numbers);
-            for($i = 0; $i < $gin_count; ++$i){
-                copy("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id={$gi_numbers[$i]}&rettype=fasta&retmode=text", $target . '/' . $short_names[$i] . '.fasta');
-            }
+        $data        = $this->config['data'];
+        $database    = $type == 'protein' ? 'protein' : 'nuccore';
+        $gin_count   = count($data);
+        for($i = 0; $i < $gin_count; ++$i){
+            copy("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={$database}&id={$data[$i]['gin']}&rettype=fasta&retmode=text", $target . '/' . $data[$i]['short_name'] . '.fasta');
         }
     }
 
-    private function to_assoc($keys, $values){
-        $assoc = [];
-        $c_keys = count($keys);
-        for($i = 0; $i<$c_keys; ++$i){
-            $assoc[$keys[$i]] = $values[$i];
+    /**
+     * Extracts single FASTA from multiple FASTA
+     *
+     * @param string $filename The FASTA file containing multiple items
+     * @param string $target   Target directory
+     * @return array
+     */
+    private function extractFASTA($filename, $target){
+        $source_fp = fopen($filename, 'r');
+        $data = [];
+        $count = 0;
+        while(!feof($source_fp)){
+            $line = fgets($source_fp);
+            if(substr($line, 0, 1) === '>'){ // header is found
+                $header = substr($line, 1, strlen($line)-1);
+                do{
+                    $id = time() + ($count++);
+                    $file_name = $target . '/' . $id . ".fasta";
+                }while(file_exists($file_name));
+
+                $target_fp = fopen($file_name, 'w');
+                $info = ["header" => $header, "id" => $id];
+                array_push($data, $info);
+            }
+            if(isset($target_fp)) fwrite($target_fp, $line);
+        }
+        unlink($filename);
+        return $data;
+    }
+
+    private function full_name_to_short_name($data){
+        $assoc  = [];
+        $c_keys = count($data);
+        for($i = 0; $i < $c_keys; ++$i){
+            $assoc[($this->config['type'] == Constants::PROJECT_TYPE_ACCN_GIN ? $data[$i]['title'] : $data[$i]['id'])] = $data[$i]['short_name'];
         }
         return $assoc;
     }

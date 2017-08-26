@@ -6,8 +6,12 @@ require_once __DIR__ . '/../autoload.php';
 use \AWorDS\App\Route;
 use \AWorDS\Config;
 
-// Debug
-error_log("---------- NEW REQUEST ----------");
+if(Config::DEBUG_MODE){
+    error_reporting(E_ALL|E_DEPRECATED|E_ERROR|E_NOTICE);
+    error_log("---------- NEW REQUEST ----------");
+}else{
+    error_reporting(0);
+}
 
 date_default_timezone_set('UTC');
 

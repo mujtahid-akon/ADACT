@@ -1,0 +1,2 @@
+     EC: -> EC  -> HS
+     HS: -> HS  -> EC

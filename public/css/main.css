@@ -1,7 +1,7 @@
 html, body, .container-table {
     height: 100%;
     width: 100%;
-    font-family: Cambria, font86573;
+    font-family: Cambria, sans-serif;
     color: #777;
     cursor: default;
 }

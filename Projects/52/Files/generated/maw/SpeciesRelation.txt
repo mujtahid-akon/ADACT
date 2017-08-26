@@ -1,2 +1,0 @@
-    dog: -> dog  -> house mouse
-house mouse: -> house mouse  -> dog

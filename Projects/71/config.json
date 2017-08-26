@@ -1,0 +1,38 @@
+{
+    "project_name": "AJAX Res 3",
+    "aw_type": "maw",
+    "kmer": {
+        "min": 9,
+        "max": 13
+    },
+    "inversion": false,
+    "dissimilarity_index": "MAW_TVD",
+    "sequence_type": "nucleotide",
+    "data": [
+        {
+            "id": "NM_009417",
+            "id_type": "accn",
+            "title": "Mus musculus thyroid peroxidase (Tpo), mRNA",
+            "type": "nucleotide",
+            "gin": "927442695",
+            "short_name": "Mus"
+        },
+        {
+            "id": "NM_001003009",
+            "id_type": "accn",
+            "title": "Canis lupus familiaris thyroid peroxidase (TPO), mRNA",
+            "type": "nucleotide",
+            "gin": "350529408",
+            "short_name": "Canis"
+        },
+        {
+            "id": "224465210",
+            "id_type": "gin",
+            "title": "Homo sapiens thyroid peroxidase (TPO), transcript variant 1, mRNA",
+            "type": "nucleotide",
+            "gin": "224465210",
+            "short_name": "Homo"
+        }
+    ],
+    "type": "accn_gin"
+}

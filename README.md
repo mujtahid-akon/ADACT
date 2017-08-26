@@ -4,14 +4,14 @@ For both macOS & Linux
 ***NOTE: `Match7.java` isn't working properly on macOS.***
 
 ## Instructions
-##### Run server
+#### Run server
 
 ```bash
 php -S 127.0.0.1:8080 router.php
 ```
 (Also works with Apache2 when `htaccess` and `modrewrite` enabled)
 
-##### Enable directory writing for /Projects (Linux Only)
+#### Enable directory writing for /Projects (Linux Only)
 
 [Help Link](https://stackoverflow.com/a/16373988/4147849)
 1. Check which `user` is running:

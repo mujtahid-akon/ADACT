@@ -25,6 +25,7 @@ interface Config{
    */
   const SITE_TITLE   = 'AWorDS';         // Set Site title
   const USE_ONLY_SSL = false;
+  const DEBUG_MODE   = true;
   
   /**
    * These constants should not be changed

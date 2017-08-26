@@ -2,7 +2,7 @@
 .idea/
 .DS_Store
 # Remove all the generated files
-Projects/*
+#Projects/*
 
 # remove scripts for now
 scripts/

@@ -1,5 +1,11 @@
 ## SQL Version Control
-- `awords_v2.01.sql` [`present`]
+
+- `awords_v3.0.sql` [`present`]
+    
+    `projects` and `last_project` tables have been
+    modified to adapt to the changes of `AWorDSv3.0 beta`.
+
+- `awords_v2.01.sql`
 
     After presenting in PL first time.
     Only `users` and `projects` tables are modified.

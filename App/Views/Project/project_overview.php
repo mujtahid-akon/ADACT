@@ -32,20 +32,40 @@ function get_species_from_species_relation($relations){
 }
 ?>
 
-<h3>Project: <?php print(ucwords($config['project_name'])); ?></h3>
+<h3>Project: <?php print ucwords($config['project_name']); ?></h3>
 <h4><a href="<?php print $_SERVER['PHP_SELF'] . '/edit' ?>">Edit</a></h4>
 
 <button onclick="$('#project_info').toggle()" class="btn btn-default">Toggle Project Info</button>
 <button class="btn btn-default" disabled>Fork This Project</button>
 <br/>
-<table id="project_info" class="table table-bordered table-striped table-hover" style="display: none;">
-    <caption>Project Info</caption>
-    <?php // FIXME: More enhancement is needed
-    foreach($config as $key => $value){
-        print "<tr><th>".ucwords(preg_replace('/_/', ' ', $key))."</th><td>" . (is_array($value) ? implode(', ', $value) : $value) . "</td></tr>";
-    }
-    ?>
-</table>
+<div id="project_info" style="display: none;">
+    <table class="table table-bordered table-striped table-hover">
+        <caption>Overview</caption>
+        <tbody>
+        <?php
+        print "<tr><th>Project Name</th><td>".ucwords($config['project_name'])."</td></tr>";
+        print "<tr><th>Sequence Type</th><td>".ucwords($config['sequence_type'])."</td></tr>";
+        print "<tr><th>Absent Word Type</th><td>".$config['aw_type']."</td></tr>";
+        print "<tr><th>k-Mer</th><td>Min: ".$config['kmer']['min'].", Max: ".$config['kmer']['max']."</td></tr>";
+        print "<tr><th>Inversion</th><td>".($config['inversion'] ? "Yes" : "No")."</td></tr>";
+        print "<tr><th>Dissimilarity Index</th><td>".$config['dissimilarity_index']."</td></tr>";
+        ?>
+        </tbody>
+    </table>
+    <table id="project_info" class="table table-bordered table-striped table-hover">
+        <caption>Species Info</caption>
+        <thead>
+        <tr><th>UID</th><th>Title/Header</th><th>Short Name</th></tr>
+        </thead>
+        <tbody>
+        <?php
+        foreach ($config['data'] as $data) {
+            print "<tr><th>{$data['id']}</th><td>".ucwords($data['title'])."</td><td>{$data['short_name']}</td></tr>";
+        }
+        ?>
+        </tbody>
+    </table>
+</div>
 <br />
 <?php
 ?>
