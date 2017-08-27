@@ -70,6 +70,10 @@ class User extends Controller
     public function unlock(){
         $this->set_model();
         extract($this->_params);
+        /**
+         * @var string $email
+         * @var string $key
+         */
         $this->set('is_unlocked', $this->{$this->_model}->unlock($email, $key));
         $this->set('email', $email);
     }
@@ -93,6 +97,10 @@ class User extends Controller
     
     public function reset_password_page(){
         extract($this->_params);
+        /**
+         * @var string $email
+         * @var string $key
+         */
         $this->set_model();
         $logged_in = $this->{$this->_model}->login_check();
         if(empty($key) AND !$logged_in){ // load the password reset request form

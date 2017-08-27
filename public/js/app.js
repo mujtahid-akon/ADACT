@@ -1,15 +1,27 @@
 /**
  * ProgressBar class constructor
  *
- * @param {*|jQuery}      selector
- * @param {int|undefined} [max_value]
- * @param {int|undefined} [init_value]
- * @param {string}        [text]
+ * @param {*|jQuery}         selector
+ * @param {int|undefined}    [max_value]
+ * @param {int|undefined}    [init_value]
+ * @param {string|undefined} [text]
  * @constructor
  */
 var ProgressBar = function(selector, max_value, init_value, text){
+    /**
+     * Progressbar selector
+     * @type {*|jQuery|null}
+     */
     this.selector   = selector;
+    /**
+     * Maximum value for progressbar
+     * @type {int|undefined}
+     */
     this.max_value  = max_value;
+    /**
+     * Initial value for progressbar
+     * @type {int|undefined}
+     */
     this.init_value = init_value;
     /**
      * Set value for progress bar
@@ -26,15 +38,14 @@ var ProgressBar = function(selector, max_value, init_value, text){
      */
     this.increment = function(byWhat){
         if(this.selector === null) return false;
-        var current = this.selector.val();
-        this.selector.val(current + (byWhat === undefined ? 1 : byWhat));
+        this.selector.val(this.selector.val() + (byWhat === undefined ? 1 : byWhat));
         return true;
     };
-    // init
+    // __construct
     text = (text === undefined) ? "" : "<div>" + text + "</div>";
     if(this.max_value !== undefined){
         this.selector.html(text + "<progress max=\"" + this.max_value + "\" value=\"" + this.init_value + "\" style=\"width: 100%\" />");
-        this.selector = this.selector.children().eq(0);
+        this.selector = this.selector.children().eq((text === "" ? 0 : 1));
     }else{
         this.selector.html(text + "<progress style=\"width: 100%\" />");
         this.selector = null;
@@ -66,7 +77,11 @@ var InputMethod = {
     // Constants
     FILE     : "file",
     ACCN_GIN : "accn_gin",
-    // Current InputMethod: don't access it directly, use getCurrent() instead
+    /**
+     * Current InputMethod
+     * NOTE: don't access it directly, use InputMethod.getCurrent() instead
+     * @type {string|null}
+     */
     current : null,
     /**
      * set current method
@@ -74,7 +89,7 @@ var InputMethod = {
      * @param {String} id
      */
     setCurrent : function(id){
-        // Hide others except the requested method
+        // Hide all except the requested method
         $('.fasta_method').hide();
         $('#fasta_status').hide();
         $('#' + id).show();
@@ -89,6 +104,7 @@ var InputMethod = {
     },
     /**
      * Get current FASTA file input method
+     * @return {string|null}
      */
     getCurrent : function(){
         return this.current;
@@ -100,7 +116,7 @@ var InputMethod = {
  *
  * Analyzes user input
  *
- * @type {{GIN: string, ACCN: string, NUCLEOTIDE: string, PROTEIN: string, DB_NUCCORE: string, DB_PROTEIN: string, inputs: Array, selector: (*|jQuery|HTMLElement), progress: null, results: Array, init: InputAnalyzer.init, getMetaData: InputAnalyzer.getMetaData, renderer: InputAnalyzer.renderer, isMixedType: InputAnalyzer.isMixedType, buildTable: InputAnalyzer.buildTable}}
+ * @type {{GIN: string, ACCN: string, NUCLEOTIDE: string, PROTEIN: string, DB_NUCCORE: string, DB_PROTEIN: string, inputs: Array, selector: null, progress: null, results: Array, init: InputAnalyzer.init, addShortNames: InputAnalyzer.addShortNames, getMetaData: InputAnalyzer.getMetaData, renderer: InputAnalyzer.renderer, upload: InputAnalyzer.upload, isMixedType: InputAnalyzer.isMixedType, buildTable: InputAnalyzer.buildTable, getShortName: InputAnalyzer.getShortName}}
  */
 var InputAnalyzer = {
     // ID Constants
@@ -112,13 +128,25 @@ var InputAnalyzer = {
     // DB Constants
     DB_NUCCORE: "nuccore",
     DB_PROTEIN: "protein",
-
-    inputs: [],
-    selector: $('#fasta_status'),
     /**
-     * @var {null|ProgressBar} progress
+     * Store input values from the input fields
+     * (only for InputMethod.ACCN_GIN)
+     * @type {Array}
+     * @type {string[]}
+     */
+    inputs: [],
+    /**
+     * @type {*|jQuery|null}
+     */
+    selector: null,
+    /**
+     * @type {null|ProgressBar}
      */
     progress: null,
+    /**
+     * @type {Array}
+     * @type {{id: int|string, id_type: string, title: string|null, type: string|null, gin: int|null, short_name: string|null}[]}
+     */
     results: [],
     /**
      * Initialize analyzer based on current input method
@@ -129,6 +157,7 @@ var InputAnalyzer = {
         var parent = this;
         this.selector = $('#fasta_status');
         // show status
+        this.selector.html("");
         this.selector.show();
 
         if(InputMethod.getCurrent() === InputMethod.ACCN_GIN){
@@ -139,6 +168,10 @@ var InputAnalyzer = {
             //console.log(this.inputs);
             this.progress = new ProgressBar(this.selector, this.inputs.length, 0, "Analyzing...");
             $.each(this.inputs, function (i, id) {
+                /**
+                 * Which type of ID the user inserted
+                 * @type {string}
+                 */
                 var id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
                 parent.getMetaData(id, id_type);
             });
@@ -147,7 +180,8 @@ var InputAnalyzer = {
             this.upload(form);
         }
     },
-    add_short_names: function(){
+    addShortNames: function(){
+        // FIXME: Further filers necessary
         var c_names = this.results.length;
         var status  = true;
         var i;
@@ -188,6 +222,10 @@ var InputAnalyzer = {
      */
     getMetaData: function(id, id_type){
         var parent = this;
+        /**
+         * Response data
+         * @type {{id: int|string, id_type: string, title: string|null, type: string|null, gin: int|null, short_name: string|null}}
+         */
         var response = {
             id: id,
             id_type: id_type,
@@ -196,13 +234,26 @@ var InputAnalyzer = {
             gin: null,
             short_name: null
         };
-        // Process JSON data
+        /**
+         * Process JSON data
+         *
+         * @param {string} db
+         * @param {{result}} data
+         */
         function processData(db, data) {
+            /**
+             * @var {uids}   data.result
+             * @var {Array}  data.result.uids
+             * @var {int[]}  data.result.uids
+             */
             if(data.hasOwnProperty('result') && data.result.hasOwnProperty('uids')){
+                /**
+                 * GI Numbers
+                 * @type {Array}
+                 */
                 var gin = data.result.uids;
                 if(gin.length === 1){
-                    gin = gin[0];
-                    response.gin   = gin;
+                    response.gin   = gin[0];
                     response.title = data.result[gin].title;
                     response.type  = db === parent.DB_NUCCORE ? parent.NUCLEOTIDE : parent.PROTEIN;
                 }
@@ -253,7 +304,7 @@ var InputAnalyzer = {
         });
     },
     /**
-     * AJAX handler
+     * AJAX handler for getting meta data from ncbi's website
      *
      * @param {string} db
      * @param {string} id
@@ -287,6 +338,10 @@ var InputAnalyzer = {
             beforeSend: function(){
                 new ProgressBar(upload_sel, undefined, undefined, "Uploading...");
             },
+            /**
+             * Do this on success
+             * @param {{status: int, [data]: Array}} res Data return only if the status is FILE_UPLOAD_SUCCESS
+             */
             success: function(res){
                 switch(res.status){
                     case 0: // FILE_UPLOAD_SUCCESS
@@ -295,14 +350,23 @@ var InputAnalyzer = {
                             'The file was uploaded successfully.</div>' +
                             '<div class="btn btn-primary" id="upload_new" onclick="$(\'#filef_status\').hide();' +
                             '$(\'#upload_file\').show();$(\'#method\').removeAttr(\'disabled\');">Upload a new file</div>');
+                        /**
+                         * @var {{id: int, header: string}[]} res.data
+                         */
+                        /**
+                         * Result as status is FILE_UPLOAD_SUCCESS
+                         * @type {{id: int, header: string}[]}
+                         */
                         var results    = res.data;
                         parent.results = [];
                         for(var i = 0; i < results.length; ++i){
                             var result = {
                                 id: results[i].id,
+                                id_type: 'file',
                                 title: results[i].header,
                                 short_name: null,
-                                type: InputMethod.FILE
+                                type: InputMethod.FILE,
+                                gin: null
                             };
                             parent.results.push(result);
                         }
@@ -345,10 +409,19 @@ var InputAnalyzer = {
      * @returns {boolean}
      */
     isMixedType: function () {
+        /**
+         * Count total species
+         * @type {int}
+         */
         var len  = this.results.length;
+
         // return false if array is empty
         if(len <= 0) return false;
 
+        /**
+         * Which type of result
+         * @type {string|null} Nucleotide or Protein
+         */
         var type = this.results[0].type;
         for(var i = 1; i<len; ++i){
             if(this.results[i].type !== type) return true;
@@ -356,13 +429,21 @@ var InputAnalyzer = {
         return false;
     },
     buildTable: function () {
-        var c_names = this.results.length;
-        var html = "<p class='text-success'>Found: " + c_names + " Species</p>"
+        /**
+         * Count total species
+         * @type {int}
+         */
+        var c_species = this.results.length;
+        /**
+         * HTML output
+         * @type {string}
+         */
+        var html = "<p class='text-success'>Found: " + c_species + " Species</p>"
             + "<p>Add short names using the table below: "
-            + "(A short name should be less than 15 characters with no spaces)</p>"
+            + "(A short name can only contain letters and hyphens)</p>"
             + "<table class='table table-bordered table-striped table-hover'>"
-            + "<thead><tr><th>ID</th><th>Title</th><th>Short Name</th></tr></thead>";
-        for(var i = 0; i<c_names; ++i){
+            + "<thead><tr><th>ID</th><th>Title/Header</th><th>Short Name</th></tr></thead>";
+        for(var i = 0; i<c_species; ++i){
             html += "<tr>"
                 + "<td>" + this.results[i].id + "</td>"
                 + "<td>" + this.results[i].title + "</td>"
@@ -371,18 +452,23 @@ var InputAnalyzer = {
         }
         html += "</table>"
             + "<button class=\"btn btn-primary\" id=\"fasta_check_out\" "
-            + "onclick=\"InputAnalyzer.add_short_names()\" style=\"vertical-align: top\">Done</button>";
+            + "onclick=\"InputAnalyzer.addShortNames()\" style=\"vertical-align: top\">Done</button>";
         this.selector.html(html);
     },
     getShortName: function (title) {
-        // TODO
+        var match;
+        // For proteins
+        match = title.match(/Short=([\w\s-]+)/);
+        if(match !== null) return match[1];
+
+        // TODO A very big function to analyze and generate short name from title/header
         return title;
     }
 };
 
 /**
  * Project Object
- * @type {{config:Project.config, result: Project.result}}
+ * @type {{config:Project.config, result: {Project.result}}}
  */
 var Project = {};
 
@@ -426,12 +512,6 @@ Project.result = {
             return field | 0;
         }
 
-        // 1. Project Name
-        // 3. K-Mer Min
-        // 4. K-Mer Max
-        // 6. Dissimilarity Index
-        // 7. MAW Type
-
         return ( !isEmpty(this.config.project_name)
             && (0 <= this.config.kmer.min <= this.config.kmer.max)
             && !isEmpty(this.config.dissimilarity_index) );// && file_done; // FIXME: file_done is a global variable
@@ -453,7 +533,7 @@ Project.result = {
      */
     send: function () {
         if(!this.verify()) return false;
-        this.btn = $('#p_btn')
+        this.btn = $('#p_btn');
 
         var parent = this;
         // TODO: Modify this request to make interactive

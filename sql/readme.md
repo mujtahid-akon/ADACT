@@ -1,6 +1,10 @@
 ## SQL Version Control
 
-- `awords_v3.0.sql` [`present`]
+- `awords_v3.01.sql` [`present`]
+
+    `activation_key` should not be unique.
+    
+- `awords_v3.0.sql`
     
     `projects` and `last_project` tables have been
     modified to adapt to the changes of `AWorDSv3.0 beta`.

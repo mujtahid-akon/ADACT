@@ -8,7 +8,7 @@ use \AWorDS\Config;
 
 if(Config::DEBUG_MODE){
     error_reporting(E_ALL|E_DEPRECATED|E_ERROR|E_NOTICE);
-    error_log("---------- NEW REQUEST ----------");
+    error_log("{$_SERVER['REQUEST_METHOD']}: {$_SERVER['REQUEST_URI']}");
 }else{
     error_reporting(0);
 }
@@ -21,16 +21,18 @@ if(Config::USE_ONLY_SSL AND !((!empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['R
     exit();
 }
 
-/**
+/*
  * Custom MVC Style designed particularly for this project
  */
 
 /**
- * For a $location, only letters, digits, underscores, dots, and hyphens are allowed
+ * @var string $location Only letters, digits, underscores, dots, and hyphens are allowed
  */
 $location = '/';
-if(php_sapi_name() == 'cli-server') $location = $_SERVER['REQUEST_URI'];
-else{
+if(php_sapi_name() == 'cli-server'){
+    $uri = explode('?', $_SERVER['REQUEST_URI']);
+    $location = $uri[0];
+}else{
     preg_match('/^(\/?[\w\.\-]+)+(?(?=&))/', $_SERVER['QUERY_STRING'], $matches); // (?(?=&))
     $location = '/' . (isset($matches[0]) ? $matches[0] : '');
 }

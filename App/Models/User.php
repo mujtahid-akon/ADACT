@@ -26,7 +26,7 @@ class User extends Model{
                     if(!$remember){   // Session only login
                         $this->new_session($user_id, session_id(), Constants::SESSION_SESSION);
                     }else{                  // Cookie login
-                        $this->new_session($user_id, $this->activition_key(), Constants::SESSION_COOKIE);
+                        $this->new_session($user_id, $this->activation_key(), Constants::SESSION_COOKIE);
                     }
                     return Constants::LOGIN_SUCCESS;
                 }
@@ -63,7 +63,7 @@ class User extends Model{
     function register($name, $email, $pass){
         $hash = password_hash($pass, PASSWORD_DEFAULT);
         if($this->user_exists($email) == Constants::ACCOUNT_EXISTS) return Constants::ACCOUNT_EXISTS;
-        $activation_key = $this->activition_key();
+        $activation_key = $this->activation_key();
         if($stmt = $this->mysqli->prepare('INSERT INTO `users`(`name`, `email`, `password`, `joined_date`, `locked`, `activation_key`) VALUE(?,?,?, NOW(), 1, ?)')){
             $stmt->bind_param('ssss', $name, $email, $hash, $activation_key);
             $stmt->execute();
@@ -76,7 +76,7 @@ class User extends Model{
     }
     
     function unlock($email, $key){
-        if($stmt = $this->mysqli->prepare('UPDATE `users` SET `locked` = 0, activation_key = null WHERE `email` = ? AND activation_key = ?')){
+        if($stmt = $this->mysqli->prepare('UPDATE `users` SET `locked` = 0, `activation_key` = \'\' WHERE `email` = ? AND activation_key = ?')){
             $stmt->bind_param('ss', $email, $key);
             $stmt->execute();
             $stmt->store_result();
@@ -90,11 +90,13 @@ class User extends Model{
     }
     
     function email_reset_request($email){
-        $to      = $email;
-        $subject = "AWorDS: Password reset request"; // TODO: use TITLE instead
-        $activition_key = $this->new_activation_key($email);
-        // TODO: change website name and address
-        $reset_address = 'http://web-muntashir.codeanyapp.com/AWorDS/reset_pass&email=' . urlencode($email) . '&key=' . urlencode($activition_key);
+        $site_title = self::SITE_TITLE;
+        $from    = self::MAIL_FROM;
+        $address = self::ORG_ADDRESS;
+        $subject = "{$site_title}: Password reset request";
+        $activation_key = $this->new_activation_key($email);
+        // TODO: change title and address
+        $reset_address = self::WEB_ADDRESS . '/reset_pass' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
         $message = <<<EOF
 <!DOCTYPE html>
 <html>
@@ -102,9 +104,9 @@ class User extends Model{
   <title>{$subject}</title>
 </head>
 <body>
-  <h1>AWorDS</h1>
-  <address><a href="mailto:info@awords.co.uk">info@awords.co.uk</a></address>
-  <address>221/B, Baker Street, London, UK</address>
+  <h1>{$site_title}</h1>
+  <address><a href="mailto:{$from}">{$from}</a></address>
+  <address>{$address}</address>
   <br/>
   <p>Dear user,</p>
   <p>You have requested for resetting your password. If this is really you, please follow the link bellow:</p>
@@ -113,7 +115,7 @@ class User extends Model{
 </body>
 </html>
 EOF;
-        self::email($to, $subject, $message);
+        self::email('', $email, $subject, $message);
     }
     
     function reset_password($email, $pass){
@@ -137,11 +139,12 @@ EOF;
         return Constants::ACCOUNT_DOES_NOT_EXIST;
     }
     
-    function email_new_ac($name, $email, $activition_key){
-        $to      = "{$name} <{$email}>";
-        $subject = "Welcome to AWorDS!"; // TODO: use TITILE instead
-        // TODO: change website name and address
-        $verification_address = 'http://web-muntashir.codeanyapp.com/AWorDS/unlock&email=' . urlencode($email) . '&key=' . urlencode($activition_key);
+    function email_new_ac($name, $email, $activation_key){
+        $site_title = self::SITE_TITLE;
+        $from    = self::MAIL_FROM;
+        $address = self::ORG_ADDRESS;
+        $subject = "Welcome to {$site_title}!";
+        $verification_address = self::WEB_ADDRESS . '/unlock' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
         $message = <<<EOF
 <!DOCTYPE html>
 <html>
@@ -149,9 +152,9 @@ EOF;
   <title>{$subject}</title>
 </head>
 <body>
-  <h1>AWorDS</h1>
-  <address><a href="mailto:info@awords.co.uk">info@awords.co.uk</a></address>
-  <address>221/B, Baker Street, London, UK</address>
+  <h1>{$site_title}</h1>
+  <address><a href="mailto:{$from}">{$from}</a></address>
+  <address>{$address}</address>
   <br/>
   <p>Dear {$name},</p>
   <p>Your email was used to create a new account in <a href="http://web-muntashir.codeanyapp.com/AWorDS" target='_blank'>AWorDS</a>.
@@ -161,11 +164,11 @@ EOF;
 </body>
 </html>
 EOF;
-        self::email($to, $subject, $message);
+        self::email($name, $email, $subject, $message);
     }
     
     function new_activation_key($email){
-        $activation_key = $this->activition_key();
+        $activation_key = $this->activation_key();
         if($stmt = $this->mysqli->prepare('UPDATE `users` SET `activation_key` = ? WHERE `email` = ?')){
             $stmt->bind_param('ss', $activation_key, $email);
             $stmt->execute();
@@ -204,7 +207,7 @@ EOF;
         }
     }
     
-    private function activition_key(){
+    private function activation_key(){
         $max = ceil(Constants::ACTIVATION_KEY_LENGTH / 40);
         $random = '';
         for ($i = 0; $i < $max; $i ++) {
@@ -217,7 +220,7 @@ EOF;
             $stmt->store_result();
             $stmt->bind_result($count);
             $stmt->fetch();
-            if($count == Constants::COUNT_ONE) return $this->activition_key();
+            if($count == Constants::COUNT_ONE) return $this->activation_key();
         }
         return $random;
     }
