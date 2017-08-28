@@ -4,7 +4,6 @@ namespace AWorDS\App\Models;
 
 use \AWorDS\App\Constants;
 use \AWorDS\Config;
-use const Grpc\CALL_ERROR_NOT_ON_SERVER;
 
 /**
  * @property int|null project_id
@@ -24,7 +23,20 @@ class Project extends Model{
     private $maw_exec    = 'maw';
     private $eagle_exec  = 'eagle';
     protected $config    = [];
-
+    public $dissimilarity_index = [
+        "MAW" => [
+            "MAW_LWI_SDIFF" => "Length weighted index of symmetric difference of MAW sets",
+            "MAW_LWI_INTERSECT" => "Length weighted index of intersection of MAW sets",
+            "MAW_GCC_SDIFF" => "GC content of symmetric difference of MAW sets",
+            "MAW_GCC_INTERSECT" => "GC content of intersection of MAW sets",
+            "MAW_JD" => "Jaccard Distance of MAW sets",
+            "MAW_TVD" => "Total Variation Distance of MAW sets"
+        ],
+        "RAW" => [
+            "RAW_LWI" => "Length weighted index of RAW set",
+            "RAW_GCC" => "GC content of RAW set"
+        ]
+    ];
     /**
      * Public Functions
      */
@@ -54,12 +66,18 @@ class Project extends Model{
      * @return array file upload status, and an array of Species names on success
      */
     function file_upload($zip){
+        // Create upload directory array
+        if(!isset($_SESSION['upload_info'])){
+            /** @var array $_SESSION 0 => [dir => path/to/fasta, md5 => md5(path/to/fasta)] */
+            $_SESSION['upload_info'] = [];
+        }
+
         // 1. Size limit
         if($zip['size'] > Config::MAX_UPLOAD_SIZE) return ['status' => Constants::FILE_SIZE_EXCEEDED];
         // 2. MIME: not always check-able: skip
         //if(!($zip['type'] == 'application/zip' || $zip['type'] == 'application/octet-stream')) return ['status' => Constants::FILE_INVALID_MIME];
         // 3. See if it can be moved
-        $tmp_dir = '/tmp/' . time();
+        $tmp_dir = '/tmp/' . (time() + mt_rand());
         mkdir($tmp_dir);
         $tmp_file = $tmp_dir . '/' . basename($zip['name']);
         if(!move_uploaded_file($zip['tmp_name'], $tmp_file)) return ['status' => Constants::FILE_INVALID_FILE];
@@ -88,9 +106,10 @@ class Project extends Model{
             //sort($files);
             // Everything's in order
             // Set file session containing the extracted directory
-            $_SESSION['file_dir'] = $tmp_dir;
+            $id = md5($tmp_dir);
+            array_push($_SESSION['upload_info'], ['dir' => $tmp_dir, 'md5' => $id]);
             // Return success
-            return ['status' => Constants::FILE_UPLOAD_SUCCESS, 'data' => $data];
+            return ['status' => Constants::FILE_UPLOAD_SUCCESS, 'data' => $data, 'id' => $id];
         }
         // In any other case, return invalid file
         return ['status' => Constants::FILE_INVALID_FILE];
@@ -323,6 +342,7 @@ class Project extends Model{
          * @var string $sequence_type Minimal Absent Word Type (nucleotide|protein)
          * @var array  $data
          * @var string $type          (file|accn_gin)
+         * @var string $file_id       md5 sum of file directory
          */
         $this->project_id = null;
         // 1. Save project info in the DB, and get inserted id (which is the project id)
@@ -356,21 +376,31 @@ class Project extends Model{
             if(!file_exists($this->original_dir)) mkdir($this->original_dir);
             // 4.3 Move extracted files to the Files/original or download the files
             if($type == Constants::PROJECT_TYPE_FILE){
-                // 4.3.1 Move extracted files to the Files/original
-                $files = $this->dir_list($_SESSION['file_dir']);
+                // 4.3.1 Get directory
+                $directory = null;
+                foreach ($_SESSION['upload_info'] as &$item){
+                    if($item['md5'] === $file_id){
+                        $directory = $item['dir'];
+                        unset($item);
+                    }
+                }
+                // 4.3.2 Cancel project if no valid directory found: this is unlikely to be happen
+                if($directory === null){
+                    $this->delete_project($this->project_id);
+                    return null;
+                }
+                // 4.3.3 Move extracted files to the Files/original
+                $files = $this->dir_list($directory);
                 $f_names = $this->full_name_to_short_name($data); // FIXME
                 foreach ($files as $file){
                     passthru('mv "' . $file . '" "' . $this->original_dir . '/' . $f_names[$this->get_basename($file)] . '.fasta"');
                 }
-                // 4.3.2 Delete the directory where the extracted files are previously stored, along with session
-                passthru("rmdir {$_SESSION['file_dir']}");
-                unset($_SESSION['file_dir']);
-                //return 0;
+                // 4.3.4 Delete the directory where the extracted files are previously stored, along with session
+                passthru("rmdir {$directory}");
             }else{
                 // 4.3.1 Download the FASTA files
                 $this->download_fasta($this->original_dir, $sequence_type);
             }
-
             // 5. Run scripts & Place files in the PROJECT_DIRECTORY/{project_id}/Files/
             //    from /tmp/Projects/{project_id}/Files
             $this->generate() AND $this->structure_files();
@@ -636,6 +666,7 @@ class Project extends Model{
          * @var string $dissimilarity_index Dissimilarity Index for MAW or RAW
          * @var array  $data          Containing all the InputAnalyzer.results data
          * @var string $type          FASTA file getting method (file|accn_gin)
+         * @var string $file_id       md5 sum of uploaded file directory
          */
 
         $d_i_maw = ['MAW_LWI_SDIFF', 'MAW_LWI_INTERSECT', 'MAW_GCC_SDIFF', 'MAW_GCC_INTERSECT', 'MAW_JD', 'MAW_TVD'];
@@ -651,11 +682,23 @@ class Project extends Model{
             AND (($aw_type == 'maw' AND in_array($dissimilarity_index, $d_i_maw))
                 OR ($aw_type == 'raw' AND in_array($dissimilarity_index, $d_i_raw)))
             AND isset($type) AND in_array($type, ['file', 'accn_gin'])
-            AND (($type == 'file' AND isset($_SESSION['file_dir'])) OR ($type == 'accn_gin'))
+            AND (($type == 'file' AND isset($_SESSION['upload_info'], $file_id) AND $this->has_this_file_directory($file_id)) OR ($type == 'accn_gin'))
             AND isset($data)
         )
             return true;
 
+        return false;
+    }
+
+    /**
+     * Search for uploaded file directory from a md5 sum (known as file_id)
+     * @param string $md5_sum
+     * @return bool
+     */
+    private function has_this_file_directory($md5_sum){
+        foreach ($_SESSION['upload_info'] as $item){
+            if($item['md5'] === $md5_sum) return true;
+        }
         return false;
     }
 

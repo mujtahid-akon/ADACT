@@ -30,7 +30,7 @@ interface Config{
     const MAIL_SECURITY  = 'tls'; // OR ssl
     const MAIL_SMTP_AUTH = true;
     const MAIL_USER = 'example@gmail.com'; // Your username (e.g. muntashir.islam96@gmail.com for Gmail)
-    const MAIL_PASS = 'example_password';             // Your password
+    const MAIL_PASS = 'example_password';  // Your password
     const MAIL_FROM = 'example@gmail.com'; // Your email address
     const MAIL_NAME = 'Info at AWorDS';
 

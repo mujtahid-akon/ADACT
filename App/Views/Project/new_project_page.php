@@ -1,6 +1,7 @@
 <?php
 /**
- * @var bool $logged_in
+ * @var bool  $logged_in
+ * @var array $dissimilarity_index
  */
 if(!$logged_in){
     exit();
@@ -83,11 +84,13 @@ if(!$logged_in){
                 <fieldset>
                     <label>Absent Word Type *: </label>
                     <label>
-                        <input type="radio" id="aw_type" name="aw_type" value="maw" checked />
+                        <input type="radio" id="aw_type" name="aw_type" value="maw" checked
+                               onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();" />
                         <abbr title="Minimal Absent Words">MAW</abbr>
                     </label>
                     <label>
-                        <input type="radio" id="aw_type" name="aw_type" value="raw" />
+                        <input type="radio" id="aw_type" name="aw_type" value="raw"
+                               onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();"/>
                         <abbr title="Relative Absent Words">RAW</abbr>
                     </label>
                 </fieldset>
@@ -114,16 +117,16 @@ if(!$logged_in){
                     <label for="dissimilarity_index">Dissimilarity Index *</label>
                     <select id="dissimilarity_index" name="dissimilarity_index" class="form-control" style="display: inline-block;width: unset;">
                         <option value="" disabled selected>Select One</option>
-                        <!-- MAW Dissimilarity Indexes -->
-                        <option class="maw_dissimilarity" value="MAW_LWI_SDIFF">MAW_LWI_SDIFF</option>
-                        <option class="maw_dissimilarity" value="MAW_LWI_INTERSECT">MAW_LWI_INTERSECT</option>
-                        <option class="maw_dissimilarity" value="MAW_GCC_SDIFF">MAW_GCC_SDIFF</option>
-                        <option class="maw_dissimilarity" value="MAW_GCC_INTERSECT">MAW_GCC_INTERSECT</option>
-                        <option class="maw_dissimilarity" value="MAW_JD">MAW_JD</option>
-                        <option class="maw_dissimilarity" value="MAW_TVD">MAW_TVD</option>
-                        <!-- RAW Dissimilarity Indexes -->
-                        <option style="display: none;" class="raw_dissimilarity" value="RAW_LWI">RAW_LWI</option>
-                        <option style="display: none;" class="raw_dissimilarity" value="RAW_GCC">RAW_GCC</option>
+                        <?php
+                        // MAW Dissimilarity Indexes
+                        foreach ($dissimilarity_index['MAW'] as $short_form => $full_form){
+                            print "<option class=\"maw_dissimilarity\" value=\"{$short_form}\">{$full_form}</option>";
+                        }
+                        // RAW Dissimilarity Indexes
+                        foreach ($dissimilarity_index['RAW'] as $short_form => $full_form){
+                            print "<option style=\"display: none;\" class=\"raw_dissimilarity\" value=\"{$short_form}\">{$full_form}</option>";
+                        }
+                        ?>
                     </select>
                 </fieldset>
             </fieldset>

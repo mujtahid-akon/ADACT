@@ -102,6 +102,7 @@ class Project extends Controller{
         }
         $this->set('logged_in', $logged_in);
         $this->set('active_tab', 'new');
+        $this->set('dissimilarity_index', $this->{$this->_model}->dissimilarity_index);
     }
     
     function file_upload(){
@@ -170,13 +171,16 @@ class Project extends Controller{
         $project = $this->{$this->_model};
         $logged_in = $project->login_check();
         if($logged_in AND $project->verify_project($project_id)){
+            $is_last_project_id = $project_id == $project->last_project_id();
             $this->set('logged_in', $logged_in);
             $this->set('project_id', $project_id);
             $this->set('active_tab', 'projects');
             $this->set('config', json_decode(file_get_contents(
                 Config::PROJECT_DIRECTORY . '/' . $project_id
                 . '/' . Constants::CONFIG_JSON), true));
-            if($project_id == $project->last_project_id()){
+            $this->set('is_last_project_id', $is_last_project_id);
+            $this->set('dissimilarity_index', $project->dissimilarity_index);
+            if($is_last_project_id){
                 $project->set_last_project_seen();
             }
             exit();

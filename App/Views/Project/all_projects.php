@@ -24,7 +24,7 @@ var delete_project = function(id, p_name){
                     alert('Your project was successfully deleted.');
                     break;
                 case 2:
-                    alert('Couldn\'t delete the project, it doesn\'t exists or might have alreay been deleted.');
+                    alert('Couldn\'t delete the project, it doesn\'t exists or might have already been deleted.');
                     break;
                 default:
                     alert('Sorry, due an error the project couldn\'t be deleted. Please, try again.');
@@ -54,7 +54,7 @@ foreach($projects as $project){
 // Format Date
 $datetime = DateTime::createFromFormat('Y-m-d H:i:s', $project['date_created']);
 $project['date_created'] = $datetime->format('jS M, Y') . ' at ' . $datetime->format('H:i:s');
-// Show text based on wether the project is editable or not.
+// Show text based on whether the project is editable or not.
 $edit_text = $project['editable'] ? '<a href="projects/' . $project['id'] . '/edit" class="project-icon glyphicon glyphicon-edit" title="Edit Project"></a>' : '';
 
 print <<<EOF

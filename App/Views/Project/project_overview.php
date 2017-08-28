@@ -9,9 +9,11 @@
 /**
  * @var array $config configurations extracted from config.json
  * @var int   $project_id
+ * @var bool  $is_last_project_id
+ * @var array $dissimilarity_index
  */
-
-$url = $_SERVER['PHP_SELF'] . '/get';
+$base_url = $_SERVER['PHP_SELF'];
+$url = $base_url . '/get';
 $dir = \AWorDS\Config::PROJECT_DIRECTORY . '/' . $project_id;
 // Get Distant Matrix
 $elements = array_reverse(file($dir . '/Output.txt'));
@@ -20,7 +22,10 @@ $relation = file($dir . '/SpeciesRelation.txt');
 // Get Species names FIXME: Use $config instead
 $species = get_species_from_species_relation($relation); //file($dir . '/SpeciesFull.txt');
 $count_species = count($species);
-// 118
+// Project type
+$isAFileIOProject = $config['type'] === \AWorDS\App\Constants::PROJECT_TYPE_FILE;
+// Transform Absent Words type to uppercase
+$config['aw_type'] = strtoupper($config['aw_type']);
 
 function get_species_from_species_relation($relations){
     $species = [];
@@ -33,10 +38,16 @@ function get_species_from_species_relation($relations){
 ?>
 
 <h3>Project: <?php print ucwords($config['project_name']); ?></h3>
-<h4><a href="<?php print $_SERVER['PHP_SELF'] . '/edit' ?>">Edit</a></h4>
+<?php
+if($is_last_project_id):
+?>
+<h4><a href="<?php print $base_url . '/edit' ?>">Edit</a></h4>
+<?php
+endif;
+?>
 
 <button onclick="$('#project_info').toggle()" class="btn btn-default">Toggle Project Info</button>
-<button class="btn btn-default" disabled>Fork This Project</button>
+<a class="btn btn-default" <?php print ($isAFileIOProject ? "disabled" : "href=\"\"") ?>>Fork This Project</a>
 <br/>
 <div id="project_info" style="display: none;">
     <table class="table table-bordered table-striped table-hover">
@@ -45,22 +56,26 @@ function get_species_from_species_relation($relations){
         <?php
         print "<tr><th>Project Name</th><td>".ucwords($config['project_name'])."</td></tr>";
         print "<tr><th>Sequence Type</th><td>".ucwords($config['sequence_type'])."</td></tr>";
-        print "<tr><th>Absent Word Type</th><td>".$config['aw_type']."</td></tr>";
-        print "<tr><th>k-Mer</th><td>Min: ".$config['kmer']['min'].", Max: ".$config['kmer']['max']."</td></tr>";
+        print "<tr><th>Absent Word Type</th><td>".($config['aw_type'] === 'MAW' ? "Minimal" : "Relative")." Absent Words ({$config['aw_type']})</td></tr>";
+        print "<tr><th>k-Mer</th><td>Min: {$config['kmer']['min']}, Max: {$config['kmer']['max']}</td></tr>";
         print "<tr><th>Inversion</th><td>".($config['inversion'] ? "Yes" : "No")."</td></tr>";
-        print "<tr><th>Dissimilarity Index</th><td>".$config['dissimilarity_index']."</td></tr>";
+        print "<tr><th>Dissimilarity Index</th><td>{$dissimilarity_index[$config['aw_type']][$config['dissimilarity_index']]}</td></tr>";
         ?>
         </tbody>
     </table>
     <table id="project_info" class="table table-bordered table-striped table-hover">
         <caption>Species Info</caption>
         <thead>
-        <tr><th>UID</th><th>Title/Header</th><th>Short Name</th></tr>
+        <tr><th><?php print ($isAFileIOProject ? "SL" : "ID"); ?></th><th>Title/Header</th><th>Short Name</th></tr>
         </thead>
         <tbody>
         <?php
+        if($isAFileIOProject) $id = 0;
+
         foreach ($config['data'] as $data) {
-            print "<tr><th>{$data['id']}</th><td>".ucwords($data['title'])."</td><td>{$data['short_name']}</td></tr>";
+            /** @var int $id */
+            $id = ($isAFileIOProject) ? ($id + 1) : $data['id'];
+            print "<tr><th>{$id}</th><td>".ucwords($data['title'])."</td><td>{$data['short_name']}</td></tr>";
         }
         ?>
         </tbody>

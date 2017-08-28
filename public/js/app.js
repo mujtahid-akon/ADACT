@@ -64,8 +64,6 @@ var lock_fasta_method = function(){
 };
 */
 
-// FIXME: To allow multiple projects for one user, use different project id (may not necessary)
-
 /**
  * InputMethod Object
  *
@@ -116,7 +114,7 @@ var InputMethod = {
  *
  * Analyzes user input
  *
- * @type {{GIN: string, ACCN: string, NUCLEOTIDE: string, PROTEIN: string, DB_NUCCORE: string, DB_PROTEIN: string, inputs: Array, selector: null, progress: null, results: Array, init: InputAnalyzer.init, addShortNames: InputAnalyzer.addShortNames, getMetaData: InputAnalyzer.getMetaData, renderer: InputAnalyzer.renderer, upload: InputAnalyzer.upload, isMixedType: InputAnalyzer.isMixedType, buildTable: InputAnalyzer.buildTable, getShortName: InputAnalyzer.getShortName}}
+ * @type {{GIN: string, ACCN: string, NUCLEOTIDE: string, PROTEIN: string, DB_NUCCORE: string, DB_PROTEIN: string, inputs: Array, selector: null, progress: null, results: Array, file_id: null, init: InputAnalyzer.init, addShortNames: InputAnalyzer.addShortNames, getMetaData: InputAnalyzer.getMetaData, renderer: InputAnalyzer.renderer, upload: InputAnalyzer.upload, buildTable: InputAnalyzer.buildTable, getShortName: InputAnalyzer.getShortName}}
  */
 var InputAnalyzer = {
     // ID Constants
@@ -148,6 +146,10 @@ var InputAnalyzer = {
      * @type {{id: int|string, id_type: string, title: string|null, type: string|null, gin: int|null, short_name: string|null}[]}
      */
     results: [],
+    /**
+     * @type {string|null} file id (only for InputMethod.FILE)
+     */
+    file_id: null,
     /**
      * Initialize analyzer based on current input method
      *
@@ -255,7 +257,7 @@ var InputAnalyzer = {
                 if(gin.length === 1){
                     response.gin   = gin[0];
                     response.title = data.result[gin].title;
-                    response.type  = db === parent.DB_NUCCORE ? parent.NUCLEOTIDE : parent.PROTEIN;
+                    response.type  = (db === parent.DB_NUCCORE) ? parent.NUCLEOTIDE : parent.PROTEIN;
                 }
             }
         }
@@ -267,18 +269,26 @@ var InputAnalyzer = {
                 //console.log(this.results);
                 // There might be three scenario: nucleotide, protein, mixed
                 // Nucleotides only or Proteins only are correct, but not the mixed one
-                // TODO: need to handle ALL the three scenario properly
-                if(parent.isMixedType()){
-                    alert("It looks like you are trying to use nucleotides & proteins at the same time. Please use only nucleotide or only proteins.");
-                    parent.selector.hide();
-                    return;
-                }
 
                 // Set SEQ_TYPE based on retrieved info
                 var len  = parent.results.length;
                 if(len <= 0) return;
-
+                // Get the common type
                 var type = parent.results[0].type;
+
+                for(var i = 0; i<len; ++i){
+                    if(parent.results[i].type === null){
+                        alert("Some of the Accession/GI numbers you've provided are not found! Please, provide only valid Accession/GI numbers.");
+                        parent.selector.hide();
+                        return;
+                    }
+                    if(parent.results[i].type !== type){
+                        alert("It looks like you are trying to use nucleotides & proteins at the same time. Please use only nucleotide or only proteins.");
+                        parent.selector.hide();
+                        return;
+                    }
+                }
+                // UI Changes
                 if(type === parent.PROTEIN) {
                     $(".seq_type[value=protein]").prop("checked", true);
                     $(".seq_type").prop("disabled", true);
@@ -291,6 +301,7 @@ var InputAnalyzer = {
                 parent.buildTable();
             }
         }
+
         this.renderer(this.DB_NUCCORE, id, function (db, data) {
             processData(parent.DB_NUCCORE, data);
             if(response.gin === null){ // Maybe it's a protein
@@ -322,6 +333,10 @@ var InputAnalyzer = {
             }
         });
     },
+    /**
+     * Upload file to server
+     * @param form
+     */
     upload: function (form) {
         var upload_sel = $('#filef_status');
         upload_sel.show();
@@ -340,7 +355,7 @@ var InputAnalyzer = {
             },
             /**
              * Do this on success
-             * @param {{status: int, [data]: Array}} res Data return only if the status is FILE_UPLOAD_SUCCESS
+             * @param {{status: int, [data]: Array, [id]: string}} res Data return only if the status is FILE_UPLOAD_SUCCESS
              */
             success: function(res){
                 switch(res.status){
@@ -358,6 +373,7 @@ var InputAnalyzer = {
                          * @type {{id: int, header: string}[]}
                          */
                         var results    = res.data;
+                        parent.file_id = res.id;
                         parent.results = [];
                         for(var i = 0; i < results.length; ++i){
                             var result = {
@@ -404,30 +420,8 @@ var InputAnalyzer = {
         });
     },
     /**
-     * Check if the types are mixed
-     *
-     * @returns {boolean}
+     * Build table to input short names
      */
-    isMixedType: function () {
-        /**
-         * Count total species
-         * @type {int}
-         */
-        var len  = this.results.length;
-
-        // return false if array is empty
-        if(len <= 0) return false;
-
-        /**
-         * Which type of result
-         * @type {string|null} Nucleotide or Protein
-         */
-        var type = this.results[0].type;
-        for(var i = 1; i<len; ++i){
-            if(this.results[i].type !== type) return true;
-        }
-        return false;
-    },
     buildTable: function () {
         /**
          * Count total species
@@ -456,6 +450,7 @@ var InputAnalyzer = {
         this.selector.html(html);
     },
     getShortName: function (title) {
+        if(title === null) return null;
         var match;
         // For proteins
         match = title.match(/Short=([\w\s-]+)/);
@@ -504,6 +499,12 @@ Project.result = {
             type: InputMethod.getCurrent() // #8
         };
 
+        // Special for InputMethod.FILE
+        if(InputMethod.getCurrent() === InputMethod.FILE){
+            this.config.file_id = InputAnalyzer.file_id; // #9
+            if(this.config.file_id === null) return false;
+        }
+
         // Check configs
         function isEmpty(field) {
             return field === "" || field === null;
@@ -514,7 +515,7 @@ Project.result = {
 
         return ( !isEmpty(this.config.project_name)
             && (0 <= this.config.kmer.min <= this.config.kmer.max)
-            && !isEmpty(this.config.dissimilarity_index) );// && file_done; // FIXME: file_done is a global variable
+            && !isEmpty(this.config.dissimilarity_index) );
     },
     /**
      * Verify inputs before sending
@@ -533,7 +534,7 @@ Project.result = {
      */
     send: function () {
         if(!this.verify()) return false;
-        this.btn = $('#p_btn');
+        this.submit_btn = $('#p_btn');
 
         var parent = this;
         // TODO: Modify this request to make interactive
