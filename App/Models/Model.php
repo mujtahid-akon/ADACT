@@ -12,7 +12,6 @@ require_once __DIR__ . '/../../Libraries/PHPMailer/PHPMailerAutoload.php';
 
 use \AWorDS\Config;
 use \AWorDS\App\Constants;
-use function Sodium\crypto_box_seed_keypair;
 
 class Model implements Config
 {
@@ -88,8 +87,9 @@ class Model implements Config
     
     function login_check(){
         if(isset($_SESSION['session'])){ // Top priority
+            $session_id = session_id(); // To remove E_STRICT error
             if($stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = "session"')){
-                $stmt->bind_param('is', $_SESSION['session']['id'], session_id());
+                $stmt->bind_param('is', $_SESSION['session']['id'], $session_id);
                 $stmt->execute();
                 $stmt->store_result();
                 $stmt->bind_result($count);

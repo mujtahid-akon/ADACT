@@ -27,8 +27,8 @@ if($logged_in){ ?>
         <form class="navbar-form form-horizontal navbar-right" id="login_form" method="post" action="login">
             <input class="form-control" type="text" name="email" placeholder="E-mail address" required />
             <input class="form-control" type="password" name="pass" placeholder="Password" required />
-            <label><input type="checkbox" name="remember" /> Remember me</label>
             <input class="btn btn-primary" type="submit" value="login" />
+            <a href="/reset_pass">Forget password?</a>
         </form>
     </div>
 </div>

@@ -68,7 +68,7 @@ if(!$logged_in){
                 <div class="fasta_method" id="input_accn_gin" style="display: none;">
                     <label for="accn_gin" style="vertical-align: top;">Accession/GI numbers *</label>
                     <textarea class="form-control" id="accn_gin" name="accn_gin" placeholder="Input Accession/GI Numbers"
-                              style="width: unset; display: inline;" ></textarea><br />
+                              style="width: 100%; display: block;" ></textarea>
                     <small>Accession/GI numbers must be separated by commas
                         (eg. NM_009417, NM_001003009, 224465210, 50978625, 9507198, A3R4N5).</small><br />
                     <button class="btn btn-primary" id="analyze_accn_gin" onclick="InputAnalyzer.init()"
@@ -98,9 +98,9 @@ if(!$logged_in){
                 <fieldset>
                     <label>K-Mer Size *: </label>
                     <input class="form-control" type="number" id="kmer_min" name="kmer_min" min="1"
-                           style="width: 100px;display: inline-block;" placeholder="Min" required />
+                           style="width: 100px;display: inline-block;" placeholder="Min" value="9" required />
                     <input class="form-control" type="number" id="kmer_max" name="kmer_max" min="1"
-                           style="width: 100px;display: inline-block" placeholder="Max" required />
+                           style="width: 100px;display: inline-block" placeholder="Max" value="13" required />
                 </fieldset>
                 <!-- Inversion -->
                 <fieldset>

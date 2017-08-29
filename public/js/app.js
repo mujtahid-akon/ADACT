@@ -275,18 +275,26 @@ var InputAnalyzer = {
                 if(len <= 0) return;
                 // Get the common type
                 var type = parent.results[0].type;
-
+                // Get invalid ACCN/GID
+                var invalid_ids = [];
+                // Analyze
                 for(var i = 0; i<len; ++i){
                     if(parent.results[i].type === null){
-                        alert("Some of the Accession/GI numbers you've provided are not found! Please, provide only valid Accession/GI numbers.");
-                        parent.selector.hide();
-                        return;
-                    }
-                    if(parent.results[i].type !== type){
+                        invalid_ids.push(parent.results[i].id);
+                    }else if(parent.results[i].type !== type){
                         alert("It looks like you are trying to use nucleotides & proteins at the same time. Please use only nucleotide or only proteins.");
                         parent.selector.hide();
                         return;
                     }
+                }
+                // Show warning for invalid ACCN/GID
+                if(invalid_ids.length > 0){
+                    var msg = "";
+                    if(invalid_ids.length > 1) msg = "These Accession/GI numbers appear to be invalid: ";
+                    else msg = "This Accession/GI number appears to be invalid: ";
+                    alert(msg + invalid_ids.join(', '));
+                    parent.selector.hide();
+                    return;
                 }
                 // UI Changes
                 if(type === parent.PROTEIN) {
@@ -463,7 +471,7 @@ var InputAnalyzer = {
 
 /**
  * Project Object
- * @type {{config:Project.config, result: {Project.result}}}
+ * @type {{config:Project.config, result: {Project.result}, process: {Project.process}}}
  */
 var Project = {};
 
@@ -477,6 +485,7 @@ Project.result = {
     RAW: 'raw',
     submit_btn: null,
     config: {},
+    project_id: null,
     /**
      * Prepare before publishing result
      *
@@ -552,8 +561,12 @@ Project.result = {
                 btn.html("<img width='11' src='css/images/spinner.gif'> Loading...");
             },
             success: function(res){
-                if(res !== null && res.id !== null) window.location.assign('projects/' + res.id);
-                else parent.restore();
+                if(res !== null && res.id !== null){
+                    parent.project_id = res.id;
+                    window.location.assign('projects/' + res.id);
+                }else{
+                    parent.restore();
+                }
             },
             error: function(xhr, status){
                 if(status !== null) parent.restore();
@@ -570,5 +583,53 @@ Project.result = {
         btn.addClass('btn-primary');
         btn.attr('onclick', 'Project.result.send()');
         btn.html("Show Result");
+    }
+};
+
+/**
+ * Do the process
+ *
+ * // FIXME: Remove dependency of Project.result.project_id
+ *
+ * @type {{init: Project.process.init, cancel: Project.process.cancel}}
+ */
+Project.process = {
+    init: function () {
+        $.ajax({
+            method: 'post',
+            url: 'projects/process_data',
+            data: {project_id: Project.result.project_id},
+            cache: false,
+            dataType: 'json',
+            beforeSend: function(){
+                // Prepare status
+            },
+            success: function(res){
+                // Check after every two seconds
+                // Show status
+            },
+            error: function(xhr, status){
+                // Show error message
+            }
+        });
+    },
+    cancel: function () {
+        $.ajax({
+            method: 'post',
+            url: 'projects/process_cancel',
+            data: {project_id: Project.result.project_id},
+            cache: false,
+            dataType: 'json',
+            beforeSend: function(){
+                // Prepare cancellation
+            },
+            success: function(res){
+                // Disable init
+                // Show status
+            },
+            error: function(xhr, status){
+                // Show error message
+            }
+        });
     }
 };

@@ -21,7 +21,11 @@ class Project extends Model{
     private $ref_index   = 0;
     private $dm_exec     = 'dm';
     private $maw_exec    = 'maw';
-    private $eagle_exec  = 'eagle';
+    private $eagle_exec  = 'EAGLE';
+    private $project_info = [
+        "status" => null,
+        "cancel" => false
+    ];
     protected $config    = [];
     public $dissimilarity_index = [
         "MAW" => [
@@ -45,6 +49,8 @@ class Project extends Model{
      * new_project method
      *
      * Creates a new project
+     *
+     * // FIXME: this should only create a new project and return the project_id
      * 
      * @param array $config
      * @return null|int returns the id number on success, null on failure
@@ -53,8 +59,30 @@ class Project extends Model{
         $this->config = $config;
         // Check if the config file is in order
         if(!$this->is_a_config()) return null;
-        // If so, execute
-        return $this->execute(true);
+        // If so, create a new project
+        extract($this->config);
+        /**
+         * variables extracted from $this->config
+         *
+         * @var string $project_name  Name of the project
+         */
+        if(!isset($_SESSION['project_info'])) $_SESSION['project_info'] = [];
+        $this->project_id = null;
+        // 1. Save project info in the DB, and get inserted id (which is the project id)
+        if($stmt = $this->mysqli->prepare('INSERT INTO `projects`(`user_id`, `project_name`, `date_created`) VALUE(?, ?, NOW())')){
+            $stmt->bind_param('is', $_SESSION['user_id'], $project_name);
+            $stmt->execute();
+            $stmt->store_result();
+            if($stmt->affected_rows == Constants::COUNT_ONE){
+                // Set the inset_id as the project id
+                $this->project_id = $stmt->insert_id;
+            }
+        }
+        array_push($_SESSION['project_info'], $this->project_id);
+        $_SESSION['project_info'][$this->project_id] = $this->project_info;
+
+        // return $this->project_id;
+        return $this->process_data(true);
     }
     
     /**
@@ -312,10 +340,6 @@ class Project extends Model{
     }
 
     /**
-     * Private functions
-     */
-
-    /**
      * execute method.
      *
      * Executes user query to generate the requested result.
@@ -326,35 +350,24 @@ class Project extends Model{
      * @param bool $new true = new project, false = edit project
      * @return int|null inserted project id on success or null on failure
      */
-    private function execute($new){
+     function process_data($new){
         // Change executable names according to the platform it's running: default is Linux
         if(exec('uname -s') == 'Darwin'){ // macOS
             $this->maw_exec   = 'maw_mac';
             $this->dm_exec    = 'dm_mac';
-            $this->eagle_exec = 'eagle_mac';
+            $this->eagle_exec = 'EAGLE_mac';
         }
-        extract($this->config);
-        /**
-         * variables extracted from $this->config
-         *
-         * @var string $project_name  Name of the project
-         * @var string $aw_type       Absent Word Type (maw|raw)
-         * @var string $sequence_type Minimal Absent Word Type (nucleotide|protein)
-         * @var array  $data
-         * @var string $type          (file|accn_gin)
-         * @var string $file_id       md5 sum of file directory
-         */
-        $this->project_id = null;
-        // 1. Save project info in the DB, and get inserted id (which is the project id)
-        if($stmt = $this->mysqli->prepare('INSERT INTO `projects`(`user_id`, `project_name`, `date_created`) VALUE(?, ?, NOW())')){
-            $stmt->bind_param('is', $_SESSION['user_id'], $project_name);
-            $stmt->execute();
-            $stmt->store_result();
-            if($stmt->affected_rows == Constants::COUNT_ONE){
-                // Set the inset_id as the project id
-                $this->project_id = $stmt->insert_id;
-            }
-        }
+         extract($this->config);
+         /**
+          * variables extracted from $this->config
+          *
+          * @var string $project_name  Name of the project
+          * @var string $aw_type       Absent Word Type (maw|raw)
+          * @var string $sequence_type Minimal Absent Word Type (nucleotide|protein)
+          * @var array  $data
+          * @var string $type          (file|accn_gin)
+          * @var string $file_id       md5 sum of file directory
+          */
         // If the above query is successful
         if($this->project_id != null){
             // 2. Set this project as the last project by the user if it's a new project
@@ -407,6 +420,10 @@ class Project extends Model{
         }
         return $this->project_id;
     }
+
+    /**
+     * Private functions
+     */
 
     /**
      * set_as_last method.

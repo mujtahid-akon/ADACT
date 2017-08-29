@@ -189,4 +189,12 @@ class Project extends Controller{
             exit();
         }
     }
+
+    function process_data(){
+        // TODO
+    }
+
+    function process_cancel(){
+        // TODO: Similar to project_delete()
+    }
 }
