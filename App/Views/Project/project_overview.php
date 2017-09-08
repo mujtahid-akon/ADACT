@@ -5,60 +5,137 @@
  * Date: 6/7/17
  * Time: 6:40 PM
  */
+use \AWorDS\App\Constants;
+use \AWorDS\Config;
+/**
+ * @var bool $logged_in
+ */
+if(!$logged_in) exit();
+
 
 /**
- * @var array $config configurations extracted from config.json
- * @var int   $project_id
- * @var bool  $is_last_project_id
- * @var array $dissimilarity_index
+ * Variables exported from Project controller
+ *
+ * @var int   $project_id          Current project id
+ * @var bool  $isTheLastProject    If it's the last project (that means editable)
+ * @var array $dissimilarity_index Dissimilarity index array
+ * @var bool  $isAPendingProject   If it's a pending project (that means show status, elapsed time, etc.)
  */
-$base_url = $_SERVER['PHP_SELF'];
-$url = $base_url . '/get';
-$dir = \AWorDS\Config::PROJECT_DIRECTORY . '/' . $project_id;
-// Get Distant Matrix
-$elements = array_reverse(file($dir . '/Output.txt'));
-// Get Species Relation
-$relation = file($dir . '/SpeciesRelation.txt');
-// Get Species names FIXME: Use $config instead
-$species = get_species_from_species_relation($relation); //file($dir . '/SpeciesFull.txt');
-$count_species = count($species);
+
+// load config
+$config = ($isAPendingProject) ?
+    json_decode(file_get_contents((new \AWorDS\App\Models\Directories($project_id))->get(Constants::CONFIG_JSON)), true):
+    json_decode(file_get_contents(Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . Constants::CONFIG_JSON), true);
+
 // Project type
-$isAFileIOProject = $config['type'] === \AWorDS\App\Constants::PROJECT_TYPE_FILE;
+$isAFileIOProject = $config['type'] === Constants::PROJECT_TYPE_FILE;
+// Base url
+$base_url = $_SERVER['PHP_SELF'];
 // Transform Absent Words type to uppercase
 $config['aw_type'] = strtoupper($config['aw_type']);
 
-function get_species_from_species_relation($relations){
-    $species = [];
-    foreach ($relations as $relation){
-        preg_match('/[\w\s]+(?=\:)/', $relation, $matches);
-        array_push($species, $matches[0]);
-    }
-    return $species;
+// Preparing the outputs if the project isn't a pending one
+if(!$isAPendingProject){
+    // Info downloading url
+    $download_url = $base_url . '/get';
+    $project_dir = \AWorDS\Config::PROJECT_DIRECTORY . '/' . $project_id;
+    // Get Species Relation
+    $relation_file = $project_dir . '/SpeciesRelation.json';
+    $species_relations = json_decode(file_get_contents($project_dir . '/SpeciesRelation.json'), true);
+    // Get Species names
+    $species = get_species_from_species_relation($species_relations);
 }
-?>
 
+
+/**
+ * Get a list of species from the species relations
+ * @param array $species_relations
+ * @return array
+ */
+function get_species_from_species_relation($species_relations){
+    $species_list = [];
+    foreach ($species_relations as $species => $relation){
+        array_push($species_list, $species);
+    }
+    return $species_list;
+}
+
+/**
+ * Get distance matrix HTML table
+ *
+ * @param array  $species
+ * @param string $project_dir
+ * @return array Each member is a table row
+ */
+function get_distance_matrix($species, $project_dir){
+    $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
+    $distance_matrix = file($project_dir . '/DistanceMatrix.txt');
+    $dm_i = 0; // Distance matrix pointer
+    $table_rows = [];
+    for($row_i  = 0; $row_i < $total_species; ++$row_i){
+        $table_row = "<tr>";
+        // Header first
+        $table_row .= "<th>{$species[$row_i]}</th>";
+        // Blank columns
+        for($col_i = 0; $col_i <= $row_i; ++$col_i){
+            $table_row .= "<td></td>";
+        }
+        // Now, the rest
+        for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
+            $table_row .= "<td>{$distance_matrix[$dm_i++]}</td>";
+        }
+        $table_row .= "</tr>\n";
+        // Print the row
+        array_push($table_rows, $table_row);
+    }
+    return $table_rows;
+}
+
+// Output begin
+?>
 <h3>Project: <?php print ucwords($config['project_name']); ?></h3>
 <?php
-if($is_last_project_id):
+if($isTheLastProject AND !$isAPendingProject):
+    print "<h4><a href=\"{$base_url}/edit\">Edit</a></h4>";
+endif; // isTheLastProject
+
+if($isAPendingProject):
 ?>
-<h4><a href="<?php print $base_url . '/edit' ?>">Edit</a></h4>
+    <p class="text text-danger"><em>The project is currently running...</em></p>
 <?php
-endif;
+endif; // isAPendingProject
 ?>
 
-<button onclick="$('#project_info').toggle()" class="btn btn-default">Toggle Project Info</button>
-<a class="btn btn-default" <?php print ($isAFileIOProject ? "disabled" : "href=\"\"") ?>>Fork This Project</a>
-<br/>
-<div id="project_info" style="display: none;">
+<div>
+    <?php
+    if($isAPendingProject):
+    ?>
+        <script src="/js/app.js"></script>
+        <button onclick="Project.process.cancel(<?php print $project_id. ',' .$config['project_name'] ?>)" class="btn btn-default">Cancel Project</button>
+    <?php
+    else:
+    ?>
+        <button onclick="$('#project_info').toggle()" class="btn btn-default">Toggle Project Info</button>
+    <?php
+    endif; // isAPendingProject
+    ?>
+    <a class="btn btn-default" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"\"") ?>>Fork This Project</a>
+</div>
+
+<div id="project_info" <?php print ($isAPendingProject ? '' : 'style="display: none;"') ?>>
     <table class="table table-bordered table-striped table-hover">
         <caption>Overview</caption>
         <tbody>
         <?php
         print "<tr><th>Project Name</th><td>".ucwords($config['project_name'])."</td></tr>";
+        if($isAPendingProject){
+            print "<tr><th>Status</th><td>Pending...</td></tr>";
+            print "<tr><th>Elapsed Time</th><td>1:00</td></tr>";
+        }
         print "<tr><th>Sequence Type</th><td>".ucwords($config['sequence_type'])."</td></tr>";
         print "<tr><th>Absent Word Type</th><td>".($config['aw_type'] === 'MAW' ? "Minimal" : "Relative")." Absent Words ({$config['aw_type']})</td></tr>";
-        print "<tr><th>k-Mer</th><td>Min: {$config['kmer']['min']}, Max: {$config['kmer']['max']}</td></tr>";
-        print "<tr><th>Inversion</th><td>".($config['inversion'] ? "Yes" : "No")."</td></tr>";
+        print "<tr><th>K-Mer</th><td>Min: {$config['kmer']['min']}, Max: {$config['kmer']['max']}</td></tr>";
+        print "<tr><th>Reverse Complement</th><td>".($config['inversion'] ? "Yes" : "No")."</td></tr>";
         print "<tr><th>Dissimilarity Index</th><td>{$dissimilarity_index[$config['aw_type']][$config['dissimilarity_index']]}</td></tr>";
         ?>
         </tbody>
@@ -83,6 +160,7 @@ endif;
 </div>
 <br />
 <?php
+if(!$isAPendingProject):
 ?>
 <div style="padding-bottom: 10px;">
     <button onclick="$('.output').hide();$('#distance_matrix').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default active">Distance Matrix</button>
@@ -92,34 +170,29 @@ endif;
 </div>
 <div>
     <div id="neighbour_tree" class="output" style="display: none;">
-        <a href="<?php print $url . '/NeighbourTree.jpg' ?>">Download Neighbour Tree</a><br />
-        <img src="<?php print $url . '/NeighbourTree.jpg' ?>" />
+        <a href="<?php print $download_url . '/NeighbourTree.jpg' ?>">Download Neighbour Tree</a><br />
+        <img src="<?php print $download_url . '/NeighbourTree.jpg' ?>" />
     </div>
     <div id="upgma_tree" class="output" style="display: none;">
-        <a href="<?php print $url . '/UPGMATree.jpg' ?>">Download UPGMA Tree</a><br />
-        <img src="<?php print $url . '/UPGMATree.jpg' ?>" />
+        <a href="<?php print $download_url . '/UPGMATree.jpg' ?>">Download UPGMA Tree</a><br />
+        <img src="<?php print $download_url . '/UPGMATree.jpg' ?>" />
     </div>
     <div id="sorted_species_relation" style="text-align: left; display: none;" class="output">
-        <a href="<?php print $url . '/SpeciesRelation.txt' ?>">Download Sorted Species Relation</a><br />
+        <a href="<?php print $download_url . '/SpeciesRelation.txt' ?>">Download Sorted Species Relation</a><br />
         <table class="table table-striped table-hover">
             <thead>
             <tr>
                 <th style="border-right: 1px solid #ddd">Species</th>
-                <th colspan="<?php print 2 * count($relation) - 1 ?>">Relation</th>
+                <th colspan="<?php print 2 * count($species) - 1 ?>">Relation</th>
             </tr>
             </thead>
             <tbody>
             <?php
-            foreach($relation as $sp_rl){
-                $sp_rl = trim($sp_rl);
-                // Get each species title
-                preg_match('/^([\w\s]+)\:/', $sp_rl, $matches);
-                $sp_title = $matches[1];
-                // Set species relation by trimming the title
-                $sp_rl = preg_replace('/^([\w\s]+)\:\s*->\s*/', '', $sp_rl);
+            foreach($species_relations as $_species => $_relation){
                 print "<tr>";
-                print "<th style=\"border-right: 1px solid #ddd\">{$sp_title}</th>";
-                print "<td>" . preg_replace('/\s*->\s*/', '</td><td>&xrarr;</td><td>', $sp_rl) . "</td>";
+                print "<th style=\"border-right: 1px solid #ddd\">{$_species}</th>";
+
+                print "<td>" . implode('</td><td>&xrarr;</td><td>', $_relation) . "</td>";
                 print "</tr>\n";
             }
             ?>
@@ -127,7 +200,7 @@ endif;
         </table>
     </div>
     <div id="distance_matrix" class="output">
-        <a href="<?php print $url . '/DistantMatrix.txt' ?>">Download Distance Matrix</a><br />
+        <a href="<?php print $download_url . '/DistantMatrix.txt' ?>">Download Distance Matrix</a><br />
         <table class="table table-bordered table-striped table-hover">
             <thead>
             <tr>
@@ -141,19 +214,14 @@ endif;
             </thead>
             <tbody>
             <?php
-            for($i = 0; $i < $count_species; ++$i){
-                $element = explode(',', $elements[$i]);
-                print "<tr>";
-                print "<th>{$species[$i]}</th>";
-                for($j = $count_species-1; $j >= 0; --$j){
-                    print "<td>";
-                    if(isset($element[$j])) print trim($element[$j]);
-                    print "</td>";
-                }
-                print "</tr>";
+            foreach (get_distance_matrix($species, $project_dir) as $distance_matrix){
+                print $distance_matrix;
             }
             ?>
             </tbody>
         </table>
     </div>
 </div>
+<?php
+endif; // isAPendingProject
+// Output end

@@ -77,7 +77,6 @@ class Template
         if(!isset($title)) $title = Config::SITE_TITLE;
         // Set status to default is not set
         if(!isset($status)) $status = HttpStatusCode::__default;
-        http_response_code($status);
 
         $DIR = Config::WEB_DIRECTORY;
 
@@ -101,23 +100,22 @@ class Template
 	<base href="{$DIR}">
 	<meta name="Description" content="AWorDS" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<!--link href="https://www.fontify.me/wf/7d6c4da9e6ebf1836a1c32879c63dbfc" rel="stylesheet" type="text/css">
-	<!--link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" /-->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+	<!--link href="https://www.fontify.me/wf/7d6c4da9e6ebf1836a1c32879c63dbfc" rel="stylesheet" type="text/css" /-->
+	<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
+	<!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous" /-->
 	<link rel="stylesheet" href="css/main.css" type="text/css" />
-	<!--script src="js/jquery.min.js\"></script-->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<!--script src="js/bootstrap.min.js"></script-->
+	<script src="js/jquery.min.js"></script>
+	<!--script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script-->
+	<script src="js/bootstrap.min.js"></script>
 	<script src="js/app.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+	<!--script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script-->
 EOF;
 
         if(file_exists($extra)) require_once $extra; // Extra things to be added in the header section
 
         print <<< EOF
 </head>
-<body class="container">
-
+<body>
 EOF;
 
         // Show header if wanted
@@ -126,25 +124,27 @@ EOF;
             else if(file_exists($default_view_dir)) require_once $default_header;
         }
 
+        // Container begin
+        print "<div class=\"container\">";
+
         // Show action
         if(file_exists($action)){
             if($status == HttpStatusCode::NOT_FOUND){ // Error
                 print <<< EOF
-<div class="container-table">
-    <div class="vertical-center-row text-center">
-        <h1 class="title"><a href="home">{$title}</a></h1>
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
+    <div class="container-table">
+        <div class="vertical-center-row text-center">
+            <h1 class="title"><a href="/home">{$title}</a></h1>
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-4">
 EOF;
                 require_once $action;
                 print <<< EOF
+                </div>
+                <div class="col-md-4"></div>
             </div>
-            <div class="col-md-4"></div>
         </div>
     </div>
-</div>
-
 EOF;
             }else{
                 require_once $action;
@@ -157,7 +157,9 @@ EOF;
         	else if(file_exists($default_view_dir)) require_once $default_footer;
 		}
 
+        // Container end
         print <<< EOF
+</div>
 </body>
 </html>
 

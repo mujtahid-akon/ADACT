@@ -22,15 +22,9 @@ class Main extends Controller
         $logged_in = $user->login_check();
         $this->set('title', Config::SITE_TITLE);
         $this->set('logged_in', $logged_in);
-        if(!$logged_in) $this->_template->hide_header();
+        if(!$logged_in) $this->_template->hide_header(); // FIXME
         else{
             $this->set('active_tab', 'home');
-            $this->set_model('Project');
-            /**
-             * @var \AWorDS\App\Models\Project $project
-             */
-            $project = $this->{$this->_model};
-            $this->set('last_project', $project->last_project_info());
         }
     }
 }

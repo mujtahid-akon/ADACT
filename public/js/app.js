@@ -151,6 +151,11 @@ var InputAnalyzer = {
      */
     file_id: null,
     /**
+     * Whether analyzing input finished
+     * @type boolean
+     */
+    done: false,
+    /**
      * Initialize analyzer based on current input method
      *
      * @param [form]
@@ -183,39 +188,126 @@ var InputAnalyzer = {
         }
     },
     addShortNames: function(){
-        // FIXME: Further filers necessary
-        var c_names = this.results.length;
-        var status  = true;
+        // FIXME: Also filters these in PHP file
+        const CHAR_LIMIT_EXCEEDED = 1;
+        const UNFILLED_FIELDS     = 2;
+        const DUPLICATE_ENTRIES   = 3;
+        const CHAR_CONSTRAINT     = 4;
+        const MAX_FILE_EXCEEDED   = 5; //TODO
+
+        const CHAR_LIMIT          = 15;
+        /**
+         * Count total entries
+         * @type {Number}
+         */
+        var c_entries = this.results.length;
+        /**
+         * Status code for filters
+         * Code    Constant            Meaning
+         * ----    --------            -------
+         * 0       (default)           Success
+         * 1       CHAR_LIMIT_EXCEEDED The 15 character limit exceeded
+         * 2       UNFILLED_FIELDS     There are some unfilled fields
+         * 3       DUPLICATE_ENTRIES   There are duplicate entries
+         * 4       CHAR_CONSTRAINT     Used any character other than /\w-\s/
+         * @type {int}
+         */
+        var status = 0;
+        var parent = this;
         var i;
-        for(i = 0; i<c_names; ++i){
+
+        // Get current short name values
+        for(i = 0; i<c_entries; ++i){
+            //var selector = $('#sn_' + i).val();
+            this.results[i].short_name = $('#sn_' + i).val();
+        }
+
+        // Checks
+        // 1. Check if all the fields are set
+        // 2. Check for Character limits
+        // 4. Character usage
+        for(i = 0; i<c_entries; ++i){
             var s_name = $('#sn_' + i).val();
             this.results[i].short_name = s_name;
-            if(s_name === null || s_name === "") status = false;
+            if(s_name === null || s_name === ""){
+                status = UNFILLED_FIELDS;
+                break;
+            }
+            if(s_name.length > CHAR_LIMIT){
+                status = CHAR_LIMIT_EXCEEDED;
+                break;
+            }
+            if(!(/^[\w,-]+$/.test(s_name))){
+                status = CHAR_CONSTRAINT;
+                break;
+            }
         }
-        if(status === false) alert("You must fill all the short names!");
-        else{
-            var chk = $('#fasta_check_out');
-            chk.attr('disabled', '');
-            chk.removeClass('btn-primary');
-            chk.addClass('btn-default');
-            switch(InputMethod.getCurrent()){
-                case InputMethod.FILE:
-                    chk = $('#upload_new');
-                    break;
-                case InputMethod.ACCN_GIN:
-                    chk = $('#analyze_accn_gin');
-            }
-            chk.attr('disabled', '');
-            chk.removeClass('btn-primary');
-            chk.addClass('btn-default');
+        // 4. Check for duplicate values
+        var duplicates = getDuplicates(getShortNames());
+        if(duplicates.length > 0) status = DUPLICATE_ENTRIES;
 
-            for(i = 0; i<c_names; ++i){
-                var selector = $('#sn_' + i).parent();
-                selector.html(this.results[i].short_name);
+        switch(status){
+            case CHAR_CONSTRAINT:
+                alert("Short names must contain a to z (uppercase or lower case) letters, underscores, hyphens or commas.");
+                break;
+            case CHAR_LIMIT_EXCEEDED:
+                alert("Short names can contain at most " + CHAR_LIMIT + " characters!");
+                break;
+            case UNFILLED_FIELDS:
+                alert("You must fill all the short names!");
+                break;
+            case DUPLICATE_ENTRIES:
+                alert("There are duplicate values. You must set unique short names!");
+                break;
+            default: // Success = 0
+                this.done = true;
+                var chk = $('#fasta_check_out');
+                chk.attr('disabled', '');
+                chk.removeClass('btn-primary');
+                chk.addClass('btn-default');
+                switch(InputMethod.getCurrent()){
+                    case InputMethod.FILE:
+                        chk = $('#upload_new');
+                        break;
+                    case InputMethod.ACCN_GIN:
+                        chk = $('#analyze_accn_gin');
+                }
+                chk.attr('disabled', '');
+                chk.removeClass('btn-primary');
+                chk.addClass('btn-default');
+
+                for(i = 0; i<c_entries; ++i){
+                    var selector = $('#sn_' + i).parent();
+                    selector.html(this.results[i].short_name);
+                }
+        }
+
+        /**
+         * Get short names
+         * @return {Array}
+         */
+        function getShortNames() {
+            var short_names = [];
+            for(var i = 0; i<parent.results.length; ++i){
+                if(parent.results[i].short_name !== null) short_names.push(parent.results[i].short_name);
             }
+            return short_names;
+        }
+
+        /**
+         * Get duplicate values
+         *
+         * @param {Array} array
+         * @return {Array}
+         */
+        function getDuplicates(array) {
+            var i = 0, m = [];
+            return array.filter(function (n) {
+                return !m[n] * ~array.indexOf(n, m[n] = ++i);
+            });
         }
     },
-// DON'T Call these functions! They are private!
+    // DON'T Call these functions! They are private!
     /**
      * Get meta data using AJAX
      *
@@ -244,20 +336,20 @@ var InputAnalyzer = {
          */
         function processData(db, data) {
             /**
-             * @var {uids}   data.result
-             * @var {Array}  data.result.uids
-             * @var {int[]}  data.result.uids
+             * @var {uids|{organism}[]} data.result
+             * @var {int[]}         data.result.uids
              */
             if(data.hasOwnProperty('result') && data.result.hasOwnProperty('uids')){
                 /**
                  * GI Numbers
-                 * @type {Array}
+                 * @type {int[]}
                  */
                 var gin = data.result.uids;
                 if(gin.length === 1){
                     response.gin   = gin[0];
                     response.title = data.result[gin].title;
                     response.type  = (db === parent.DB_NUCCORE) ? parent.NUCLEOTIDE : parent.PROTEIN;
+                    response.short_name = data.result[gin].organism;
                 }
             }
         }
@@ -311,8 +403,8 @@ var InputAnalyzer = {
         }
 
         this.renderer(this.DB_NUCCORE, id, function (db, data) {
-            processData(parent.DB_NUCCORE, data);
-            if(response.gin === null){ // Maybe it's a protein
+            processData(parent.DB_NUCCORE, data); // Is it a nucleotide?
+            if(response.gin === null){ // Oh, Maybe it's a protein
                 parent.renderer(parent.DB_PROTEIN, id, function (db, data) {
                     processData(parent.DB_PROTEIN, data);
                     postProcess();
@@ -447,9 +539,9 @@ var InputAnalyzer = {
             + "<thead><tr><th>ID</th><th>Title/Header</th><th>Short Name</th></tr></thead>";
         for(var i = 0; i<c_species; ++i){
             html += "<tr>"
-                + "<td>" + this.results[i].id + "</td>"
+                + "<td>" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.results[i].id) + "</td>"
                 + "<td>" + this.results[i].title + "</td>"
-                + "<td>" + "<input id='sn_" + i + "' class='short_name form-control' value='" + this.getShortName(this.results[i].title) + "'/></td>"
+                + "<td>" + "<input id='sn_" + i + "' class='short_name form-control' value='" + this.getShortName(this.results[i]) + "'/></td>"
                 + "</tr>";
         }
         html += "</table>"
@@ -457,21 +549,18 @@ var InputAnalyzer = {
             + "onclick=\"InputAnalyzer.addShortNames()\" style=\"vertical-align: top\">Done</button>";
         this.selector.html(html);
     },
-    getShortName: function (title) {
-        if(title === null) return null;
-        var match;
+    getShortName: function (seq_info) {
+        if(seq_info.short_name === null) return "";
         // For proteins
-        match = title.match(/Short=([\w\s-]+)/);
-        if(match !== null) return match[1];
-
-        // TODO A very big function to analyze and generate short name from title/header
-        return title;
+        //match = title.match(/Short=([\w\s-]+)/);
+        //if(match !== null) return match[1];
+        return seq_info.short_name.replace(/\s/g, '_');
     }
 };
 
 /**
  * Project Object
- * @type {{config:Project.config, result: {Project.result}, process: {Project.process}}}
+ * @type {{config:Project.config, result: {Project.result}, process: {Project.process}, delete: {Project.delete}}}
  */
 var Project = {};
 
@@ -524,7 +613,8 @@ Project.result = {
 
         return ( !isEmpty(this.config.project_name)
             && (0 <= this.config.kmer.min <= this.config.kmer.max)
-            && !isEmpty(this.config.dissimilarity_index) );
+            && !isEmpty(this.config.dissimilarity_index)
+            && InputAnalyzer.done);
     },
     /**
      * Verify inputs before sending
@@ -541,7 +631,7 @@ Project.result = {
     /**
      * Send request for result
      */
-    send: function () {
+    send: function(){
         if(!this.verify()) return false;
         this.submit_btn = $('#p_btn');
 
@@ -553,7 +643,7 @@ Project.result = {
             data: {config: JSON.stringify(this.config)},
             cache: false,
             dataType: 'json',
-            beforeSend: function(){
+            beforeSend: function() {
                 var btn = parent.submit_btn;
                 btn.removeClass('btn-primary');
                 btn.addClass('btn-default disabled');
@@ -563,7 +653,8 @@ Project.result = {
             success: function(res){
                 if(res !== null && res.id !== null){
                     parent.project_id = res.id;
-                    window.location.assign('projects/' + res.id);
+                    window.location.assign('/projects/'   + res.id);
+                    //window.location.assign('/projects/'   + res.id + '/process');
                 }else{
                     parent.restore();
                 }
@@ -613,11 +704,11 @@ Project.process = {
             }
         });
     },
-    cancel: function () {
+    cancel: function (project_id, project_name) {
         $.ajax({
             method: 'post',
             url: 'projects/process_cancel',
-            data: {project_id: Project.result.project_id},
+            data: {project_id: project_id},
             cache: false,
             dataType: 'json',
             beforeSend: function(){
@@ -632,4 +723,37 @@ Project.process = {
             }
         });
     }
+};
+
+/**
+ * Delete a project
+ *
+ * @param {int}    project_id
+ * @param {string} project_name
+ */
+Project.delete = function (project_id, project_name) {
+    $.ajax({
+        method: 'post',
+        url: 'projects/' + project_id + '/delete',
+        cache: false,
+        dataType: 'json',
+        beforeSend: function(){
+            return confirm("Are you sure want to delete " + project_name + "?");
+        },
+        success: function(res){
+            switch(res.status){
+                case 0:
+                    $('#p_' + project_id).remove();
+                    break;
+                case 2:
+                    alert('Couldn\'t delete the project, it doesn\'t exists or may have already been deleted.');
+                    break;
+                default:
+                    alert('Sorry, due an error the project couldn\'t be deleted. Please, try again.');
+            }
+        },
+        error: function(xhr, status){
+            if(status !== null) alert('Sorry, due an error the project couldn\'t be deleted. Please, try again.');
+        }
+    });
 };

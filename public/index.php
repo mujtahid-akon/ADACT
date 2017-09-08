@@ -13,6 +13,8 @@ if(Config::DEBUG_MODE){
     error_reporting(0);
 }
 
+// Set default timezone to UTC
+// NOTICE: default timezone of MySQL won't be affected by this! (which is the server time)
 date_default_timezone_set('UTC');
 
 // If SSL is enabled but request is in HTTP, redirect to HTTPS
@@ -55,19 +57,19 @@ Route::add(Route::GET, '/reset_pass', 'User@reset_password_page', ['email' => Ro
 Route::add(Route::GET, '/logout', 'User@logout');
 /* === Project: Serial must be maintained! === */
 Route::add(Route::GET, '/projects', 'Project@all_projects');
+Route::add(Route::GET, '/projects/pending', 'Project@pending_projects'); // TODO
 // New project
 Route::add(Route::GET, '/projects/new', 'Project@new_project_page');
 Route::add(Route::POST, '/projects/new', 'Project@new_project', ['config' => Route::STRING]);
 Route::add(Route::POST, '/projects/file_upload', 'Project@file_upload');
-Route::add(Route::POST, '/projects/process_data', 'Project@process_data', ['project_id' => Route::INTEGER]); // TODO
-Route::add(Route::POST, '/projects/process_cancel', 'Project@process_cancel', ['project_id' => Route::INTEGER]); // TODO
 // Regular project
 Route::add(Route::GET, '/projects/last', 'Project@last_project');
-Route::add(Route::GET, '/projects/{project_id}', 'Project@project_overview');   // TODO
+Route::add(Route::GET, '/projects/{project_id}', 'Project@project_overview');
 Route::add(Route::GET, '/projects/{project_id}/edit', 'Project@edit_project');  // TODO
+Route::add(Route::GET, '/projects/{project_id}/process', 'Project@process_data');  // TODO
 Route::add(Route::POST, '/projects/{project_id}/delete', 'Project@delete_project');
 Route::add(Route::GET, '/projects/{project_id}/download', 'Project@download_project');
-Route::add(Route::GET, '/projects/{project_id}/get/{file_name}', 'Project@get');
+Route::add(Route::GET, '/projects/{project_id}/get/{file_name}', 'Project@get_file');
 
 /**
  * Load views or do other specific tasks describe in the respective controller

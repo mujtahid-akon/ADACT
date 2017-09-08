@@ -1,6 +1,14 @@
 ## SQL Version Control
 
-- `awords_v3.01.sql` [`present`]
+   ***Only use the latest sql file***
+
+- `awords_v4.0.sql` [`current`]
+
+    Added `pending_projects` table. Also, `projects` and
+    `last_projects` tables have been modified.
+
+
+- `awords_v3.01.sql` [`obsolete`]
 
     `activation_key` should not be unique.
     

@@ -18,19 +18,19 @@ class Model implements Config
     public $mysqli;
 
     function __construct(){
-        $this->mysqli = new \Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
+        @$this->mysqli = new \Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
         if ($this->mysqli->connect_error) {
-            die("Unable to connect to mysql.");
+            error_log("Unable to connect to mysql.");
         }
-        $this->mysqli->set_charset("utf8");
+        @$this->mysqli->set_charset("utf8");
     }
         
     static function mysqli(){
-        $mysqli = new \Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
+        @$mysqli = new \Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
         if ($mysqli->connect_error) {
-            die("Unable to connect to mysql.");
+            error_log("Unable to connect to mysql.");
         }
-        $mysqli->set_charset("utf8");
+        @$mysqli->set_charset("utf8");
         return $mysqli;
     }
     
@@ -83,12 +83,37 @@ class Model implements Config
             return true;
         }
     }
+
+    static function formatted_email($name, $email, $subject, $body){
+        $site_title = self::SITE_TITLE;
+        $from    = self::MAIL_FROM;
+        $address = self::ORG_ADDRESS;
+        $message = <<< EOF
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{$subject}</title>
+</head>
+<body>
+  <h1>{$site_title}</h1>
+  <p>Dear {$name},</p>
+  {$body}
+  <p>Regards,</p>
+  <p>{$site_title} Team</p>
+  <hr />
+  <address><a href="mailto:{$from}">{$from}</a></address>
+  <address>{$address}</address>
+</body>
+</html>
+EOF;
+        return self::email($name === "User" ? '' : $name, $email, $subject, $message);
+    }
     
     
     function login_check(){
         if(isset($_SESSION['session'])){ // Top priority
             $session_id = session_id(); // To remove E_STRICT error
-            if($stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = "session"')){
+            if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = \'session\'')){
                 $stmt->bind_param('is', $_SESSION['session']['id'], $session_id);
                 $stmt->execute();
                 $stmt->store_result();
@@ -102,7 +127,7 @@ class Model implements Config
             }
         }else{  // Cookie
             if(isset($_COOKIE['u_id'], $_COOKIE['id'])){
-                if($stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = "cookie"')){
+                if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = "cookie"')){
                     $stmt->bind_param('is', $_COOKIE['u_id'], $_COOKIE['id']);
                     $stmt->execute();
                     $stmt->store_result();

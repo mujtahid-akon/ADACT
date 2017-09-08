@@ -4,6 +4,8 @@ namespace AWorDS\App\Controllers;
 
 use \AWorDS\App\Constants;
 use AWorDS\App\HttpStatusCode;
+use AWorDS\App\Models\LastProjects;
+use AWorDS\App\Models\PendingProjects;
 use \AWorDS\Config;
 
 class Project extends Controller{
@@ -14,25 +16,32 @@ class Project extends Controller{
      * or redirect to home, if not logged in
      */
     function all_projects(){
-        $this->set_model();
-        $logged_in = $this->{$this->_model}->login_check();
-        $this->set('logged_in', $logged_in);
-        $this->set('active_tab', 'projects');
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();;
+        $logged_in = $project->login_check();
         if($logged_in){
-            $this->set('projects', $this->{$this->_model}->all_projects());
-        }else $this->_redirect = true;
+            $this->set('logged_in', $logged_in);
+            $this->set('active_tab', 'projects');
+            $this->set('projects', $project->getAll());
+        }else $this->redirect();
     }
-    
+
     function delete_project(){
-        $this->_JSON = true;
-        $this->_JSON_contents['status'] = Constants::PROJECT_DELETE_FAILED;
+        $this->json();
+        $this->set('status', Constants::PROJECT_DELETE_FAILED);
+
         if(isset($this->_url_params['project_id'])) $project_id = $this->_url_params['project_id'];
         else exit();
         
-        $this->set_model();
-        $logged_in = $this->{$this->_model}->login_check();
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();;
+        $logged_in = $project->login_check();
         if($logged_in){
-            $this->_JSON_contents['status'] = $this->{$this->_model}->delete_project($project_id);
+            $this->set('status', $project->delete($project_id));
         }
     }
 
@@ -42,23 +51,25 @@ class Project extends Controller{
      * Downloads a project as a zip file
      */
     function download_project(){
-        $this->_GUI = false;
+        $this->_HTML = false;
         if(isset($this->_url_params['project_id'])) $project_id = $this->_url_params['project_id'];
         else exit();
         
-        $this->set_model();
-        $logged_in = $this->{$this->_model}->login_check();
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();;
+        $logged_in = $project->login_check();
         if($logged_in){
-            $file = $this->{$this->_model}->export($project_id, Constants::EXPORT_ALL);
-            if($file != null){
-                header('Content-Type: ' . $file['mime']);
-                header('Content-Disposition: attachment; filename="' . $file['name'] . '"');
-                readfile($file['path']);
-            }else{
-                $this->_redirect = true;
-                $this->_redirect_location = 'projects';
-            }
-        }else $this->_redirect = true;
+            if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)) {
+                $file = $project->export($project_id, Constants::EXPORT_ALL);
+                if ($file != null) {
+                    header('Content-Type: ' . $file['mime']);
+                    header('Content-Disposition: attachment; filename="' . $file['name'] . '"');
+                    readfile($file['path']);
+                } else $this->redirect(Config::WEB_DIRECTORY . 'projects');
+            }else $this->redirect(Config::WEB_DIRECTORY . 'projects');
+        }else $this->redirect();
     }
 
     /**
@@ -67,17 +78,20 @@ class Project extends Controller{
      * Load the last project of the current user
      */
     function last_project(){
-        $this->set_model();
-        $logged_in = $this->{$this->_model}->login_check();
+        /**
+         * @var \AWorDS\App\Models\LastProjects $lastProject
+         */
+        $lastProject = $this->set_model('LastProjects');;
+        $logged_in = $lastProject->login_check();
         if($logged_in){
-            $last_project_id = $this->{$this->_model}->last_project_id();
+            $last_project_id = $lastProject->get();
             if($last_project_id != null){
-                $this->_redirect = true;
-                $this->_redirect_location = $last_project_id;
+                $this->redirect(Config::WEB_DIRECTORY . 'projects/' . $last_project_id);
             }else{ // 404 Error
+                $this->response(HttpStatusCode::NOT_FOUND);
                 $this->set('status', HttpStatusCode::NOT_FOUND);
             }
-        }else $this->_redirect = true;
+        }else $this->redirect();
     }
     
     function new_project(){
@@ -85,55 +99,60 @@ class Project extends Controller{
         /**
          * @var string $config A JSON string containing all configurations
          */
-        $this->set_model();
-        $logged_in = $this->{$this->_model}->login_check();
-        $this->_JSON = true;
-        if($logged_in && $config != null){
-            $this->_JSON_contents['id'] = $this->{$this->_model}->new_project(json_decode(htmlspecialchars_decode($config), true));
-        }
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();
+        $logged_in = $project->login_check();
+        $this->json(['id' => (($logged_in && $config != null) ?
+            $project->add(json_decode(htmlspecialchars_decode($config), true)) : null)]);
     }
-    
+
     function new_project_page(){
-        $this->set_model();
-        $logged_in = $this->{$this->_model}->login_check();
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();
+        $logged_in = $project->login_check();
         if(!$logged_in){
-            $this->_redirect = true;
+            $this->redirect();
             exit();
         }
         $this->set('logged_in', $logged_in);
         $this->set('active_tab', 'new');
-        $this->set('dissimilarity_index', $this->{$this->_model}->dissimilarity_index);
+        $this->set('dissimilarity_index', $project->dissimilarity_index);
     }
     
     function file_upload(){
-        $this->set_model();
-        $logged_in = $this->{$this->_model}->login_check();
-        $this->_JSON = true;
-        if($logged_in && isset($_FILES['filef'])){
-            $this->_JSON_contents = $this->{$this->_model}->file_upload($_FILES['filef']);
-        }else $this->_JSON_contents['status'] = Constants::FILE_UPLOAD_FAILED;
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();
+        $logged_in = $project->login_check();
+        $this->json(($logged_in && isset($_FILES['filef'])) ?
+            $project->uploadFile($_FILES['filef']) :
+            ['status' => Constants::FILE_UPLOAD_FAILED]);
     }
 
     /**
-     * get method
+     * get_file method
      *
      * get Distance Matrix, Species Relation, UPGMA Tree, Neighbour Tree
      */
-    function get(){
+    function get_file(){
         extract($this->_url_params);
         /**
          * @var string $file_name
          * @var int    $project_id
          */
-        $this->_GUI_load_view = false;
+        $this->load_view(false);
         if(!isset($file_name, $project_id)) goto redirect;
-        $this->set_model();
         /**
          * @var \AWorDS\App\Models\Project $project
          */
-        $project = $this->{$this->_model};
+        $project = $this->set_model();
         $logged_in = $project->login_check();
-        if($logged_in AND $project->verify_project($project_id)){
+        if($logged_in AND $project->verify($project_id)){
             $file_type = null;
             switch($file_name){
                 case 'SpeciesRelation.txt': $file_type = Constants::EXPORT_SPECIES_RELATION; break;
@@ -142,11 +161,12 @@ class Project extends Controller{
                 case 'UPGMATree.jpg'      : $file_type = Constants::EXPORT_UPGMA_TREE;
             }
             if($file_type == null) goto redirect;
-            $file = $this->{$this->_model}->export($project_id, $file_type);
+            $file = $project->export($project_id, $file_type);
             if($file == null){
                 redirect:
-                $this->_redirect = true;
-                $this->_redirect_location = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : Config::WEB_DIRECTORY . 'projects';
+                $this->redirect(isset($_SERVER['HTTP_REFERER']) ?
+                    $_SERVER['HTTP_REFERER'] :
+                    Config::WEB_DIRECTORY . 'projects');
                 exit();
             }
             header('Content-Type: ' . $file['mime']);
@@ -157,44 +177,57 @@ class Project extends Controller{
         goto redirect;
     }
 
+    /**
+     * project_overview method
+     *
+     * Returns the overview of the current project
+     */
     function project_overview(){
         extract($this->_url_params);
+        /**
+         * @var int $project_id
+         */
         if(!isset($project_id)){
-            $this->_redirect = true;
+            $this->redirect();
             exit();
         }
 
-        $this->set_model();
         /**
          * @var \AWorDS\App\Models\Project $project
          */
-        $project = $this->{$this->_model};
+        $project = $this->set_model();
         $logged_in = $project->login_check();
-        if($logged_in AND $project->verify_project($project_id)){
-            $is_last_project_id = $project_id == $project->last_project_id();
-            $this->set('logged_in', $logged_in);
-            $this->set('project_id', $project_id);
-            $this->set('active_tab', 'projects');
-            $this->set('config', json_decode(file_get_contents(
-                Config::PROJECT_DIRECTORY . '/' . $project_id
-                . '/' . Constants::CONFIG_JSON), true));
-            $this->set('is_last_project_id', $is_last_project_id);
-            $this->set('dissimilarity_index', $project->dissimilarity_index);
-            if($is_last_project_id){
-                $project->set_last_project_seen();
+
+        if($logged_in){
+            if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)){
+                $isTheLastProject = (new LastProjects())->isA($project_id);
+                $this->set('logged_in', $logged_in);
+                $this->set('project_id', $project_id);
+                $this->set(Constants::ACTIVE_TAB, 'projects');
+                $this->set('isTheLastProject', (new LastProjects())->isA($project_id));
+                $this->set('dissimilarity_index', $project->dissimilarity_index);
+                $this->set('isAPendingProject', (new PendingProjects())->isA($project_id));
+                $project->set_seen($project_id);
+            }else{
+                $this->redirect(Config::WEB_DIRECTORY . 'projects');
             }
-            exit();
         }else{
-            $this->_redirect = true;
-            exit();
+            $this->redirect();
         }
     }
 
     function process_data(){
-        // TODO
+        extract($this->get_params());
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();
+        if($project->login_check()){
+            //
+        }else $this->redirect('/projects');
     }
 
-    function process_cancel(){
-        // TODO: Similar to project_delete()
+    function pending_projects(){
+        // TODO
     }
 }

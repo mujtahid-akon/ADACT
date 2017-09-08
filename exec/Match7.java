@@ -510,7 +510,7 @@ public class Match7 {
 
         NJ njclu = new NJ(speciesList, diffMatrix);
         new TreeFrame("Neighbour tree", njclu.getRoot(), args[0]);
-		System.exit(1);
+		System.exit(0);
     }
 }
 

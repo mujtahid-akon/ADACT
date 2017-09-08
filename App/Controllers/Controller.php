@@ -8,12 +8,18 @@
 
 namespace AWorDS\App\Controllers;
 
+use AWorDS\App\HttpStatusCode;
 use AWorDS\App\Views\Template;
 use AWorDS\App\Route;
 use AWorDS\Config;
 
 class Controller
 {
+    /**
+     * @var int $response_code Any constant form HttpStatusCode
+     */
+    private $response_code = HttpStatusCode::OK;
+
     protected $_model;
     protected $_controller;
     protected $_action;
@@ -24,16 +30,19 @@ class Controller
     
     /**
      * Output types (GUI, Redirect, JSON)
+     *
+     * @var bool $_redirect Redirect to the redirect location
+     * @var bool $_HTML     Output to user
+     * @var bool $_JSON     JSON output
      */
     protected $_redirect = false;
-    protected $_GUI      = true;
+    protected $_HTML     = true;
     protected $_JSON     = false;
     
     protected $_redirect_location = Config::WEB_DIRECTORY;
     protected $_JSON_contents     = [];
-    protected $_GUI_load_view     = true;
-    
-    
+    protected $_HTML_load_view     = true;
+
 
     function __construct($controller, $action, $method, $params, $url_params) {
         $this->_controller  = $controller;
@@ -65,24 +74,47 @@ class Controller
                     default:
                         // FIXME: needed to be implemented upon required
                 }
-                
-//                 $parameters_o[$param] = (isset($parameters[$param])) ? $parameters[$param] : null;
             }
         }
         $this->_params= $params;
  
-        if($this->_GUI AND $this->_GUI_load_view) $this->_template = new Template($controller, $action);
+        if($this->_HTML AND $this->_HTML_load_view) $this->_template = new Template($controller, $action);
     }
-  
+
+    /**
+     * Get request parameters
+     * @return array
+     */
+    function get_params(){
+        return array_merge($this->_url_params, $this->_params);
+    }
+
+    /**
+     * Call a particular model class
+     *
+     * @param null|string $model
+     */
     function set_model($model = null){
         if($model == null) $model = $this->_controller;
         $model = '\\AWorDS\\App\\Models\\' . $model;
         $this->_model = $model;
         $this->$model = new $model;
+        return $this->$model;
     }
 
+    /**
+     * Set a value for a variable
+     *
+     * This variable is accessible in various ways depends on user actions
+     * - For a redirection, it does nothing and isn't accessible
+     * - For an HTML request, it is accessible in the Template class
+     * - For a JSON request, it's not accessible but sent as part of JSON output
+     *
+     * @param null|string $name  variable name
+     * @param mixed       $value value of the variable
+     */
     function set($name, $value){
-        if($this->_GUI AND $this->_GUI_load_view) $this->_template->set($name, $value);
+        if($this->_HTML AND $this->_HTML_load_view) $this->_template->set($name, $value);
         elseif($this->_JSON){
             if($name == null){
                 array_push($this->_JSON_contents, $value);
@@ -92,9 +124,54 @@ class Controller
         }
     }
 
+    /**
+     * Response code of the current request
+     *
+     * @var int $code Any constants from HttpStatusCode
+     */
+    function response($code){
+        $this->response_code = $code;
+    }
+
+    /**
+     * Redirect to a certain page
+     *
+     * @param string $location
+     */
+    function redirect($location = Config::WEB_DIRECTORY){
+        $this->_redirect = true;
+        $this->_redirect_location = $location;
+        $this->_HTML = false;
+        $this->_JSON = false;
+    }
+
+    /**
+     * Whether to load view or not
+     *
+     * Only applies when _HTML = true
+     *
+     * @param bool $isItOk
+     */
+    function load_view($isItOk){
+        $this->_HTML_load_view = $isItOk;
+    }
+
+    /**
+     * Output as JSON instead of HTML
+     *
+     * @var array|null $content An optional array which is to be outputted (also can be set by $this->set)
+     */
+    function json($content = null){
+        $this->_JSON = true;
+        $this->_HTML = false;
+        $this->_redirect = false;
+        if(is_array($content)) $this->_JSON_contents = $content;
+    }
+
     function __destruct(){
+        http_response_code($this->response_code);
         if($this->_redirect) header("Location: {$this->_redirect_location}");
-        elseif($this->_JSON) print json_encode($this->_JSON_contents);
-        elseif($this->_GUI AND $this->_GUI_load_view) $this->_template->render();
+        elseif($this->_JSON) print json_encode($this->_JSON_contents, JSON_PRETTY_PRINT);
+        elseif($this->_HTML AND $this->_HTML_load_view) $this->_template->render();
     }
 }

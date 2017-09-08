@@ -1,5 +1,5 @@
 <?php
-if(preg_match('/^\/(css|fonts|js|test\.php)/', $_SERVER['REQUEST_URI'], $matches)){
+if(preg_match('/^\/(css|ico|fonts|js|test\.php)/', $_SERVER['REQUEST_URI'], $matches)){
     // Local directories
     $file = __DIR__ . '/public' . $_SERVER['REQUEST_URI'];
     if(file_exists($file)){

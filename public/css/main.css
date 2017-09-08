@@ -1,7 +1,33 @@
+/** Background colors & other enhancements */
+body{
+    background-color: lightyellow;
+}
+
+nav{
+    background-color: palegoldenrod !important;
+    border: 0 !important;
+    border-radius: unset !important;
+    box-shadow: 0 0 30px 30px palegoldenrod;
+}
+
+nav .active>a, nav .open>a{
+    background-color: darkkhaki !important;
+}
+
+.table-striped>tbody>tr:nth-child(odd) {
+    background-color: lemonchiffon !important;
+}
+
+thead>tr:first-child{
+    background-color: lavender;
+}
+
+/** Others */
+
 html, body, .container-table {
     height: 100%;
     width: 100%;
-    font-family: Cambria, sans-serif;
+    font-family: monospace, Cambria, sans-serif;
     color: #777;
     cursor: default;
 }
@@ -25,4 +51,14 @@ td{
 
 a, a:hover, a:active, a:visited{
     color: #333;
+}
+
+.unread-count{
+    background-color: orangered;
+    color: lightgoldenrodyellow;
+    border-radius: 2px;
+    padding: 1px;
+    position: relative;
+    top: -10px;
+    left: -5px;
 }

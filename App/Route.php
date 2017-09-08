@@ -68,7 +68,10 @@ class Route
         foreach(self::$routes as $route){
             if($method == $route['method'] and preg_match("/^{$route['url']}$/", $url, $matches)){
                 self::$last_route = $route;
-                self::$matches = $matches;
+                self::$matches = [];
+                foreach ($matches as $key => $value) {
+                    if(!is_int($key)) self::$matches[$key] = $value;
+                }
                 return true;
             }
         }
@@ -83,14 +86,22 @@ class Route
             $action     = $tmp[1];
             unset($tmp);
             $controller_class = '\\AWorDS\\App\\Controllers\\' . $controller;
-//                 var_dump(self::$matches);
             if(class_exists($controller_class)){
-                if(method_exists($controller_class, $action)) (new $controller_class($controller, $action, self::$last_route['method'], self::$last_route['params'], self::$matches))->$action();
-                else die("Error: Missing $controller::$action method.");
-            } else die("Error: Missing $controller Controller."); // FIXME should return 404 or error
+                if(method_exists($controller_class, $action)){
+                    (new $controller_class($controller, $action, self::$last_route['method'], self::$last_route['params'], self::$matches))->$action();
+                }else{
+                    http_response_code(HttpStatusCode::NOT_FOUND);
+                    die("Error: Missing $controller::$action method.");
+                }
+            }else{
+                http_response_code(HttpStatusCode::NOT_FOUND);
+                die("Error: Missing $controller Controller.");
+            }
             return;
+        }else{
+            http_response_code(HttpStatusCode::NOT_FOUND);
+            // TODO: 404 Error
         }
-        // TODO: 404 Error
         return;
     }
 }

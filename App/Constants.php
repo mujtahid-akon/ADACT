@@ -16,6 +16,8 @@ class Constants{
     const BOOL_FALSE = 0;
     const ACTIVATION_KEY_LENGTH = 16;   // Can be up to 50
     const SHORTAGE_OF_ARGUMENTS = 100;
+
+    const ACTIVE_TAB = 'active_tab';
     
     /**
      * Session related constants
@@ -75,11 +77,22 @@ class Constants{
     /**
      * File related constants
      */
-//    const SPECIES_ORDER    = 'SpeciesOrder.txt';
     const SPECIES_RELATION = 'SpeciesRelation.txt';
     const DISTANT_MATRIX   = 'Output.txt';
     const NEIGHBOUR_TREE   = 'Neighbour tree.jpg';
     const UPGMA_TREE       = 'UPGMA tree.jpg';
     const CONFIG_JSON      = 'config.json';
     const CONFIG_TEXT      = 'config.txt';  // Configurations in a readable format: including the short names
+
+    /**
+     * Pending Status constants (at pending_projects.status)
+     */
+    const PROJECT_EXEC_SUCCESS      = 0;
+    const PROJECT_PENDING           = 1;
+    const PROJECT_EXEC_BEGIN        = 2;
+    const PROJECT_FASTA_FETCH_FILES = 3;
+    const PROJECT_GENERATE_AW       = 4;
+    const PROJECT_GENERATE_DM       = 5;
+    const PROJECT_PHYLOGENIC_TREES  = 6;
+    const PROJECT_SAVING_OUTPUT     = 7;
 }

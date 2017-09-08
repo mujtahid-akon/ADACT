@@ -1,51 +1,20 @@
 <?php
 /**
- * @var array $projects a project list containing 'id', 'name', 'date_created' and 'editable'
+ * @var array $projects A project list containing 'id', 'name', 'date_created', 'pending' and 'editable'
  */
 $project_count = count($projects);
 ?>
-<script>
-var delete_project = function(id, p_name){
-//     var conf = confirm("Are you sure want to delete " + p_name + "?");
-//     if(!conf) return false;
-    
-    $.ajax({
-        method: 'post',
-        url: 'projects/' + id + '/delete',
-        cache: false,
-        dataType: 'json',
-        beforeSend: function(){
-            return confirm("Are you sure want to delete " + p_name + "?");
-        },
-        success: function(res){
-            switch(res.status){
-                case 0:
-                    $('#p_' + id).remove();
-                    alert('Your project was successfully deleted.');
-                    break;
-                case 2:
-                    alert('Couldn\'t delete the project, it doesn\'t exists or might have already been deleted.');
-                    break;
-                default:
-                    alert('Sorry, due an error the project couldn\'t be deleted. Please, try again.');
-            }
-        },
-        error: function(xhr, status){
-            if(status !== null) alert('Sorry, due an error the project couldn\'t be deleted. Please, try again.');
-        }
-    });
-};
-</script>
+<script src="/js/app.js"></script>
 <div class="row">
     <div class="col-md-12">
         <h1>All projects</h1>
         <h4><a href='projects/new'>Create a new project</a></h4>
         <?php
-        if($project_count == 0){
+        if($project_count == 0):
         ?>
             <div>You don't have any projects.</div>
         <?php
-        }else{
+        else:
         ?>
         <table class="table table-responsive table-hover">
             <tbody>
@@ -55,22 +24,34 @@ foreach($projects as $project){
 $datetime = DateTime::createFromFormat('Y-m-d H:i:s', $project['date_created']);
 $project['date_created'] = $datetime->format('jS M, Y') . ' at ' . $datetime->format('H:i:s');
 // Show text based on whether the project is editable or not.
-$edit_text = $project['editable'] ? '<a href="projects/' . $project['id'] . '/edit" class="project-icon glyphicon glyphicon-edit" title="Edit Project"></a>' : '';
+$edit_text = $project['editable'] ? '<a href="/projects/' . $project['id'] . '/edit" class="project-icon glyphicon glyphicon-edit" title="Edit Project"></a>' : '';
+$delete_text = !$project['pending'] ?
+    "<a href=\"javascript:Project.delete({$project['id']}, '{$project['name']}')\" class=\"project-icon glyphicon glyphicon-trash text-danger\" title=\"Delete Project\"></a>" :
+    "<a href=\"javascript:Project.process.cancel({$project['id']}, '{$project['name']}')\" class=\"project-icon glyphicon glyphicon-remove text-danger\" title=\"Cancel Project\"></a>";
+$pending_text = $project['pending'] ? '<small class="alert-warning" style="padding: 5px;border-radius: 5px;text-shadow: 1px 1px wheat;background-color: wheat;">pending</small>' : '';
+$download_text = $project['pending'] ?
+    '' :
+    "<a href=\"projects/{$project['id']}/download\" class=\"project-icon glyphicon glyphicon-download-alt text-info\" title=\"Download Project\"></a>";
 
-print <<<EOF
+print <<< EOF
                 <tr id="p_{$project['id']}">
                     <td>#<a href="projects/{$project['id']}">{$project['id']}</a></td>
-                    <td><a href="projects/{$project['id']}" class="h4">{$project['name']}</a><div><em>Date: {$project['date_created']}</em></div></td>
+                    <td>
+                    <div>
+                        <a href="projects/{$project['id']}" class="h4">{$project['name']}</a>
+                        {$pending_text}
+                    </div>
+                    <div><em>Date: {$project['date_created']}</em></div></td>
                     <td>{$edit_text}</td>
-                    <td><a href="javascript:delete_project({$project['id']}, '{$project['name']}')" class="project-icon glyphicon glyphicon-trash text-danger" title="Delete Project"></span></td>
-                    <td><a href="projects/{$project['id']}/download" class="project-icon glyphicon glyphicon-download-alt text-info" title="Download Project"></a></td>
+                    <td>{$delete_text}</td>
+                    <td>{$download_text}</td>
                 </tr>
-
 EOF;
-} ?>
+}
+?>
             </tbody>
         </table>
-        <?php } ?>
+        <?php endif; // Project count ?>
     </div>
 </div>
 <style>

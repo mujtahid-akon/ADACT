@@ -1,3 +1,0 @@
-  Canis: -> Canis  -> Homo  -> Mus
-   Homo: -> Homo  -> Canis  -> Mus
-    Mus: -> Mus  -> Homo  -> Canis

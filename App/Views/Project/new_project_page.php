@@ -104,7 +104,7 @@ if(!$logged_in){
                 </fieldset>
                 <!-- Inversion -->
                 <fieldset>
-                    <label><input type="checkbox" id="inversion" name="inversion" /> Use inversion</label>
+                    <label><input type="checkbox" id="inversion" name="inversion" /> Use Reverse Complement</label>
                 </fieldset>
                 <!-- MAW Type -->
                 <fieldset>
@@ -120,11 +120,11 @@ if(!$logged_in){
                         <?php
                         // MAW Dissimilarity Indexes
                         foreach ($dissimilarity_index['MAW'] as $short_form => $full_form){
-                            print "<option class=\"maw_dissimilarity\" value=\"{$short_form}\">{$full_form}</option>";
+                            print "<option class=\"maw_dissimilarity\" value=\"{$short_form}\">{$full_form}</option>\n";
                         }
                         // RAW Dissimilarity Indexes
                         foreach ($dissimilarity_index['RAW'] as $short_form => $full_form){
-                            print "<option style=\"display: none;\" class=\"raw_dissimilarity\" value=\"{$short_form}\">{$full_form}</option>";
+                            print "<option style=\"display: none;\" class=\"raw_dissimilarity\" value=\"{$short_form}\">{$full_form}</option>\n";
                         }
                         ?>
                     </select>
