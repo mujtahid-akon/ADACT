@@ -406,7 +406,7 @@ EOF;
         if(!$this->_dir->cd($this->_dir->original())) $this->_dir->create();
         for($i = 0; $i < $gin_count; ++$i){
             //copy("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={$database}&id={$data[$i]['gin']}&rettype=fasta&retmode=text", $dir . '/' . $data[$i]['short_name'] . '.fasta');
-            if($this->_dir->store($data[$i]['short_name'] . '.fasta', "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={$database}&id={$data[$i]['gin']}&rettype=fasta&retmode=text", $this->_dir::STORE_DOWNLOAD)){
+            if(!$this->_dir->store($data[$i]['short_name'] . '.fasta', "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={$database}&id={$data[$i]['gin']}&rettype=fasta&retmode=text", $this->_dir::STORE_DOWNLOAD)){
                 $this->delete_project("{$data[$i]['gin']} can't be downloaded");
                 return false;
             }
