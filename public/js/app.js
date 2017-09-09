@@ -541,7 +541,7 @@ var InputAnalyzer = {
             html += "<tr>"
                 + "<td>" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.results[i].id) + "</td>"
                 + "<td>" + this.results[i].title + "</td>"
-                + "<td>" + "<input id='sn_" + i + "' class='short_name form-control' value='" + this.getShortName(this.results[i]) + "'/></td>"
+                + "<td>" + "<input id='sn_" + i + "' class='short_name form-control' value='" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.getShortName(this.results[i])) + "'/></td>"
                 + "</tr>";
         }
         html += "</table>"

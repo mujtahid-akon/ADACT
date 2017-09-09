@@ -92,40 +92,37 @@ class Process extends Model
         $this->_pending_process->status(PendingProjects::PROJECT_FETCHING_FASTA);
         if(!$this->fetchFiles()){
             $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
-            $status = false;
+            $this->halt('Fetching files failed!');
         }
         // 2. Generate {short_name}.[m|r]aw.txt files
         $this->_pending_process->status(PendingProjects::PROJECT_FINDING_AW);
         if(!$this->generateAW()){
             $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
-            $status = false;
+            $this->halt('Generating absent words failed!');
         }
         // 3. Generate distance matrix (by creating SpeciesFull.txt)
         $this->_pending_process->status(PendingProjects::PROJECT_GENERATE_DM);
         if(!$this->generate_distance_matrix()){
             $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
-            $status = false;
+            $this->halt('Generating distance matrix failed!');
         }
         // 4. Generate phylogenic trees
         $this->_pending_process->status(PendingProjects::PROJECT_GENERATE_PT);
         if(!$this->generate_phylogenic_trees()){
             $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
-            $status = false;
+            $this->halt('Generating Phylogenic trees failed!');
         }
         // 5. Copy them to the project directory
         $this->_pending_process->status(PendingProjects::PROJECT_TAKE_CARE);
         if(!$this->takeCare()){
             $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
-            $status = false;
+            $this->halt('Copying files failed!');
         }
         // Success
         $this->_pending_process->remove($this->_project_id);
-        if($status == true){
-            // Send mail
-            $this->send_mail();
-            $this->_pending_process->status(PendingProjects::PROJECT_SUCCESS);
-        }
-
+        // Send mail
+        $this->send_mail();
+        $this->_pending_process->status(PendingProjects::PROJECT_SUCCESS);
     }
 
     /**
@@ -277,7 +274,7 @@ EOF;
             exec(self::EXECS['maw'][$this->_platform] . " -a {$sequence_type} -i '{$file}' -o '{$output_file}' -k {$kmer["min"]} -K {$kmer["max"]}" . ($inversion ? ' -r 1' : ''), $output, $return);
             error_log(implode("\n", $output));
             if($return !== 0){
-                $this->delete_project("Generating maw failed for " . $file);
+                $this->halt("Generating maw failed for " . $file);
                 return false;
             }
         }
@@ -320,7 +317,7 @@ EOF;
          }else{
              if($this->_fasta_count > 0) return true;
              else{
-                 $this->delete_project("Generating raw failed!");
+                 $this->halt("Generating raw failed!");
                  return false;
              }
          };
@@ -364,14 +361,14 @@ EOF;
 
         // Cancel project if no valid directory found: this is highly unlikely to be happened
         if($upload_directory === null){
-            $this->delete_project("Upload directory cannot be found!");
+            $this->halt("Upload directory cannot be found!");
             return false;
         }
 
         // Get file names
         $files = $this->get_files($upload_directory);
         if(count($files) <= 0){
-            $this->delete_project("Upload directory is empty!");
+            $this->halt("Upload directory is empty!");
             return false;
         }
 
@@ -382,7 +379,7 @@ EOF;
         // Move file to the pwd
         foreach ($files as $file){
             if(!$this->_dir->store($f_names[basename($file, '.fasta')] . '.fasta', $file, $this->_dir::STORE_MOVE)){
-                $this->delete_project("Moving {$file} failed!");
+                $this->halt("Moving {$file} failed!");
                 return false;
             }
         }
@@ -406,9 +403,8 @@ EOF;
 
         if(!$this->_dir->cd($this->_dir->original())) $this->_dir->create();
         for($i = 0; $i < $gin_count; ++$i){
-            //copy("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={$database}&id={$data[$i]['gin']}&rettype=fasta&retmode=text", $dir . '/' . $data[$i]['short_name'] . '.fasta');
             if(!$this->_dir->store($data[$i]['short_name'] . '.fasta', "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={$database}&id={$data[$i]['gin']}&rettype=fasta&retmode=text", $this->_dir::STORE_DOWNLOAD)){
-                $this->delete_project("{$data[$i]['gin']} can't be downloaded");
+                $this->halt("{$data[$i]['gin']} couldn't be downloaded!");
                 return false;
             }
         }
@@ -436,14 +432,15 @@ EOF;
         return $assoc;
     }
 
-    private function delete_project($message = null){
+    private function halt($message = null){
         if($message !== null) error_log($message);
-        return (new Project())->delete($this->_project_id, $this->_user_id) === 0 ? true : false;
+        (new Project())->delete($this->_project_id, $this->_user_id) === 0 ? true : false;
+        exit();
     }
 
     private function get_files($dir){
         if(!$this->_dir->cd($dir, true)){
-            $this->delete_project("{$dir} doesn't exist!");
+            $this->halt("{$dir} doesn't exist!");
             return [];
         }
         return $this->_dir->getAll();
