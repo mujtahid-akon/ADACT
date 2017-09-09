@@ -10,7 +10,6 @@ namespace AWorDS\App\Models;
 
 
 use AWorDS\App\Constants;
-use AWorDS\Config;
 
 /**
  * Class Process

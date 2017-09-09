@@ -5,6 +5,8 @@ For both macOS & Linux
 
 ## Instructions
 
+php 5.6+ is required.
+
 #### Edit Config.php
 Edit the `Config.php` located at the root of the project,
 otherwise mail client, mysql server may not work. At least
