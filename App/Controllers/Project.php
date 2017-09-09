@@ -200,7 +200,6 @@ class Project extends Controller{
 
         if($logged_in){
             if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)){
-                $isTheLastProject = (new LastProjects())->isA($project_id);
                 $this->set('logged_in', $logged_in);
                 $this->set('project_id', $project_id);
                 $this->set(Constants::ACTIVE_TAB, 'projects');

@@ -136,11 +136,13 @@ class Process extends Model
      * @return bool
      */
     function takeCare(){
-        $project_dir = self::PROJECT_DIRECTORY . '/' . $this->_project_id;
+        $project_dir = self::PROJECT_DIRECTORY;
+        //mkdir($project_dir, 0777, true);
         error_log($project_dir);
         // 1. Move /tmp/Projects/{project_id}/ to /Projects/{project_id}/
-        passthru("mv \"{$this->_dir->project_dir()}\" \"{$project_dir}/\"");
+        passthru("mv \"{$this->_dir->project_dir()}\" \"{$project_dir}\"");
         // Notice: the trailing slash
+        $project_dir .= '/' . $this->_project_id;
         $files_dir = $project_dir . '/Files/generated/';
         error_log($files_dir);
         // 2. Copy required files to Project/{project_idr}

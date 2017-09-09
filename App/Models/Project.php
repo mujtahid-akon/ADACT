@@ -18,9 +18,6 @@ use \AWorDS\Config;
  * @property array    files
  */
 class Project extends Model{
-    private $dm_exec     = 'dm';
-    private $maw_exec    = 'maw';
-    private $eagle_exec  = 'EAGLE';
     private $project_id;
 
     protected $config    = [];

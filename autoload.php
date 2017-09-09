@@ -12,7 +12,7 @@ if (version_compare(PHP_VERSION, '5.6.0', '<')) {
 }
 
 /**
- * Register the autoloader for AWorDS classes.
+ * Register the autoloader for classes.
  *
  * @param string $class The fully-qualified class name.
  * @return void
