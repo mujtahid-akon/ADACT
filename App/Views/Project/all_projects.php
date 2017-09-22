@@ -5,6 +5,16 @@
 $project_count = count($projects);
 ?>
 <script src="/js/app.js"></script>
+<script>
+    $(document).ready(function(){
+        var datetime_list = $(".datetime");
+        var len = datetime_list.length;
+        for(var i=0; i<len; ++i){
+            var d = new Date(datetime_list.eq(i).html() + " UTC");
+            datetime_list.eq(i).html(d.toDateString() + " at " + d.toTimeString().slice(0,8));
+        }
+    });
+</script>
 <div class="row">
     <div class="col-md-12">
         <h1>All projects</h1>
@@ -20,9 +30,6 @@ $project_count = count($projects);
             <tbody>
 <?php
 foreach($projects as $project){
-// Format Date
-$datetime = DateTime::createFromFormat('Y-m-d H:i:s', $project['date_created']);
-$project['date_created'] = $datetime->format('jS M, Y') . ' at ' . $datetime->format('H:i:s');
 // Show text based on whether the project is editable or not.
 $edit_text = $project['editable'] ? '<a href="/projects/' . $project['id'] . '/edit" class="project-icon glyphicon glyphicon-edit" title="Edit Project"></a>' : '';
 $delete_text = !$project['pending'] ?
@@ -41,7 +48,7 @@ print <<< EOF
                         <a href="projects/{$project['id']}" class="h4">{$project['name']}</a>
                         {$pending_text}
                     </div>
-                    <div><em>Date: {$project['date_created']}</em></div></td>
+                    <div><em>Date: <span class="datetime">{$project['date_created']}</span></em></div></td>
                     <td>{$edit_text}</td>
                     <td>{$delete_text}</td>
                     <td>{$download_text}</td>

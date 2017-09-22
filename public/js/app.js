@@ -532,7 +532,7 @@ var InputAnalyzer = {
          * HTML output
          * @type {string}
          */
-        var html = "<p class='text-success'>Found: " + c_species + " Species</p>"
+        var html = "<p class='text-success'>Found: " + c_species + " FASTA Sequences</p>"
             + "<p>Add short names using the table below: "
             + "(A short name can only contain letters and hyphens)</p>"
             + "<table class='table table-bordered table-striped table-hover'>"
@@ -551,9 +551,6 @@ var InputAnalyzer = {
     },
     getShortName: function (seq_info) {
         if(seq_info.short_name === null) return "";
-        // For proteins
-        //match = title.match(/Short=([\w\s-]+)/);
-        //if(match !== null) return match[1];
         return seq_info.short_name.replace(/\s/g, '_');
     }
 };
@@ -636,7 +633,6 @@ Project.result = {
         this.submit_btn = $('#p_btn');
 
         var parent = this;
-        // TODO: Modify this request to make interactive
         $.ajax({
             method: 'post',
             url: 'projects/new',
@@ -653,8 +649,10 @@ Project.result = {
             success: function(res){
                 if(res !== null && res.id !== null){
                     parent.project_id = res.id;
-                    window.location.assign('/projects/'   + res.id);
-                    //window.location.assign('/projects/'   + res.id + '/process');
+                    var url = '/projects/' + res.id;
+                    var form = $('<form action="' + url + '" method="get"></form>');
+                    $('body').append(form);
+                    form.submit();
                 }else{
                     parent.restore();
                 }
@@ -680,46 +678,69 @@ Project.result = {
 /**
  * Do the process
  *
- * // FIXME: Remove dependency of Project.result.project_id
- *
- * @type {{init: Project.process.init, cancel: Project.process.cancel}}
+ * @type {{status: Project.process.status, cancel: Project.process.cancel}}
  */
 Project.process = {
-    init: function () {
+    /**
+     *
+     * @param {*|jQuery} selector
+     * @param project_id
+     */
+    status: function (selector, project_id) {
         $.ajax({
             method: 'post',
-            url: 'projects/process_data',
-            data: {project_id: Project.result.project_id},
+            url: 'projects/get_status',
+            data: {project_id: project_id},
             cache: false,
             dataType: 'json',
             beforeSend: function(){
-                // Prepare status
+                selector.html("Fetching last status...");
             },
+            /**
+             * @param {{status: string, status_code: int}} res
+             */
             success: function(res){
-                // Check after every two seconds
-                // Show status
+                selector.html(res.status);
+                switch (res.status_code){
+                    case 0: // SUCCESS
+                        window.location.reload();
+                        break;
+                    case 1: // FAILED
+                        alert("Something's wrong with your project. Please try again.");
+                        window.location.assign('/projects');
+                        break;
+                }
             },
-            error: function(xhr, status){
-                // Show error message
+            error: function(){
+                selector.html("Error fetching last status. Trying again...");
             }
         });
     },
     cancel: function (project_id, project_name) {
         $.ajax({
             method: 'post',
-            url: 'projects/process_cancel',
+            url: 'projects/cancel_process',
             data: {project_id: project_id},
             cache: false,
             dataType: 'json',
             beforeSend: function(){
-                // Prepare cancellation
+                return confirm("Are you sure want to cancel " + project_name + "?");
             },
             success: function(res){
-                // Disable init
-                // Show status
+                switch(res.status){
+                    case 0:
+                        alert("Project was cancelled successfully!");
+                        window.location.assign('/projects');
+                        break;
+                    case 2:
+                        alert('Couldn\'t cancel the project, it doesn\'t exists or may have already been cancelled.');
+                        break;
+                    default:
+                        alert('Sorry, due an error the project couldn\'t be cancelled. Please, try again.');
+                }
             },
-            error: function(xhr, status){
-                // Show error message
+            error: function(){
+                alert('Sorry, the project couldn\'t be cancelled. Please, try again.');
             }
         });
     }
@@ -752,8 +773,18 @@ Project.delete = function (project_id, project_name) {
                     alert('Sorry, due an error the project couldn\'t be deleted. Please, try again.');
             }
         },
-        error: function(xhr, status){
-            if(status !== null) alert('Sorry, due an error the project couldn\'t be deleted. Please, try again.');
+        error: function(){
+            alert('Sorry, the project couldn\'t be deleted. Please, try again.');
         }
     });
 };
+
+var elapsed_time = function (selector, date_created) {
+    var now = new Date().getTime();
+    var distance = now - date_created;
+    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    selector.html(days + "d " + hours + "h " + minutes + "m " + seconds + "s ");
+}

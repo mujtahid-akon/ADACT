@@ -6,7 +6,7 @@
  * Time: 6:40 PM
  */
 use \AWorDS\App\Constants;
-use \AWorDS\Config;
+use \AWorDS\App\Models\FileManager;
 /**
  * @var bool $logged_in
  */
@@ -20,19 +20,18 @@ if(!$logged_in) exit();
  * @var bool  $isTheLastProject    If it's the last project (that means editable)
  * @var array $dissimilarity_index Dissimilarity index array
  * @var bool  $isAPendingProject   If it's a pending project (that means show status, elapsed time, etc.)
+ * @var array $project_info        If it's a pending project (that means show status, elapsed time, etc.)
  */
 
 // load config
-$config = ($isAPendingProject) ?
-    json_decode(file_get_contents((new \AWorDS\App\Models\Directories($project_id))->get(Constants::CONFIG_JSON)), true):
-    json_decode(file_get_contents(Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . Constants::CONFIG_JSON), true);
+$config = new \AWorDS\App\Models\ProjectConfig((new FileManager($project_id))->get(FileManager::CONFIG_JSON));
 
 // Project type
-$isAFileIOProject = $config['type'] === Constants::PROJECT_TYPE_FILE;
+$isAFileIOProject = $config->type === Constants::PROJECT_TYPE_FILE;
 // Base url
 $base_url = $_SERVER['PHP_SELF'];
 // Transform Absent Words type to uppercase
-$config['aw_type'] = strtoupper($config['aw_type']);
+$config->aw_type = strtoupper($config->aw_type);
 
 // Preparing the outputs if the project isn't a pending one
 if(!$isAPendingProject){
@@ -93,7 +92,7 @@ function get_distance_matrix($species, $project_dir){
 
 // Output begin
 ?>
-<h3>Project: <?php print ucwords($config['project_name']); ?></h3>
+<h3>Project: <?php print ucwords($config->project_name); ?></h3>
 <?php
 if($isTheLastProject AND !$isAPendingProject):
     print "<h4><a href=\"{$base_url}/edit\">Edit</a></h4>";
@@ -102,6 +101,22 @@ endif; // isTheLastProject
 if($isAPendingProject):
 ?>
     <p class="text text-danger"><em>The project is currently running...</em></p>
+    <script>
+        $(document).ready(function(){
+            var date_created = new Date("<?php print $project_info['date_created'] ?> UTC").getTime();
+            var selector = $("#elapsed_time");
+            // Show elapsed time
+            elapsed_time(selector, date_created);
+            setInterval(function(){
+                elapsed_time(selector, date_created);
+            }, 1000);
+            // Show status
+            Project.process.status($("#process_status"), <?php print $project_info['id'] ?>);
+            setInterval(function(){
+                Project.process.status($("#process_status"), <?php print $project_info['id'] ?>);
+            }, 10000);
+        });
+    </script>
 <?php
 endif; // isAPendingProject
 ?>
@@ -111,7 +126,7 @@ endif; // isAPendingProject
     if($isAPendingProject):
     ?>
         <script src="/js/app.js"></script>
-        <button onclick="Project.process.cancel(<?php print $project_id. ',' .$config['project_name'] ?>)" class="btn btn-default">Cancel Project</button>
+        <button onclick="Project.process.cancel(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" class="btn btn-default">Cancel Project</button>
     <?php
     else:
     ?>
@@ -127,16 +142,16 @@ endif; // isAPendingProject
         <caption>Overview</caption>
         <tbody>
         <?php
-        print "<tr><th>Project Name</th><td>".ucwords($config['project_name'])."</td></tr>";
+        print "<tr><th>Project Name</th><td>".ucwords($config->project_name)."</td></tr>";
         if($isAPendingProject){
-            print "<tr><th>Status</th><td>Pending...</td></tr>";
-            print "<tr><th>Elapsed Time</th><td>1:00</td></tr>";
+            print "<tr><th>Status</th><td id='process_status'></td></tr>";
+            print "<tr><th>Elapsed Time</th><td id='elapsed_time'></td></tr>";
         }
-        print "<tr><th>Sequence Type</th><td>".ucwords($config['sequence_type'])."</td></tr>";
-        print "<tr><th>Absent Word Type</th><td>".($config['aw_type'] === 'MAW' ? "Minimal" : "Relative")." Absent Words ({$config['aw_type']})</td></tr>";
-        print "<tr><th>K-Mer</th><td>Min: {$config['kmer']['min']}, Max: {$config['kmer']['max']}</td></tr>";
-        print "<tr><th>Reverse Complement</th><td>".($config['inversion'] ? "Yes" : "No")."</td></tr>";
-        print "<tr><th>Dissimilarity Index</th><td>{$dissimilarity_index[$config['aw_type']][$config['dissimilarity_index']]}</td></tr>";
+        print "<tr><th>Sequence Type</th><td>".ucwords($config->sequence_type)."</td></tr>";
+        print "<tr><th>Absent Word Type</th><td>".($config->aw_type === 'MAW' ? "Minimal" : "Relative")." Absent Words ({$config->aw_type})</td></tr>";
+        print "<tr><th>K-Mer</th><td>Min: {$config->kmer['min']}, Max: {$config->kmer['max']}</td></tr>";
+        print "<tr><th>Reverse Complement</th><td>".($config->inversion ? "Yes" : "No")."</td></tr>";
+        print "<tr><th>Dissimilarity Index</th><td>{$dissimilarity_index[$config->aw_type][$config->dissimilarity_index]}</td></tr>";
         ?>
         </tbody>
     </table>
@@ -149,7 +164,7 @@ endif; // isAPendingProject
         <?php
         if($isAFileIOProject) $id = 0;
 
-        foreach ($config['data'] as $data) {
+        foreach ($config->data as $data) {
             /** @var int $id */
             $id = ($isAFileIOProject) ? ($id + 1) : $data['id'];
             print "<tr><th>{$id}</th><td>".ucwords($data['title'])."</td><td>{$data['short_name']}</td></tr>";
@@ -169,14 +184,28 @@ if(!$isAPendingProject):
     <button onclick="$('.output').hide();$('#upgma_tree').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default">UPGMA tree</button>
 </div>
 <div>
+    <?php
+    /** @var string $download_url */
+    /** @var string $project_dir */
+    /** @var array  $species */
+    /** @var array  $species_relations */
+    $neighbourTree = '/NeighbourTree.jpg';
+    $UPGMATree     = 'UPGMATree.jpg';
+    if(file_exists($project_dir . $neighbourTree)):
+    ?>
     <div id="neighbour_tree" class="output" style="display: none;">
-        <a href="<?php print $download_url . '/NeighbourTree.jpg' ?>">Download Neighbour Tree</a><br />
-        <img src="<?php print $download_url . '/NeighbourTree.jpg' ?>" />
+        <a href="<?php print $download_url . $neighbourTree ?>">Download Neighbour Tree</a><br />
+        <img src="<?php print $download_url . $neighbourTree ?>" />
     </div>
+    <?php endif ?>
+    <?php
+    if(file_exists($project_dir . $UPGMATree)):
+    ?>
     <div id="upgma_tree" class="output" style="display: none;">
-        <a href="<?php print $download_url . '/UPGMATree.jpg' ?>">Download UPGMA Tree</a><br />
-        <img src="<?php print $download_url . '/UPGMATree.jpg' ?>" />
+        <a href="<?php print $download_url . $UPGMATree ?>">Download UPGMA Tree</a><br />
+        <img src="<?php print $download_url . $UPGMATree ?>" />
     </div>
+    <?php endif ?>
     <div id="sorted_species_relation" style="text-align: left; display: none;" class="output">
         <a href="<?php print $download_url . '/SpeciesRelation.txt' ?>">Download Sorted Species Relation</a><br />
         <table class="table table-striped table-hover">

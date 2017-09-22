@@ -23,12 +23,12 @@ class PendingProjects extends Model
     const STATUS = [
         self::PROJECT_SUCCESS => "Success!",
         self::PROJECT_FAILURE => "Failed!",
-        self::PROJECT_INIT    => "Initializing...",
+        self::PROJECT_INIT    => "Queued",
         self::PROJECT_FETCHING_FASTA => "Fetching FASTA files...",
         self::PROJECT_FINDING_AW  => "Finding Absent Words...",
         self::PROJECT_GENERATE_DM => "Generating Distance Matrix...",
-        self::PROJECT_GENERATE_PT => "Generating Phylogenic Trees",
-        self::PROJECT_TAKE_CARE   => "Generating final results"
+        self::PROJECT_GENERATE_PT => "Generating Phylogenetic Trees...",
+        self::PROJECT_TAKE_CARE   => "Generating final results..."
     ];
 
     private $project_id = null;
@@ -64,8 +64,10 @@ class PendingProjects extends Model
      * @param int $project_id
      * @return array|bool [id, status, status_code, cancel]
      */
-    function get($project_id){
-        $this->project_id = $project_id;
+    function get($project_id = null){
+        if($this->user_id == null) $this->user_id = $_SESSION['user_id'];
+        if($this->project_id == null) $this->project_id = $project_id;
+        if($this->project_id == null) return false;
         $info = [
             'id' => null,
             'status_code' => null,
@@ -94,23 +96,28 @@ class PendingProjects extends Model
      * @return array|bool Similar to self::get() except that it returns a list of info
      */
     function getAll($idOnly = false){
-        if($this->user_id === null){
-            $this->user_id = $_SESSION['user_id'];
-        }
+//        if($this->user_id === null){
+//            $this->user_id = $_SESSION['user_id'];
+//        }
         $info_list = [];
-        if(@$stmt = $this->mysqli->prepare("SELECT project_id, status_code, cancel FROM pending_projects WHERE user_id = ?")){
-            $stmt->bind_param('i', $this->user_id);
+        $query = ($this->user_id === null) ?
+            "SELECT project_id, user_id, status_code, cancel FROM pending_projects" :
+            "SELECT project_id, user_id, status_code, cancel FROM pending_projects WHERE user_id = ?";
+        if(@$stmt = $this->mysqli->prepare($query)){
+            if($this->user_id !== null)
+                $stmt->bind_param('i', $this->user_id);
             $stmt->execute();
             $stmt->store_result();
             if($stmt->num_rows >= Constants::COUNT_ONE){
                 for($i = 0; $i<$stmt->num_rows; ++$i){
                     $info = [
                         'id' => null,
+                        'user' => null,
                         'status_code' => null,
                         'status' => null,
                         'cancel' => 0
                     ];
-                    $stmt->bind_result($info['id'], $info['status_code'], $info['cancel']);
+                    $stmt->bind_result($info['id'], $info['user'],$info['status_code'], $info['cancel']);
                     $stmt->fetch();
                     $info['status'] = self::STATUS[$info['status_code']];
                     $info['cancel'] = $info['cancel'] == 0 ? false : true;
@@ -128,15 +135,17 @@ class PendingProjects extends Model
      * @param int $project_id
      * @return bool
      */
-    function isA($project_id){
-        $this->project_id = $project_id;
+    function isA($project_id = null){
+        if($this->user_id == null) $this->user_id = $_SESSION['user_id'];
+        if($this->project_id == null) $this->project_id = $project_id;
+        if($this->project_id == null) return false;
         if(@$stmt = $this->mysqli->prepare("SELECT COUNT(*) FROM pending_projects WHERE user_id = ? AND project_id = ?")){
-            $stmt->bind_param('ii', $_SESSION['user_id'], $project_id);
+            $stmt->bind_param('ii', $this->user_id, $this->project_id);
             $stmt->execute();
             $stmt->store_result();
             $stmt->bind_result($count);
             $stmt->fetch();
-            if($count === Constants::COUNT_ONE) return true;
+            if($count === 1) return true;
         }
         return false;
     }
@@ -147,9 +156,12 @@ class PendingProjects extends Model
      * @param int $project_id
      * @return bool
      */
-    function cancel($project_id){
+    function cancel($project_id = null){
+        if($this->user_id == null) $this->user_id = $_SESSION['user_id'];
+        if($this->project_id == null) $this->project_id = $project_id;
+        if($project_id == null) return false;
         if(@$stmt = $this->mysqli->prepare('UPDATE pending_projects SET cancel = 1 WHERE project_id = ? AND user_id = ?')){
-            $stmt->bind_param('ii', $project_id, $_SESSION['user_id']);
+            $stmt->bind_param('ii', $this->project_id, $this->user_id);
             $stmt->execute();
             $stmt->store_result();
             if($stmt->affected_rows == Constants::COUNT_ONE) return true;

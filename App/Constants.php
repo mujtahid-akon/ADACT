@@ -10,6 +10,11 @@ namespace AWorDS\App;
 
 require_once __DIR__ . '/../autoload.php';
 
+/**
+ * Class Constants
+ * @package AWorDS\App
+ * @deprecated
+ */
 class Constants{
     const COUNT_ONE  = 1;
     const BOOL_TRUE  = 1;
@@ -18,14 +23,7 @@ class Constants{
     const SHORTAGE_OF_ARGUMENTS = 100;
 
     const ACTIVE_TAB = 'active_tab';
-    
-    /**
-     * Session related constants
-     */
-    const SESSION_COOKIE  = 'cookie';
-    const SESSION_SESSION = 'session';
-    const SESSION_COOKIE_TIME = 604800;    // 7 days
-    
+
     /**
      * Login related constants
      */
@@ -47,15 +45,6 @@ class Constants{
     const ACCOUNT_DOES_NOT_EXIST = 5;
     
     /**
-     * File upload related constants
-     */
-    const FILE_SIZE_EXCEEDED  = 1;
-    const FILE_INVALID_MIME   = 2;
-    const FILE_INVALID_FILE   = 3;
-    const FILE_UPLOAD_FAILED  = 4;
-    const FILE_UPLOAD_SUCCESS = 0;
-    
-    /**
      * Project related constants
      */
     const PROJECT_DELETE_SUCCESS = 0;
@@ -73,26 +62,4 @@ class Constants{
     const EXPORT_NEIGHBOUR_TREE   = 3;
     const EXPORT_UPGMA_TREE       = 4;
     const EXPORT_ALL              = 0;
-    
-    /**
-     * File related constants
-     */
-    const SPECIES_RELATION = 'SpeciesRelation.txt';
-    const DISTANT_MATRIX   = 'Output.txt';
-    const NEIGHBOUR_TREE   = 'Neighbour tree.jpg';
-    const UPGMA_TREE       = 'UPGMA tree.jpg';
-    const CONFIG_JSON      = 'config.json';
-    const CONFIG_TEXT      = 'config.txt';  // Configurations in a readable format: including the short names
-
-    /**
-     * Pending Status constants (at pending_projects.status)
-     */
-    const PROJECT_EXEC_SUCCESS      = 0;
-    const PROJECT_PENDING           = 1;
-    const PROJECT_EXEC_BEGIN        = 2;
-    const PROJECT_FASTA_FETCH_FILES = 3;
-    const PROJECT_GENERATE_AW       = 4;
-    const PROJECT_GENERATE_DM       = 5;
-    const PROJECT_PHYLOGENIC_TREES  = 6;
-    const PROJECT_SAVING_OUTPUT     = 7;
 }

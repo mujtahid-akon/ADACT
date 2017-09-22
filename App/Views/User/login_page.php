@@ -14,7 +14,7 @@
                 <form class="form-veritcal" id="login_form" method="post" action="login">
                     <input class="form-control" type="text" name="email" placeholder="E-mail address" <?php if(!empty($email)) print 'value="' . $email . '"'; ?> required /><br />
                     <input class="form-control" type="password" name="pass" placeholder="Password" required /><br/>
-                    <label><input type="checkbox" name="remember" /> Remember me for 7 days</label><br />
+                    <!--label><input type="checkbox" name="remember" /> Remember me for 7 days</label><br /-->
                     <input class="btn btn-primary" type="submit" value=" login " />
                 </form>
             </div>

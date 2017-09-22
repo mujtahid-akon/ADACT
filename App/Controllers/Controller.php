@@ -27,7 +27,7 @@ class Controller
     protected $_params;
     protected $_url_params;
     protected $_template;
-    
+
     /**
      * Output types (GUI, Redirect, JSON)
      *
@@ -38,18 +38,33 @@ class Controller
     protected $_redirect = false;
     protected $_HTML     = true;
     protected $_JSON     = false;
-    
+
     protected $_redirect_location = Config::WEB_DIRECTORY;
     protected $_JSON_contents     = [];
     protected $_HTML_load_view     = true;
 
+    private $_post_process = false;
+    private $_post_process_info = [
+        'object' => null,
+        'method' => null,
+        'arguments' => []
+    ];
 
+    /**
+     * Controller constructor.
+     * @param string $controller
+     * @param string $action
+     * @param string $method
+     * @param array $params
+     * @param array $url_params
+     */
     function __construct($controller, $action, $method, $params, $url_params) {
         $this->_controller  = $controller;
         $this->_action      = $action;
         $this->_method      = $method;
         $this->_url_params  = $url_params;
-        
+
+        // FIXME: only GET and POST is implemented
         if(in_array($method, [Route::GET, Route::POST])){
             if($method == Route::GET){
                 $parameters = $_GET;
@@ -77,7 +92,7 @@ class Controller
             }
         }
         $this->_params= $params;
- 
+
         if($this->_HTML AND $this->_HTML_load_view) $this->_template = new Template($controller, $action);
     }
 
@@ -168,7 +183,55 @@ class Controller
         if(is_array($content)) $this->_JSON_contents = $content;
     }
 
+    function post_process($object, $method, $args = []){
+        $this->_post_process = true;
+        $this->_post_process_info['object'] = $object;
+        $this->_post_process_info['method'] = $method;
+        $this->_post_process_info['arguments'] = $args;
+    }
+
     function __destruct(){
+        if($this->_post_process) $this->__post_process();
+        else $this->__send_response();
+    }
+
+    private function __post_process(){
+        // at php.ini output_buffering = off
+        // Disable gzip compression
+        if(function_exists('apache_setenv')) @apache_setenv('no-gzip', 1);
+        @ini_set('zlib.output_compression', 0);
+        // Disable apache compression
+        //header( 'Content-Encoding: none; ' );
+
+        ignore_user_abort(true);
+        set_time_limit(0);
+
+        ob_end_flush();
+        ob_start();
+        // do initial processing here
+        // send the response: only text response
+        $this->__send_response();
+        header('Connection: close');
+        header('Content-Length: '.ob_get_length());
+        ob_end_flush();
+        ob_flush();
+        flush();
+        // Close current session writing to prevent session locking
+        if(session_id()) session_write_close();
+        //error_log("Session Status: " . (session_status() == 1 ? "NONE" : "ACTIVE"));
+
+        // Run post process functions
+        if($this->_post_process_info['method'] != null){
+            if($this->_post_process_info['object'] != null){
+                call_user_func([$this->_post_process_info['object'], $this->_post_process_info['method']], $this->_post_process_info['arguments']);
+            }else{
+                call_user_func($this->_post_process_info['method'], $this->_post_process_info['arguments']);
+            }
+        }
+    }
+
+    private function __send_response(){
+        //error_log("Session Status: " . (session_status() == 1 ? "NONE" : "ACTIVE"));
         http_response_code($this->response_code);
         if($this->_redirect) header("Location: {$this->_redirect_location}");
         elseif($this->_JSON) print json_encode($this->_JSON_contents, JSON_PRETTY_PRINT);

@@ -1,34 +1,15 @@
 ## SQL Version Control
 
    ***Only use the latest sql file***
-
-- `awords_v4.0.sql` [`current`]
-
-    Added `pending_projects` table. Also, `projects` and
-    `last_projects` tables have been modified.
-
-
-- `awords_v3.01.sql` [`obsolete`]
-
-    `activation_key` should not be unique.
+   
+- `awords_v4.1.sql` [`current`]
     
-- `awords_v3.0.sql`
-    
-    `projects` and `last_project` tables have been
-    modified to adapt to the changes of `AWorDSv3.0 beta`.
+    - `active_sessions` : The column `type` is removed and `data` and `time`
+       columns are added as part of migration to DB based session
+    - `uploaded_files` table is added as par of part of migration to DB based session
 
-- `awords_v2.01.sql`
+- `awords_v4.0.sql` [`obsolete`]
 
-    After presenting in PL first time.
-    Only `users` and `projects` tables are modified.
-    No major change is occurred.
-    
-- `awords_v2.0.sql`
-
-    Added `active_sessions` and `login_attempts` tables
-    as part of enhancing security.
-    
-- `awords_v1.0.sql` [`obsolete`]
-
-    First Database: obsolete and should not be used.
-    
+    - `pending_projects` table is added
+    - `projects` : The column `seen` is added
+    - `last_projects` : The column `seen` is removed

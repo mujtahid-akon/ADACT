@@ -46,7 +46,6 @@ class User extends Controller
         /**
          * @var string $email
          * @var string $pass
-         * @var bool   $remember
          */
         $this->set_model();
         /**
@@ -60,7 +59,7 @@ class User extends Controller
         }
         // First check the parameters
         if(empty($email) OR empty($pass)) $status = Constants::SHORTAGE_OF_ARGUMENTS;
-        else $status = $this->{$this->_model}->login($email, $pass, $remember);
+        else $status = $this->{$this->_model}->login($email, $pass);
         switch($status){
             case Constants::LOGIN_LOCKED:
                 $_SESSION['login_error'] = "<strong>Your account is locked!</strong> An email was sent to your account, use that email to unlock your account.";

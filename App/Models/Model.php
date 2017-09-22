@@ -111,9 +111,9 @@ EOF;
     
     
     function login_check(){
-        if(isset($_SESSION['session'])){ // Top priority
-            $session_id = session_id(); // To remove E_STRICT error
-            if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = \'session\'')){
+        $session_id = session_id();
+        if($session_id){
+            if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ?')){
                 $stmt->bind_param('is', $_SESSION['session']['id'], $session_id);
                 $stmt->execute();
                 $stmt->store_result();
@@ -123,21 +123,6 @@ EOF;
                     // Make things easy and quick by setting session
                     $_SESSION['user_id'] = $_SESSION['session']['id'];
                     return true;
-                }
-            }
-        }else{  // Cookie
-            if(isset($_COOKIE['u_id'], $_COOKIE['id'])){
-                if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = "cookie"')){
-                    $stmt->bind_param('is', $_COOKIE['u_id'], $_COOKIE['id']);
-                    $stmt->execute();
-                    $stmt->store_result();
-                    $stmt->bind_result($count);
-                    $stmt->fetch();
-                    if($count == Constants::COUNT_ONE){
-                        // Make things easy and quick by setting session
-                        $_SESSION['user_id'] = $_COOKIE['u_id'];
-                        return true;
-                    }
                 }
             }
         }

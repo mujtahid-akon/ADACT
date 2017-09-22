@@ -3,6 +3,7 @@
 namespace AWorDS\App\Models;
 
 use \AWorDS\App\Constants;
+use AWorDS\App\Session;
 
 class User extends Model{
     /**
@@ -10,10 +11,9 @@ class User extends Model{
      *
      * @param string $email
      * @param string $pass
-     * @param null|string $remember
      * @return int
      */
-    function login($email, $pass, $remember){
+    function login($email, $pass){
        if(@$stmt = $this->mysqli->prepare('SELECT `user_id`, `password`, `locked` FROM users WHERE email=?')){
             $stmt->bind_param('s', $email);
             $stmt->execute();
@@ -23,11 +23,7 @@ class User extends Model{
                 $stmt->fetch();
                 if($isLocked == Constants::BOOL_TRUE) return Constants::LOGIN_LOCKED;
                 if(password_verify($pass, $hash)){
-                    if(!$remember){   // Session only login
-                        $this->new_session($user_id, session_id(), Constants::SESSION_SESSION);
-                    }else{                  // Cookie login
-                        $this->new_session($user_id, $this->activation_key(), Constants::SESSION_COOKIE);
-                    }
+                    $this->new_session($user_id, session_id());
                     return Constants::LOGIN_SUCCESS;
                 }
             }
@@ -38,27 +34,7 @@ class User extends Model{
     }
     
     function logout(){
-        if($this->login_check()){
-            if(isset($_SESSION['session'])){ // Top priority
-                $session_id = session_id(); // To prevent E_STRICT
-                if(@$stmt = $this->mysqli->prepare("DELETE FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = 'session'")){
-                    $stmt->bind_param('is', $_SESSION['session']['id'], $session_id);
-                    $stmt->execute();
-                    $stmt->store_result();
-                    unset($_SESSION['session']);
-                }
-            }else{  // Cookie
-                if(isset($_COOKIE['u_id'], $_COOKIE['id'])){
-                    if(@$stmt = $this->mysqli->prepare("DELETE FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ? AND `type` = 'cookie'")){
-                        $stmt->bind_param('is', $_COOKIE['u_id'], $_COOKIE['id']);
-                        $stmt->execute();
-                        $stmt->store_result();
-                        setcookie('u_id', '', time() - Constants::SESSION_COOKIE_TIME);
-                        setcookie('id', '',time() - Constants::SESSION_COOKIE_TIME);
-                    }
-                }
-            }
-        }
+        session_destroy(); // This can essentially do everything
     }
     
     function register($name, $email, $pass){
@@ -165,18 +141,16 @@ EOF;
         return false;
     }
     
-    private function new_session($user_id, $session_id, $session_type){
-        if($session_type == Constants::SESSION_SESSION){
-            $_SESSION['session']['id']    = $user_id;
-        }else{
-            setcookie('u_id', $user_id, time() + Constants::SESSION_COOKIE_TIME);
-            setcookie('id', $session_id,time() + Constants::SESSION_COOKIE_TIME);
-        }
-        if(@$stmt = $this->mysqli->prepare('INSERT INTO `active_sessions` VALUE(?,?,?)')){
-            $stmt->bind_param('iss', $user_id, $session_id, $session_type);
-            $stmt->execute();
+    private function new_session($user_id, $session_id){
+        error_log("user: $user_id, session: $session_id");
+        $_SESSION['session']['id'] = $user_id;
+
+        if(@$stmt = $this->mysqli->prepare('UPDATE `active_sessions` SET user_id = ? WHERE session_id = ?')){
+            $stmt->bind_param('is', $user_id, $session_id);
+            error_log(var_dump($stmt->execute()));
             $stmt->store_result();
         }
+
     }
     
     private function activation_key(){

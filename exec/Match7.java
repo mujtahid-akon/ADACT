@@ -416,11 +416,10 @@ public class Match7 {
 
     public static void main(String[] args) {
         String FILENAME = args[0] + "SpeciesFull.txt";
-	//System.out.println(args[0]);
-      BufferedReader br = null;
-      FileReader fr = null;
+        BufferedReader br = null;
+        FileReader fr = null;
      
-      int i = 0;
+        int i = 0;
 		try {
 
 			fr = new FileReader(FILENAME);

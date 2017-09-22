@@ -23,9 +23,11 @@ DROP TABLE IF EXISTS `active_sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `active_sessions` (
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT '0',
   `session_id` varchar(128) NOT NULL,
-  `type` varchar(15) NOT NULL COMMENT 'session or cookie'
+  `data` text,
+  `time` int(11) DEFAULT NULL,
+  UNIQUE KEY `active_sessions_session_id_uindex` (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -48,7 +50,6 @@ DROP TABLE IF EXISTS `last_projects`;
 CREATE TABLE `last_projects` (
   `user_id` int(11) NOT NULL,
   `project_id` int(11) NOT NULL,
-  `seen` tinyint(1) NOT NULL,
   UNIQUE KEY `user_id` (`user_id`),
   UNIQUE KEY `project_id` (`project_id`),
   CONSTRAINT `last_projects_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
@@ -62,7 +63,6 @@ CREATE TABLE `last_projects` (
 
 LOCK TABLES `last_projects` WRITE;
 /*!40000 ALTER TABLE `last_projects` DISABLE KEYS */;
-INSERT INTO `last_projects` VALUES (1,76,1);
 /*!40000 ALTER TABLE `last_projects` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -89,6 +89,34 @@ LOCK TABLES `login_attempts` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `pending_projects`
+--
+
+DROP TABLE IF EXISTS `pending_projects`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pending_projects` (
+  `project_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `status_code` int(2) NOT NULL COMMENT 'one or two digits number',
+  `cancel` tinyint(1) DEFAULT '0' COMMENT 'Whether to cancel the project',
+  PRIMARY KEY (`project_id`),
+  KEY `pending_projects_users_user_id_fk` (`user_id`),
+  CONSTRAINT `pending_projects_projects_project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`),
+  CONSTRAINT `pending_projects_users_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Stores a list of pending projects';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pending_projects`
+--
+
+LOCK TABLES `pending_projects` WRITE;
+/*!40000 ALTER TABLE `pending_projects` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pending_projects` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `projects`
 --
 
@@ -100,10 +128,11 @@ CREATE TABLE `projects` (
   `user_id` int(11) NOT NULL,
   `project_name` varchar(50) NOT NULL,
   `date_created` datetime NOT NULL,
+  `seen` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`project_id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `projects_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -112,8 +141,33 @@ CREATE TABLE `projects` (
 
 LOCK TABLES `projects` WRITE;
 /*!40000 ALTER TABLE `projects` DISABLE KEYS */;
-INSERT INTO `projects` VALUES (71,1,'AJAX Res 3','2017-08-27 01:20:08'),(76,1,'New Upload Final','2017-08-27 03:34:09');
 /*!40000 ALTER TABLE `projects` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `uploaded_files`
+--
+
+DROP TABLE IF EXISTS `uploaded_files`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `uploaded_files` (
+  `serial_no` int(11) NOT NULL AUTO_INCREMENT,
+  `sha512_value` text,
+  `directory` text,
+  PRIMARY KEY (`serial_no`),
+  UNIQUE KEY `uploaded_files_serial_no_uindex` (`serial_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1 COMMENT='Store uploaded file data';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `uploaded_files`
+--
+
+LOCK TABLES `uploaded_files` WRITE;
+/*!40000 ALTER TABLE `uploaded_files` DISABLE KEYS */;
+INSERT INTO `uploaded_files` VALUES (7,'020d2c6885027642d46f7166bdd73529779d28c62e016d28bec25da0ea2d3f31e55e0912040a06466fb0e3c6a7df9c920e2c045aa9fd395ebd7279e5649fb7f3','/Users/muntashir/Documents/Projects/AWorDS/tmp/3553713677'),(8,'1aef94cb0882c9e0a9f2add0e01eadac45acf490798ed66bf8dca56afabf7545a30db65b509e11a353cfa650879c0007c4e08403c7e49c53c9da1062c63b5cc5','/Users/muntashir/Documents/Projects/AWorDS/tmp/3211461828'),(9,'9d56eee629a7ef1bc6ac2ed09662fcd8d2489d3a318bb6f86752725951564301c6f1d6312d268fb83ac01aa5289236109918377607bf37e39f4beb618e7633ab','/Users/muntashir/Documents/Projects/AWorDS/tmp/1623126884');
+/*!40000 ALTER TABLE `uploaded_files` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -132,8 +186,7 @@ CREATE TABLE `users` (
   `locked` tinyint(1) NOT NULL,
   `activation_key` varchar(50) NOT NULL,
   PRIMARY KEY (`user_id`),
-  UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `activation_key` (`activation_key`)
+  UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -143,7 +196,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Muntashir Al-Islam','muntashir.islam96@gmail.com','$2y$10$di/NluMKLEkld4R.PUDlD.WHQpIodOykrtr2VuGGcivZc0MIeBRpq','2017-05-28 18:21:26',0,'67b09ae3b19d0e13'),(4,'Mujtahid Akon','mujtahid.akon@gmail.com','9752ad5886739703b40702a2a4315104','2017-05-29 03:23:14',0,'c8e13029dc89412a'),(7,'Mahi','mahibuet045@gmail.com','$2y$10$cMsV/F8QTQPENw7J7yj.ve/oFioe88gme7xX3eFJAwZFn0j1ASb7G','2017-07-08 11:56:22',0,'11b12bf7c220fbe8');
+INSERT INTO `users` VALUES (1,'Muntashir Al-Islam','muntashir.islam96@gmail.com','$2y$10$0KJ04rPFlZjRXJM9.HzB/eRgkYoEj4P06JfzeAQHorjFWEfDnCwKy','2017-05-28 18:21:26',0,'0186dd1a606475ac'),(4,'Mujtahid Akon','mujtahid.akon@gmail.com','9752ad5886739703b40702a2a4315104','2017-05-29 03:23:14',0,'c8e13029dc89412a'),(7,'Mahi','mahibuet045@gmail.com','$2y$10$cMsV/F8QTQPENw7J7yj.ve/oFioe88gme7xX3eFJAwZFn0j1ASb7G','2017-07-08 11:56:22',0,'11b12bf7c220fbe8');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -156,4 +209,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-08-27  3:53:18
+-- Dump completed on 2017-09-22 23:16:48

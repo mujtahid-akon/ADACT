@@ -9,17 +9,17 @@
 namespace AWorDS\App\Models;
 
 /**
- * Class Directories
+ * Class FileManager
  *
  *
  * Directory Hierarchies & fixed files:
- * 1. Before the project is completed
+ * 1. New Project (before completion): PENDING_PROJECT
  * Config::WORKING_DIRECTORY/Projects/{project_id}/Files/
  *                                                      ./generated/
  *                                                      ./original/
  *                                                      ./config.json
  *
- * 2. After the completion
+ * 2. New Project (after completion), also the last project (editable): NEW_PROJECT|LAST_PROJECT
  * Config::PROJECT_DIRECTORY/{project_id}/
  *                                       ./Files/
  *                                              ./generated/
@@ -31,11 +31,29 @@ namespace AWorDS\App\Models;
  *                                       ./SpeciesRelation.txt
  *                                       ./UPGMA tree.jpg
  *                                       ./Neighbour tree.jpg
+ * 3. Other projects: REGULAR_PROJECT
+ * Config::PROJECT_DIRECTORY/{project_id}/
+ *                                       ./config.json
+ *                                       ./DistanceMatrix.txt
+ *                                       ./Output.txt
+ *                                       ./SpeciesRelation.json
+ *                                       ./SpeciesRelation.txt
+ *                                       ./UPGMA tree.jpg
+ *                                       ./Neighbour tree.jpg
  *
  * @package AWorDS\App\Models
  */
-class Directories extends Model
-{
+class FileManager extends Model{
+    // File constants
+    const SPECIES_RELATION         = 'SpeciesRelation.txt';
+    const SPECIES_RELATION_JSON    = 'SpeciesRelation.json';
+    const DISTANT_MATRIX           = 'DistanceMatrix.txt';
+    const DISTANT_MATRIX_FORMATTED = 'Output.txt';
+    const NEIGHBOUR_TREE           = 'Neighbour tree.jpg';
+    const UPGMA_TREE               = 'UPGMA tree.jpg';
+    const CONFIG_JSON              = 'config.json';
+
+
     // store flags
     const STORE_COPY     = 1;
     const STORE_DOWNLOAD = 2;
@@ -48,24 +66,19 @@ class Directories extends Model
     private $_directories;
     private $_pwd;
     private $_files = [];
+    private $_project_type;
+    private $_project_id;
 
     /**
      * Directories constructor.
-     * @param int $project_id
+     * @param int      $project_id
+     * @param null|int $project_type
      */
-    function __construct($project_id){
+    function __construct($project_id, $project_type = null){
         parent::__construct();
-
-        $this->_directories = [
-            'root' => self::WORKING_DIRECTORY . "/Projects/{$project_id}/Files",
-            'generated' => null,
-            'original'  => null,
-            'project'   => self::WORKING_DIRECTORY . "/Projects/{$project_id}"
-        ];
-        $this->_directories['generated'] = $this->_directories['root'] . '/generated';
-        $this->_directories['original']  = $this->_directories['root'] . '/original';
-
-        $this->_pwd = $this->_directories['root'];
+        $this->_project_id   = $project_id;
+        $this->_project_type = ($project_type === null) ? (new Project($project_id))->getType() : $project_type;
+        $this->_set_directories();
     }
 
     /**
@@ -73,7 +86,7 @@ class Directories extends Model
      */
     function create(){
         // Delete it if `Files` has already been found
-        if(file_exists($this->root())) passthru('rm -rf ' . $this->root());
+        if(file_exists($this->project_dir())) passthru('rm -rf ' . $this->root());
         mkdir($this->generated(), 0777, true);
         mkdir($this->original(), 0777, true);
     }
@@ -173,7 +186,7 @@ class Directories extends Model
      * NOTE: it overwrites the current file
      *
      * @param string $filename Target filename with extension (NOT a file path)
-     * @param string $source A filename, url, string
+     * @param string $source   A filename, url, string
      * @param int $flag STORE_COPY, STORE_MOVE, STORE_STRING
      * @return bool
      */
@@ -189,6 +202,26 @@ class Directories extends Model
                 return rename($source, $filename);
             default:
                 return false;
+        }
+    }
+
+    private function _set_directories(){
+        $working_dir = ($this->_project_type === Project::PENDING_PROJECT) ?
+            self::WORKING_DIRECTORY . '/Projects' : self::PROJECT_DIRECTORY;
+        $this->_directories = [
+            'root' => $working_dir . "/{$this->_project_id}",
+            'generated' => null,
+            'original'  => null,
+            'project'   => $working_dir . "/{$this->_project_id}/Files"
+        ];
+        if($this->_project_type != Project::REGULAR_PROJECT){
+            $this->_directories['project']   = $this->_directories['root'] . "/Files";
+            $this->_directories['generated'] = $this->_directories['project'] . '/generated';
+            $this->_directories['original']  = $this->_directories['project'] . '/original';
+
+            $this->_pwd = $this->_directories['project'];
+        }else{
+            $this->_pwd = $this->_directories['root'];
         }
     }
 }

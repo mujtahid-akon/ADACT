@@ -37,7 +37,7 @@ foreach ($unread_projects as $project){
                         <?php print implode("\n", $unread_projects_list); ?>
                     </ul>
                     <?php else: ?>
-                    <div role="menu" class="dropdown-menu">
+                    <div role="menu" class="dropdown-menu" style="width: max-content;">
                         <div style="padding: 5px 10px"><em>No new notifications.</em></div>
                     </div>
                     <?php endif; ?>

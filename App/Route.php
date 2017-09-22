@@ -100,7 +100,7 @@ class Route
             return;
         }else{
             http_response_code(HttpStatusCode::NOT_FOUND);
-            // TODO: 404 Error
+            // TODO: 404 Error page
         }
         return;
     }

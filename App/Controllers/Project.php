@@ -4,8 +4,10 @@ namespace AWorDS\App\Controllers;
 
 use \AWorDS\App\Constants;
 use AWorDS\App\HttpStatusCode;
+use AWorDS\App\Models\FileUploader;
 use AWorDS\App\Models\LastProjects;
 use AWorDS\App\Models\PendingProjects;
+use AWorDS\App\Models\ProjectConfig;
 use \AWorDS\Config;
 
 class Project extends Controller{
@@ -19,7 +21,7 @@ class Project extends Controller{
         /**
          * @var \AWorDS\App\Models\Project $project
          */
-        $project = $this->set_model();;
+        $project = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
             $this->set('logged_in', $logged_in);
@@ -96,6 +98,7 @@ class Project extends Controller{
     
     function new_project(){
         extract($this->_params);
+        $json = ['id' => null];
         /**
          * @var string $config A JSON string containing all configurations
          */
@@ -104,8 +107,11 @@ class Project extends Controller{
          */
         $project = $this->set_model();
         $logged_in = $project->login_check();
-        $this->json(['id' => (($logged_in && $config != null) ?
-            $project->add(json_decode(htmlspecialchars_decode($config), true)) : null)]);
+        if($logged_in && $config != null){
+            $project_id = $project->add(json_decode(htmlspecialchars_decode($config), true));
+            $json['id'] = $project_id;
+        }
+        $this->json($json);
     }
 
     function new_project_page(){
@@ -120,7 +126,7 @@ class Project extends Controller{
         }
         $this->set('logged_in', $logged_in);
         $this->set('active_tab', 'new');
-        $this->set('dissimilarity_index', $project->dissimilarity_index);
+        $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
     }
     
     function file_upload(){
@@ -131,7 +137,7 @@ class Project extends Controller{
         $logged_in = $project->login_check();
         $this->json(($logged_in && isset($_FILES['filef'])) ?
             $project->uploadFile($_FILES['filef']) :
-            ['status' => Constants::FILE_UPLOAD_FAILED]);
+            ['status' => FileUploader::FILE_UPLOAD_FAILED]);
     }
 
     /**
@@ -204,8 +210,9 @@ class Project extends Controller{
                 $this->set('project_id', $project_id);
                 $this->set(Constants::ACTIVE_TAB, 'projects');
                 $this->set('isTheLastProject', (new LastProjects())->isA($project_id));
-                $this->set('dissimilarity_index', $project->dissimilarity_index);
+                $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
                 $this->set('isAPendingProject', (new PendingProjects())->isA($project_id));
+                $this->set('project_info', $project->get($project_id));
                 $project->set_seen($project_id);
             }else{
                 $this->redirect(Config::WEB_DIRECTORY . 'projects');
@@ -215,18 +222,65 @@ class Project extends Controller{
         }
     }
 
-    function process_data(){
-        extract($this->get_params());
+    function pending_projects(){
         /**
          * @var \AWorDS\App\Models\Project $project
          */
         $project = $this->set_model();
-        if($project->login_check()){
-            //
-        }else $this->redirect('/projects');
+        $logged_in = $project->login_check();
+        if($logged_in){
+            $this->set('logged_in', $logged_in);
+            $this->set('active_tab', 'projects');
+            $this->set('projects', $project->getAllPending());
+        }else $this->redirect();
     }
 
-    function pending_projects(){
-        // TODO
+    function status(){
+        extract($this->_params);
+        $json = [];
+        /**
+         * @var string $project_id A JSON string containing all configurations
+         */
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();
+        $logged_in = $project->login_check();
+        if($logged_in){
+            $json = ['status_code' => PendingProjects::PROJECT_FAILURE, "status" => null];
+            if($project->verify($project_id)){
+                $pending_project = new PendingProjects($project_id);
+                if($pending_project->isA()){
+                    $status = $pending_project->get();
+                    $json['status_code'] = $status['status_code'];
+                    $json['status']      = $status['status'];
+                }else{
+                    $json['status_code'] = $pending_project::PROJECT_SUCCESS;
+                }
+            }
+        }
+        $this->json($json);
+    }
+
+    function cancel_process(){
+        extract($this->_params);
+        $json = ['status' => Constants::PROJECT_DELETE_FAILED]; // Failed
+        /**
+         * @var string $project_id A JSON string containing all configurations
+         */
+        /**
+         * @var \AWorDS\App\Models\Project $project
+         */
+        $project = $this->set_model();
+        $logged_in = $project->login_check();
+        if($logged_in){
+            if($project->verify($project_id)){
+                $pending_project = new PendingProjects($project_id);
+                if($pending_project->isA()){
+                    $json['status'] = $project->delete($project_id); // 0 = SUCCESS
+                }
+            }
+        }
+        $this->json($json);
     }
 }

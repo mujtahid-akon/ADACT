@@ -5,25 +5,19 @@
  * Date: 9/7/17
  * Time: 5:04 PM
  */
-session_start();
 
 require_once __DIR__ . '/../autoload.php';
 
-if($argc != 2){
-    session_destroy();
-    exit(1);
+// get all the pending projects
+$pending_projects = (new \AWorDS\App\Models\PendingProjects())->getAll();
+
+if($pending_projects !== false) {
+    foreach ($pending_projects as $project) {
+        (new \AWorDS\App\Models\Process($project['id'], $project['user']))->init();
+    }
+}else{
+    null;
+    //print date("[d M Y H:i:s]") . " No process at this time.\n";
 }
 
-extract(json_decode($argv[1], true));
-/**
- * Extracted from supplied argument
- *
- * @var int       $project_id
- * @var int       $user_id
- * @var array|int $uploaded_files
- */
-
-(new \AWorDS\App\Models\Process($project_id, $user_id, $uploaded_files))->init();
-
-session_destroy();
 exit(0);
