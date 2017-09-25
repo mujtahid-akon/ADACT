@@ -1,0 +1,30 @@
+graph UPGMATree {
+	node [shape=plaintext]
+	A [label=1
+ color=yellow shape=egg]
+	B [label=2
+ color=yellow shape=egg]
+	C [label=3
+ color=yellow shape=egg]
+	D [label=4
+ color=yellow shape=egg]
+	E [label=5
+ color=yellow shape=egg]
+	F [label=6
+ color=yellow shape=egg]
+	10 [label="" color=blue shape=point]
+	9 [label="" color=blue shape=point]
+	8 [label="" color=blue shape=point]
+	7 [label="" color=blue shape=point]
+	6 [label="" color=blue shape=point]
+	10 -- 9 [color=red]
+	9 -- 8 [color=red]
+	8 -- A [color=red]
+	8 -- 7 [color=red]
+	7 -- C [color=red]
+	7 -- F [color=red]
+	9 -- E [color=red]
+	10 -- 6 [color=red]
+	6 -- B [color=red]
+	6 -- D [color=red]
+}

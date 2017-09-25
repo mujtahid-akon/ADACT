@@ -46,7 +46,11 @@ class Process extends Model{
             self::LINUX  => self::EXEC_LOCATION . '/dm',
             self::DARWIN => self::EXEC_LOCATION . '/dm_mac'
         ],
-        "phylogenetic_tree" => 'java -cp ' . self::EXEC_LOCATION . ' Match7'
+        //"phylogenetic_tree" => 'java -cp ' . self::EXEC_LOCATION . ' Match7',
+        "phy_tree" => [
+            "upgma" => 'python ' . self::EXEC_LOCATION . '/upgma.py', // UPGMA Tree
+            "nj" => 'python ' . self::EXEC_LOCATION . '/nj.py'       // Neighbour Trees
+        ]
     ];
     private $_platform;
     /**
@@ -108,11 +112,11 @@ class Process extends Model{
             $this->halt('Generating distance matrix failed!');
         }
         // 4. Generate phylogenetic trees: FIXME
-//        $this->_pending_process->status(PendingProjects::PROJECT_GENERATE_PT);
-//        if(!$this->generate_phylogenetic_trees()){
-//            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
-//            $this->halt('Generating Phylogenetic trees failed!');
-//        }
+        $this->_pending_process->status(PendingProjects::PROJECT_GENERATE_PT);
+        if(!$this->generate_phylogenetic_trees()){
+            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
+            $this->halt('Generating Phylogenetic trees failed!');
+        }
         // 5. Copy them to the project directory
         $this->_pending_process->status(PendingProjects::PROJECT_TAKE_CARE);
         if(!$this->takeCare()){
@@ -197,7 +201,11 @@ EOF;
     }
 
     private function generate_phylogenetic_trees(){
-        exec(self::EXECS['phylogenetic_tree'] . ' "'. $this->_fm->generated() .'/"', $output, $return);
+        $this->_fm->cd($this->_fm->generated());
+        $c_species = count($this->_config->data);
+        //exec(self::EXECS['phylogenetic_tree'] . ' "'. $this->_fm->generated() .'/"', $output, $return);
+        exec(self::EXECS['phy_tree']['upgma'] . ' "'. $this->_fm->get('SpeciesFull.txt') .'" "'. $this->_fm->get(FileManager::DISTANT_MATRIX) .'" '.$c_species, $output, $return); // FIXME
+        exec(self::EXECS['phy_tree'][   'nj'] . ' "'. $this->_fm->get('SpeciesFull.txt') .'" "'. $this->_fm->get(FileManager::DISTANT_MATRIX) .'" '.$c_species, $output, $return); // FIXME
         $this->_log(implode("\n", $output));
         return $return === 0 ? true : false;
     }
