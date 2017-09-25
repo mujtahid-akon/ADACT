@@ -56,7 +56,6 @@ class Project extends Controller{
         $this->_HTML = false;
         if(isset($this->_url_params['project_id'])) $project_id = $this->_url_params['project_id'];
         else exit();
-        
         /**
          * @var \AWorDS\App\Models\Project $project
          */
@@ -130,14 +129,22 @@ class Project extends Controller{
     }
     
     function file_upload(){
+        $json = ['status' => FileUploader::FILE_UPLOAD_FAILED];
         /**
-         * @var \AWorDS\App\Models\Project $project
+         * @var \AWorDS\App\Models\FileUploader $project
          */
-        $project = $this->set_model();
+        $project = $this->set_model('FileUploader');
         $logged_in = $project->login_check();
-        $this->json(($logged_in && isset($_FILES['filef'])) ?
-            $project->uploadFile($_FILES['filef']) :
-            ['status' => FileUploader::FILE_UPLOAD_FAILED]);
+        if($logged_in && isset($_FILES['filef'])){
+            $json = $project->upload($_FILES['filef']);
+            if(is_array($json)){ // File uploaded successfully
+                $json['status'] = FileUploader::FILE_UPLOAD_SUCCESS;
+            }else{
+                $json = ['status' => $json];
+            }
+        }
+        $this->json($json);
+
     }
 
     /**

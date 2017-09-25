@@ -177,11 +177,57 @@ endif; // isAPendingProject
 <?php
 if(!$isAPendingProject):
 ?>
+<script src="Treant.js"></script>
+<script src="vendor/raphael.js"></script>
+<script src="vendor/jquery.easing.js"></script>
+<script>
+    var file = document.createElement("link");
+    file.setAttribute("rel", "stylesheet");
+    file.setAttribute("type", "text/css");
+    file.setAttribute("href", "Treant.css");
+    document.head.appendChild(file);
+
+    const upgma = '<?php print (new \AWorDS\App\Models\UPGMATree($project_id))->generate_tree(); ?>';
+    const nj    = '<?php print (new \AWorDS\App\Models\NeighborJoiningTree($project_id))->generate_tree(); ?>';
+    const upgma_config = {
+        chart: {
+            container: "#upgma_tree_view",
+            nodeAlign: "BOTTOM",
+            connectors: {
+                type: "step",
+                style: {
+                    "stroke-width": 1,
+                    "stroke": "#ccc"
+                }
+            }
+        },
+        nodeStructure: {
+            children: JSON.parse(upgma)
+        }
+    };
+
+    const nj_config = {
+        chart: {
+            container: "#nj_tree_view",
+            nodeAlign: "BOTTOM",
+            connectors: {
+                type: "step",
+                style: {
+                    "stroke-width": 1,
+                    "stroke": "#ccc"
+                }
+            }
+        },
+        nodeStructure: {
+            children: JSON.parse(nj)
+        }
+    };
+</script>
 <div style="padding-bottom: 10px;">
     <button onclick="$('.output').hide();$('#distance_matrix').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default active">Distance Matrix</button>
     <button onclick="$('.output').hide();$('#sorted_species_relation').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default">Sorted Species Relation</button>
-    <button onclick="$('.output').hide();$('#neighbour_tree').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default">Neighbour tree</button>
-    <button onclick="$('.output').hide();$('#upgma_tree').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default">UPGMA tree</button>
+    <button onclick="$('.output').hide();$('#neighbour_tree').show();$('.views').removeClass('active');$(this).addClass('active');new Treant(nj_config);" class="views btn btn-default">Neighbour Joining Tree</button>
+    <button onclick="$('.output').hide();$('#upgma_tree').show();$('.views').removeClass('active');$(this).addClass('active');new Treant(upgma_config);" class="views btn btn-default">UPGMA tree</button>
 </div>
 <div>
     <?php
@@ -190,22 +236,18 @@ if(!$isAPendingProject):
     /** @var array  $species */
     /** @var array  $species_relations */
     $neighbourTree = '/NeighbourTree.jpg';
-    $UPGMATree     = 'UPGMATree.jpg';
-    if(file_exists($project_dir . $neighbourTree)):
+    $UPGMATree     = '/UPGMATree.jpg';
     ?>
     <div id="neighbour_tree" class="output" style="display: none;">
-        <a href="<?php print $download_url . $neighbourTree ?>">Download Neighbour Tree</a><br />
+        <a href="<?php print $download_url . $neighbourTree ?>">Download Neighbour Joining Tree</a><br />
         <img src="<?php print $download_url . $neighbourTree ?>" />
+        <div id="nj_tree_view"></div>
     </div>
-    <?php endif ?>
-    <?php
-    if(file_exists($project_dir . $UPGMATree)):
-    ?>
     <div id="upgma_tree" class="output" style="display: none;">
         <a href="<?php print $download_url . $UPGMATree ?>">Download UPGMA Tree</a><br />
-        <img src="<?php print $download_url . $UPGMATree ?>" />
+        <!--img src="<?php print $download_url . $UPGMATree ?>" /-->
+        <div id="upgma_tree_view"></div>
     </div>
-    <?php endif ?>
     <div id="sorted_species_relation" style="text-align: left; display: none;" class="output">
         <a href="<?php print $download_url . '/SpeciesRelation.txt' ?>">Download Sorted Species Relation</a><br />
         <table class="table table-striped table-hover">

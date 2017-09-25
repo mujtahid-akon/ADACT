@@ -40,8 +40,6 @@ class Project extends Model{
      *
      * Creates a new project
      *
-     * // FIXME: this should only create a new project and return the project_id
-     * 
      * @param array $config
      * @return null|int returns the id number on success, null on failure
      */
@@ -74,26 +72,6 @@ class Project extends Model{
             }
         }
         return null;
-    }
-
-    /**
-     * uploadFile method.
-     *
-     * FIXME: This should a controller
-     *
-     * Uploads a valid file: verify file upload
-     *
-     * @param array $zip_file Contains file related info
-     * @return array File upload status, and an array of species names on success
-     */
-    function uploadFile($zip_file){
-        $status = (new FileUploader())->upload($zip_file);
-        if(is_array($status)){ // File uploaded successfully
-            $status['status'] = FileUploader::FILE_UPLOAD_SUCCESS;
-            return $status;
-        }else{
-            return ['status' => $status];
-        }
     }
 
     /**

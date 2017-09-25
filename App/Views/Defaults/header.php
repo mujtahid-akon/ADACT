@@ -32,7 +32,7 @@ foreach ($unread_projects as $project){
         <div id="navbar_collapse" class="collapse navbar-collapse nav navbar-nav navbar-right">
             <ul class="nav navbar-nav">
                 <li><a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="glyphicon glyphicon-bell"></b><?php if($unread_projects_count > 0) print "<sup class='unread-count'>{$unread_projects_count}</sup>"; ?></a>
-                    <?php if($unread_projects_count > 0): ?>
+                    <?php if($unread_projects_count > 0): //TODO: Notifications should be updated after an interval ?>
                     <ul role="menu" class="dropdown-menu">
                         <?php print implode("\n", $unread_projects_list); ?>
                     </ul>
