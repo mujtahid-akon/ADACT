@@ -65,14 +65,23 @@ class Controller
         $this->_url_params  = $url_params;
 
         // FIXME: only GET and POST is implemented
-        if(in_array($method, [Route::GET, Route::POST])){
-            if($method == Route::GET){
-                $parameters = $_GET;
-                $input_method = INPUT_GET;
-            }else{
-                $parameters = $_POST;
-                $input_method = INPUT_POST;
+        if(in_array($method, [Route::GET, Route::POST, Route::PUT, Route::DELETE, Route::HEAD, Route::PATCH, Route::OPTIONS])){
+            switch ($method){
+                case Route::GET:
+                    $parameters = $_GET;
+                    $input_method = INPUT_GET;
+                    break;
+                case Route::POST:
+//                    file_get_contents("php://input", false, stream_context_get_default(), 0, $_SERVER["CONTENT_LENGTH"]);
+                    $parameters = $_POST;
+                    $input_method = INPUT_POST;
+                    break;
+                default:
+                    $parameters = $_REQUEST;
+                    $input_method = INPUT_REQUEST;
             }
+
+//            if(in_array($method, [Route::GET, Route::POST]))
             foreach($params as $param => &$value){
                 $filter_type = $value;
                 switch($filter_type){
@@ -168,6 +177,9 @@ class Controller
      * @param bool $isItOk
      */
     function load_view($isItOk){
+        $this->_HTML = true;
+        $this->_redirect = false;
+        $this->_JSON = false;
         $this->_HTML_load_view = $isItOk;
     }
 
@@ -231,10 +243,13 @@ class Controller
     }
 
     private function __send_response(){
-        //error_log("Session Status: " . (session_status() == 1 ? "NONE" : "ACTIVE"));
         http_response_code($this->response_code);
         if($this->_redirect) header("Location: {$this->_redirect_location}");
-        elseif($this->_JSON) print json_encode($this->_JSON_contents, JSON_PRETTY_PRINT);
-        elseif($this->_HTML AND $this->_HTML_load_view) $this->_template->render();
+        elseif($this->_JSON){
+            header('Content-Type: application/json; charset=UTF-8');
+            print json_encode($this->_JSON_contents, JSON_PRETTY_PRINT);
+        }elseif($this->_HTML){
+            if($this->_HTML_load_view) $this->_template->render();
+        }
     }
 }

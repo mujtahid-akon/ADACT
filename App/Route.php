@@ -20,6 +20,10 @@ class Route
     const POST   = 'POST';
     const PUT    = 'PUT';
     const DELETE = 'DELETE';
+    const PATCH  = 'PATCH';
+    const HEAD   = 'HEAD';
+    const OPTIONS= 'OPTIONS';
+    const ALL    = [Route::GET, Route::POST, Route::PUT, Route::DELETE, Route::PATCH, Route::HEAD, Route::OPTIONS];
     
     /**
      * Filter inputs
@@ -47,21 +51,33 @@ class Route
      *
      * Adds route(s)
      *
-     * @param string $method  Which method, Route::GET, POST, PUT, DELETE should be used
-     * @param string $url     Route name (to be replaced by pattern)
-     * @param string $action  Controller at action
-     * @param array  $params  Transferred from user
+     * @param string|array $method  Which method or a list of methods, Route::GET, POST, PUT, DELETE should be used
+     * @param string       $url     Route name (to be replaced by pattern)
+     * @param string       $action  Controller at action
+     * @param array        $params  Transferred from user
      */
     public static function add($method, $url, $action, $params = array()){
         // Transform url to url pattern
-        $url = preg_replace('/\//', '\/', preg_replace('/\{(\w+)\}/','(?<$1>[\w\.\-]+)', $url));
-        $route = [
-            'method' => $method,
-            'url'    => $url,
-            'action' => $action,
-            'params' => $params
-        ];
-        array_push(self::$routes, $route);
+        $url = preg_replace('/\//', '\/', preg_replace('/\{([A-Za-z0-9\-\_\.\+\!\*\’\(\,\;\:\@\=]+)\}/','(?<$1>[A-Za-z0-9\-\_\.\+\!\*\’\(\,\;\:\@\=]+)', $url));
+        if(is_array($method)){
+            foreach ($method as $item){
+                $route = [
+                    'method' => $item,
+                    'url'    => $url,
+                    'action' => $action,
+                    'params' => $params
+                ];
+                array_push(self::$routes, $route);
+            }
+        }else{ // String
+            $route = [
+                'method' => $method,
+                'url'    => $url,
+                'action' => $action,
+                'params' => $params
+            ];
+            array_push(self::$routes, $route);
+        }
     }
 
     public static function verify($method, $url){

@@ -37,7 +37,7 @@ class PendingProjects extends Model
     function __construct($project_id = null, $user_id = null){
         parent::__construct();
         if($project_id !== null) $this->project_id = $project_id;
-        if($user_id !== null) $this->user_id = $user_id;
+        $this->user_id = ($user_id !== null) ? $user_id : $_SESSION['user_id'];
     }
 
     /**
@@ -93,12 +93,9 @@ class PendingProjects extends Model
      * Get all project info
      *
      * @param bool $idOnly Whether to return only a list of id
-     * @return array|bool Similar to self::get() except that it returns a list of info
+     * @return array|bool a list of [id, status, status_code, cancel] or only ids, or empty array
      */
     function getAll($idOnly = false){
-//        if($this->user_id === null){
-//            $this->user_id = $_SESSION['user_id'];
-//        }
         $info_list = [];
         $query = ($this->user_id === null) ?
             "SELECT project_id, user_id, status_code, cancel FROM pending_projects" :
@@ -108,7 +105,7 @@ class PendingProjects extends Model
                 $stmt->bind_param('i', $this->user_id);
             $stmt->execute();
             $stmt->store_result();
-            if($stmt->num_rows >= Constants::COUNT_ONE){
+            if($stmt->num_rows >= 1){
                 for($i = 0; $i<$stmt->num_rows; ++$i){
                     $info = [
                         'id' => null,
@@ -126,7 +123,7 @@ class PendingProjects extends Model
                 return $info_list;
             }
         }
-        return false;
+        return [];
     }
 
     /**
@@ -176,7 +173,7 @@ class PendingProjects extends Model
      * @param int $status_code
      * @return bool
      */
-    function status($status_code, $project_id = null){
+    function set_status($status_code, $project_id = null){
         if($project_id === null){
             $project_id = $this->project_id;
         }else{

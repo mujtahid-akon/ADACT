@@ -2,7 +2,6 @@
 if(preg_match('/^\/(Treant|vendor|css|ico|fonts|js|test\.php)/', $_SERVER['REQUEST_URI'], $matches)){
     // Local directories
     $file = __DIR__ . '/public' . $_SERVER['REQUEST_URI'];
-    error_log($file);
     if(file_exists($file)){
         $mime = null;
         switch(get_mime($file)){

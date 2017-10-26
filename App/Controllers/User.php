@@ -8,7 +8,7 @@ use AWorDS\Config;
 class User extends Controller
 {
     public function register(){
-        extract($this->_params);
+        extract($this->get_params());
         /**
          * @var string $name
          * @var string $email
@@ -42,7 +42,7 @@ class User extends Controller
     }
     
     public function login(){
-        extract($this->_params);
+        extract($this->get_params());
         /**
          * @var string $email
          * @var string $pass
@@ -75,7 +75,7 @@ class User extends Controller
     }
     
     public function login_page(){
-        extract($this->_params);
+        extract($this->get_params());
         /**
          * @var string $email
          */
@@ -101,7 +101,7 @@ class User extends Controller
     
     public function unlock(){
         $this->set_model();
-        extract($this->_params);
+        extract($this->get_params());
         /**
          * @var string $email
          * @var string $key
@@ -111,7 +111,7 @@ class User extends Controller
     }
     
     public function reset_password(){
-        extract($this->_params);
+        extract($this->get_params());
         /**
          * @var string $email
          * @var string $pass
@@ -132,7 +132,7 @@ class User extends Controller
     }
     
     public function reset_password_page(){
-        extract($this->_params);
+        extract($this->get_params());
         /**
          * @var string $email
          * @var string $key

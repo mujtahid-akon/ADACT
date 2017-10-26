@@ -3,9 +3,32 @@
 namespace AWorDS\App\Models;
 
 use \AWorDS\App\Constants;
-use AWorDS\App\Session;
 
 class User extends Model{
+    const ACTIVATION_KEY_LENGTH = 16;   // Can be up to 50
+
+    /**
+     * Login related constants
+     */
+    const LOGIN_LOCKED  = 2;
+    const LOGIN_SUCCESS = 0;
+    const LOGIN_FAILURE = 1;
+    const SHORTAGE_OF_ARGUMENTS = 100;
+
+    const MAX_LOGIN_ATTEMPTS = 3;
+
+    /**
+     * Register related constants
+     */
+    const REGISTER_SUCCESS = 0;
+    const REGISTER_FAILURE = 1;
+
+    /**
+     * Accounts related constants
+     */
+    CONST ACCOUNT_EXISTS = 4;
+    const ACCOUNT_DOES_NOT_EXIST = 5;
+
     /**
      * InputMethod login
      *
@@ -14,23 +37,23 @@ class User extends Model{
      * @return int
      */
     function login($email, $pass){
-       if(@$stmt = $this->mysqli->prepare('SELECT `user_id`, `password`, `locked` FROM users WHERE email=?')){
+        if(@$stmt = $this->mysqli->prepare('SELECT `user_id`, `password`, `locked` FROM users WHERE email=?')){
             $stmt->bind_param('s', $email);
             $stmt->execute();
             $stmt->store_result();
-            if($stmt->num_rows == Constants::COUNT_ONE){
+            if($stmt->num_rows == 1){
                 $stmt->bind_result($user_id, $hash, $isLocked);
                 $stmt->fetch();
-                if($isLocked == Constants::BOOL_TRUE) return Constants::LOGIN_LOCKED;
+                if($isLocked == 1) return self::LOGIN_LOCKED;
                 if(password_verify($pass, $hash)){
                     $this->new_session($user_id, session_id());
-                    return Constants::LOGIN_SUCCESS;
+                    return self::LOGIN_SUCCESS;
                 }
             }
         }
-        
+
         $this->add_to_login_attempts($email);
-        return Constants::LOGIN_FAILURE;
+        return self::LOGIN_FAILURE;
     }
     
     function logout(){
@@ -39,21 +62,21 @@ class User extends Model{
     
     function register($name, $email, $pass){
         $hash = password_hash($pass, PASSWORD_DEFAULT);
-        if($this->user_exists($email) == Constants::ACCOUNT_EXISTS) return Constants::ACCOUNT_EXISTS;
+        if($this->user_exists($email) == self::ACCOUNT_EXISTS) return self::ACCOUNT_EXISTS;
         $activation_key = $this->activation_key();
         if(@$stmt = $this->mysqli->prepare('INSERT INTO `users`(`name`, `email`, `password`, `joined_date`, `locked`, `activation_key`) VALUE(?,?,?, NOW(), 1, ?)')){
             $stmt->bind_param('ssss', $name, $email, $hash, $activation_key);
             $stmt->execute();
-            if($stmt->affected_rows == Constants::COUNT_ONE){
+            if($stmt->affected_rows == 1){
                 if($this->email_new_ac($name, $email, $activation_key)){
-                    return Constants::REGISTER_SUCCESS;
+                    return self::REGISTER_SUCCESS;
                 }else{
                     // TODO: delete a/c too
-                    return Constants::REGISTER_FAILURE;
+                    return self::REGISTER_FAILURE;
                 }
             }
         }
-        return Constants::REGISTER_FAILURE;
+        return self::REGISTER_FAILURE;
     }
     
     function unlock($email, $key){
@@ -61,7 +84,7 @@ class User extends Model{
             $stmt->bind_param('ss', $email, $key);
             $stmt->execute();
             $stmt->store_result();
-            if($stmt->affected_rows == Constants::COUNT_ONE) return true;
+            if($stmt->affected_rows == 1) return true;
         }
         return false;
     }
@@ -98,9 +121,9 @@ EOF;
             $stmt->store_result();
             $stmt->bind_result($count);
             $stmt->fetch();
-            if($count == Constants::COUNT_ONE) return Constants::ACCOUNT_EXISTS;
+            if($count == 1) return self::ACCOUNT_EXISTS;
         }
-        return Constants::ACCOUNT_DOES_NOT_EXIST;
+        return self::ACCOUNT_DOES_NOT_EXIST;
     }
     
     function email_new_ac($name, $email, $activation_key){
@@ -132,7 +155,7 @@ EOF;
             $stmt->bind_param('i', $user_id);
             $stmt->execute();
             $stmt->store_result();
-            if($stmt->num_rows == Constants::COUNT_ONE){
+            if($stmt->num_rows == 1){
                 $stmt->bind_result($email);
                 $stmt->fetch();
                 return $email;
@@ -154,32 +177,32 @@ EOF;
     }
     
     private function activation_key(){
-        $max = ceil(Constants::ACTIVATION_KEY_LENGTH / 40);
+        $max = ceil(self::ACTIVATION_KEY_LENGTH / 40);
         $random = '';
         for ($i = 0; $i < $max; $i ++) {
         $random .= sha1(microtime(true).mt_rand(10000,90000));
         }
-        $random = substr($random, 0, Constants::ACTIVATION_KEY_LENGTH);
+        $random = substr($random, 0, self::ACTIVATION_KEY_LENGTH);
         if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM users WHERE activation_key=?')){
             $stmt->bind_param('s', $random);
             $stmt->execute();
             $stmt->store_result();
             $stmt->bind_result($count);
             $stmt->fetch();
-            if($count == Constants::COUNT_ONE) return $this->activation_key();
+            if($count == 1) return $this->activation_key();
         }
         return $random;
     }
-    
+
     // TODO: Not implemented yet
     private function add_to_login_attempts($email){
-        if($this->user_exists($email) == Constants::ACCOUNT_EXISTS){
+        if($this->user_exists($email) == self::ACCOUNT_EXISTS){
             // Doesn't need to check if the a/c is locked, since it's already being checked at login()
             if(@$stmt = $this->mysqli->prepare('SELECT `user_id` FROM `users` WHERE `email` = ?')){
                 $stmt->bind_param('s', $email);
                 $stmt->execute();
                 $stmt->store_result();
-                if($stmt->num_rows == Constants::COUNT_ONE){
+                if($stmt->num_rows == 1){
                     $stmt->bind_result($user_id);
                     $stmt->fetch();
                     if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `login_attempts` WHERE `user_id` = '. $user_id)){
@@ -187,18 +210,18 @@ EOF;
                         $stmt->store_result();
                         $stmt->bind_result($count);
                         $stmt->fetch();
-                        $sql = ($count == Constants::COUNT_ONE) ?
+                        $sql = ($count == 1) ?
                             'UPDATE `login_attempts` SET `attempts` = `attempts` + 1' : 'INSERT INTO `login_attempts` VALUE(' . $user_id . ', 1)';
                         // First, get the no. of attempts
-                        if($count == Constants::COUNT_ONE){
+                        if($count == 1){
                             if($stmt = $this->mysqli->prepare('SELECT `attempts` FROM `login_attempts` WHERE `user_id` = '. $user_id)){
                                 $stmt->execute();
                                 $stmt->store_result();
                                 $stmt->bind_result($attempts);
                                 $stmt->fetch();
-                                if($attempts == Constants::MAX_LOGIN_ATTEMPTS){
+                                if($attempts == self::MAX_LOGIN_ATTEMPTS){
                                     // The account is locked
-                                    return Constants::LOGIN_LOCKED;
+                                    return self::LOGIN_LOCKED;
                                 }
                             }
                         }
@@ -217,7 +240,7 @@ EOF;
      * - Delete login_attempts
      */
     function delete_account(){
-        //
+        // TODO
     }
 
     public function get_info($user_id = null){

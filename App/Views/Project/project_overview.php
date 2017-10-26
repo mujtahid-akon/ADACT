@@ -5,13 +5,14 @@
  * Date: 6/7/17
  * Time: 6:40 PM
  */
-use \AWorDS\App\Constants;
 use \AWorDS\App\Models\FileManager;
+use \AWorDS\App\Models\ProjectConfig;
+use \AWorDS\App\Models\Project;
+use \AWorDS\Config;
 /**
  * @var bool $logged_in
  */
 if(!$logged_in) exit();
-
 
 /**
  * Variables exported from Project controller
@@ -24,10 +25,9 @@ if(!$logged_in) exit();
  */
 
 // load config
-$config = new \AWorDS\App\Models\ProjectConfig((new FileManager($project_id))->get(FileManager::CONFIG_JSON));
-
+$config = new ProjectConfig((new FileManager($project_id))->get(FileManager::CONFIG_JSON));
 // Project type
-$isAFileIOProject = $config->type === Constants::PROJECT_TYPE_FILE;
+$isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
 // Base url
 $base_url = $_SERVER['PHP_SELF'];
 // Transform Absent Words type to uppercase
@@ -37,14 +37,13 @@ $config->aw_type = strtoupper($config->aw_type);
 if(!$isAPendingProject){
     // Info downloading url
     $download_url = $base_url . '/get';
-    $project_dir = \AWorDS\Config::PROJECT_DIRECTORY . '/' . $project_id;
+    $project_dir = Config::PROJECT_DIRECTORY . '/' . $project_id;
     // Get Species Relation
     $relation_file = $project_dir . '/SpeciesRelation.json';
     $species_relations = json_decode(file_get_contents($project_dir . '/SpeciesRelation.json'), true);
     // Get Species names
     $species = get_species_from_species_relation($species_relations);
 }
-
 
 /**
  * Get a list of species from the species relations
@@ -125,7 +124,7 @@ endif; // isAPendingProject
     <?php
     if($isAPendingProject):
     ?>
-        <script src="/js/app.js"></script>
+        <!--script src="/js/app.js"></script-->
         <button onclick="Project.process.cancel(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" class="btn btn-default">Cancel Project</button>
     <?php
     else:
@@ -134,7 +133,7 @@ endif; // isAPendingProject
     <?php
     endif; // isAPendingProject
     ?>
-    <a class="btn btn-default" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"\"") ?>>Fork This Project</a>
+    <a class="btn btn-default" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"/projects/{$project_id}/fork\"") ?>>Fork This Project</a>
 </div>
 
 <div id="project_info" <?php print ($isAPendingProject ? '' : 'style="display: none;"') ?>>
@@ -158,7 +157,7 @@ endif; // isAPendingProject
     <table id="project_info" class="table table-bordered table-striped table-hover">
         <caption>Species Info</caption>
         <thead>
-        <tr><th><?php print ($isAFileIOProject ? "SL" : "ID"); ?></th><th>Title/Header</th><th>Short Name</th></tr>
+        <tr><th><?php print ($isAFileIOProject ? "#" : "ID"); ?></th><th>Title/Header</th><th>Short Name</th></tr>
         </thead>
         <tbody>
         <?php
@@ -176,6 +175,7 @@ endif; // isAPendingProject
 <br />
 <?php
 if(!$isAPendingProject):
+    $tree = new \AWorDS\App\Models\Tree($project_id);
 ?>
 <script src="Treant.js"></script>
 <script src="vendor/raphael.js"></script>
@@ -187,8 +187,8 @@ if(!$isAPendingProject):
     file.setAttribute("href", "Treant.css");
     document.head.appendChild(file);
 
-    const upgma = '<?php print (new \AWorDS\App\Models\UPGMATree($project_id))->generate_tree(); ?>';
-    const nj    = '<?php print (new \AWorDS\App\Models\NeighborJoiningTree($project_id))->generate_tree(); ?>';
+    const upgma = '<?php print json_encode(($tree->generate_tree($tree::UPGMA))->getFormattedLabels()); ?>';
+    const nj    = '<?php print json_encode(($tree->generate_tree($tree::NJ))->getFormattedLabels()); ?>';
     const upgma_config = {
         chart: {
             container: "#upgma_tree_view",
@@ -224,10 +224,10 @@ if(!$isAPendingProject):
     };
 </script>
 <div style="padding-bottom: 10px;">
-    <button onclick="$('.output').hide();$('#distance_matrix').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default active">Distance Matrix</button>
-    <button onclick="$('.output').hide();$('#sorted_species_relation').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default">Sorted Species Relation</button>
-    <button onclick="$('.output').hide();$('#neighbour_tree').show();$('.views').removeClass('active');$(this).addClass('active');new Treant(nj_config);" class="views btn btn-default">Neighbour Joining Tree</button>
-    <button onclick="$('.output').hide();$('#upgma_tree').show();$('.views').removeClass('active');$(this).addClass('active');new Treant(upgma_config);" class="views btn btn-default">UPGMA tree</button>
+    <a href="/projects/<?php print $project_id ?>#distance_matrix" onclick="$('.output').hide();$('#distance_matrix').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default active">Distance Matrix</a>
+    <a href="/projects/<?php print $project_id ?>#sorted_species_relation" onclick="$('.output').hide();$('#sorted_species_relation').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default">Sorted Species Relation</a>
+    <a href="/projects/<?php print $project_id ?>#neighbour_tree" onclick="$('.output').hide();$('#neighbour_tree').show();$('.views').removeClass('active');$(this).addClass('active');new Treant(nj_config);" class="views btn btn-default">Neighbour Joining Tree</a>
+    <a href="/projects/<?php print $project_id ?>#upgma_tree" onclick="$('.output').hide();$('#upgma_tree').show();$('.views').removeClass('active');$(this).addClass('active');new Treant(upgma_config);" class="views btn btn-default">UPGMA tree</a>
 </div>
 <div>
     <?php
@@ -240,16 +240,14 @@ if(!$isAPendingProject):
     ?>
     <div id="neighbour_tree" class="output" style="display: none;">
         <a href="<?php print $download_url . $neighbourTree ?>">Download Neighbour Joining Tree</a><br />
-        <img src="<?php print $download_url . $neighbourTree ?>" />
         <div id="nj_tree_view"></div>
     </div>
     <div id="upgma_tree" class="output" style="display: none;">
         <a href="<?php print $download_url . $UPGMATree ?>">Download UPGMA Tree</a><br />
-        <!--img src="<?php print $download_url . $UPGMATree ?>" /-->
         <div id="upgma_tree_view"></div>
     </div>
     <div id="sorted_species_relation" style="text-align: left; display: none;" class="output">
-        <a href="<?php print $download_url . '/SpeciesRelation.txt' ?>">Download Sorted Species Relation</a><br />
+        <a href="<?php print $download_url . '/' . FileManager::SPECIES_RELATION ?>">Download Sorted Species Relation</a><br />
         <table class="table table-striped table-hover">
             <thead>
             <tr>
@@ -271,7 +269,7 @@ if(!$isAPendingProject):
         </table>
     </div>
     <div id="distance_matrix" class="output">
-        <a href="<?php print $download_url . '/DistantMatrix.txt' ?>">Download Distance Matrix</a><br />
+        <a href="<?php print $download_url . '/' . FileManager::DISTANT_MATRIX ?>">Download Distance Matrix</a><br />
         <table class="table table-bordered table-striped table-hover">
             <thead>
             <tr>

@@ -16,14 +16,32 @@ use \AWorDS\Config;
  * @property array    files
  */
 class Project extends Model{
-    /**
-     * Project Types
-     */
+    /** Project types */
     const PENDING_PROJECT = 1;
     const NEW_PROJECT     = 2;
     const LAST_PROJECT    = self::NEW_PROJECT;
     const REGULAR_PROJECT = 3;
+    /** Input types */
+    const INPUT_TYPE_FILE     = 'file';
+    const INPUT_TYPE_ACCN_GIN = 'accn_gin';
 
+    /** Project related constants */
+    const PROJECT_DELETE_SUCCESS = 0;
+    const PROJECT_DELETE_FAILED  = 1;
+    const PROJECT_DOES_NOT_EXIST = 2;
+
+    /**
+     * Export related constants
+     */
+    const EXPORT_SPECIES_RELATION = 1;
+    const EXPORT_DISTANT_MATRIX   = 2;
+    const EXPORT_NEIGHBOUR_TREE   = 3;
+    const EXPORT_UPGMA_TREE       = 4;
+    const EXPORT_ALL              = 0;
+
+    /**
+     * @var null|int
+     */
     private $_project_id;
     /**
      * @var ProjectConfig
@@ -55,7 +73,7 @@ class Project extends Model{
             $stmt->bind_param('is', $_SESSION['user_id'], $this->config->project_name);
             $stmt->execute();
             $stmt->store_result();
-            if($stmt->affected_rows == Constants::COUNT_ONE){
+            if($stmt->affected_rows == 1){
                 // Set the inset_id as the project id
                 $project_id = $stmt->insert_id;
                 // Add to pending list
@@ -184,30 +202,30 @@ class Project extends Model{
         if(!$this->verify($project_id)) return $file;
         // Set project info
         switch($type){
-            case Constants::EXPORT_SPECIES_RELATION:
+            case self::EXPORT_SPECIES_RELATION:
                 $file['mime'] = 'text/plain';
                 $file['name'] = FileManager::SPECIES_RELATION;
                 $file['path'] = Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . FileManager::SPECIES_RELATION;
                 break;
-            case Constants::EXPORT_DISTANT_MATRIX:
+            case self::EXPORT_DISTANT_MATRIX:
                 $file['mime'] = 'text/plain';
                 $file['name'] = 'DistanceMatrix.txt';
                 $file['path'] = Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . FileManager::DISTANT_MATRIX_FORMATTED;
                 break;
-            case Constants::EXPORT_NEIGHBOUR_TREE:
+            case self::EXPORT_NEIGHBOUR_TREE:
                 $file['mime'] = 'image/jpeg';
                 $file['name'] = FileManager::NEIGHBOUR_TREE;
                 $file['path'] = Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . FileManager::NEIGHBOUR_TREE;
                 break;
-            case Constants::EXPORT_UPGMA_TREE:
+            case self::EXPORT_UPGMA_TREE:
                 $file['mime'] = 'image/jpeg';
                 $file['name'] = FileManager::UPGMA_TREE;
                 $file['path'] = Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . FileManager::UPGMA_TREE;
                 break;
-            case Constants::EXPORT_ALL:
+            case self::EXPORT_ALL:
                 $file['mime'] = 'application/zip';
                 $file['name'] = 'project_' . $project_id . '.zip'; // e.g. project_29
-                $file['path'] = '/tmp/'. $file['name'];
+                $file['path'] = Config::WORKING_DIRECTORY . '/' . $file['name'];
                 // Create zip
                 $zip = new \ZipArchive();
                 if ($zip->open($file['path'], \ZipArchive::CREATE)!==TRUE) {
@@ -225,6 +243,28 @@ class Project extends Model{
         // set $file to null if the file isn't found
         if(!file_exists($file['path'])) $file = null;
         return $file;
+    }
+
+    function exportAll($project_ids){
+        $files = [];
+        $file_path = Config::WORKING_DIRECTORY . '/projects_'. time() . mt_rand(100, 999) . '.zip';
+        foreach ($project_ids as $project_id){
+            $file = $this->export($project_id, self::EXPORT_ALL);
+            if($file !== null) array_push($files, $file);
+        }
+        // Create zip
+        $zip = new \ZipArchive();
+        if ($zip->open($file_path, \ZipArchive::CREATE)!==TRUE) {
+            return null;
+        }
+        foreach ($files as $file){
+            $zip->addFile($file['path'], '/' . basename($file['path']));
+        }
+        $zip->close();
+
+        foreach ($files as $file) unlink($file['path']);
+        if(!file_exists($file_path)) return null;
+        return $file_path;
     }
 
     /**
@@ -256,15 +296,15 @@ class Project extends Model{
             $stmt->bind_param('ii', $user_id, $project_id);
             $stmt->execute();
             $stmt->store_result();
-            if($stmt->affected_rows == Constants::COUNT_ONE){
+            if($stmt->affected_rows == 1){
                 // Delete the project files
                 if($isAPendingProject) exec('rm -rf "' . Config::WORKING_DIRECTORY . '/Projects/' . $project_id . '"');
                 else exec('rm -rf "' . Config::PROJECT_DIRECTORY . '/' . $project_id . '"');
                 // Delete was a success
-                return Constants::PROJECT_DELETE_SUCCESS;
-            }else return Constants::PROJECT_DOES_NOT_EXIST;
+                return self::PROJECT_DELETE_SUCCESS;
+            }else return self::PROJECT_DOES_NOT_EXIST;
         }
-        return Constants::PROJECT_DELETE_FAILED;
+        return self::PROJECT_DELETE_FAILED;
     }
 
     function getType(){
@@ -290,45 +330,20 @@ class Project extends Model{
             $stmt->store_result();
             $stmt->bind_result($count);
             $stmt->fetch();
-            if($count == Constants::COUNT_ONE) return true;
+            if($count == 1) return true;
         }
         return false;
     }
 
-    /**
-     * May be in a separate class
-     */
-
-    function unread_projects_info(){
-        $user_id = $_SESSION['user_id'];
-        $projects = [];
-        $pending_projects = (new PendingProjects())->getAll(true);
-        if(@$stmt = $this->mysqli->prepare('SELECT project_id, project_name, CONVERT_TZ(date_created,\'SYSTEM\',\'UTC\') FROM projects WHERE user_id = ? AND seen = 0 ORDER BY project_id DESC')){
-            $stmt->bind_param('i', $user_id);
-            $stmt->execute();
-            $stmt->store_result();
-            for($i = 0; $i < $stmt->num_rows; ++$i){
-                $project = [];
-                $stmt->bind_result($project['id'], $project['name'], $project['date_created']);
-                $stmt->fetch();
-                if(!in_array($project['id'], $pending_projects)) array_push($projects, $project);
-            }
-        }
-        return $projects;
+    function can_fork($project_id){
+        if(!$this->verify($project_id)) return false;
+        if((new PendingProjects($project_id))->isA()) return false;
+        if((new ProjectConfig((new FileManager($project_id))->get(FileManager::CONFIG_JSON)))->type !== 'accn_gin') return false;
+        return true;
     }
 
-    function set_seen($project_id){
-        $this->_project_id = $project_id;
-        if($this->getType() == self::PENDING_PROJECT) return false;
-        if(@$stmt = $this->mysqli->prepare('UPDATE `projects` SET `seen` = 1 WHERE project_id = ? AND user_id = ?')){
-            $stmt->bind_param('ii', $project_id, $_SESSION['user_id']);
-            $stmt->execute();
-            $stmt->store_result();
-            if($stmt->affected_rows == Constants::COUNT_ONE){
-                return true;
-            }
-        }
-        return false;
+    public function can_edit($project_id){
+        return !(new PendingProjects($project_id))->isA() AND (new LastProjects())->isA($project_id);
     }
 
     /**
