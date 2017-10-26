@@ -187,7 +187,7 @@ class FileManager extends Model{
      *
      * @param string $filename Target filename with extension (NOT a file path)
      * @param string $source   A filename, url, string
-     * @param int $flag STORE_COPY, STORE_MOVE, STORE_STRING
+     * @param int    $flag     STORE_COPY, STORE_MOVE, STORE_STRING
      * @return bool
      */
     function store($filename, $source, $flag){

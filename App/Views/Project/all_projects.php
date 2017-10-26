@@ -4,7 +4,7 @@
  */
 $project_count = count($projects);
 ?>
-<script src="/js/app.js"></script>
+<!--script src="/js/app.js"></script-->
 <script>
     $(document).ready(function(){
         var datetime_list = $(".datetime");

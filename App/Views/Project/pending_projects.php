@@ -11,19 +11,17 @@
  */
 $project_count = count($projects);
 ?>
-<script src="/js/app.js"></script>
 <script>
     $(document).ready(function(){
-
         $('.projects').each(function(){
-            var project    = $(this);
-            var project_id = $(this).attr('data-id');
+            let project    = $(this);
+            let project_id = $(this).attr('data-id');
             // Modify datetime
-            var datetime   = project.find('.datetime');
-            var date_created = new Date(datetime.html() + " UTC");
+            let datetime   = project.find('.datetime');
+            let date_created = new Date(datetime.html() + " UTC");
             datetime.html(date_created.toDateString() + " at " + date_created.toTimeString().slice(0,8));
             // Show elapsed time
-            var selector = project.find('.elapsed_time');
+            let selector = project.find('.elapsed_time');
             elapsed_time(selector, date_created);
             (function (selector, date_created) {
                 setInterval(function(){

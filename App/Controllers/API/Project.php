@@ -1,6 +1,6 @@
 <?php
 
-namespace AWorDS\App\Controllers;
+namespace AWorDS\App\Controllers\API;
 
 use \AWorDS\App\Constants;
 use AWorDS\App\HttpStatusCode;
@@ -11,7 +11,7 @@ use AWorDS\App\Models\PendingProjects;
 use AWorDS\App\Models\ProjectConfig;
 use \AWorDS\Config;
 
-class Project extends Controller{
+class Project extends API{
     /**
      * all_projects method
      *
@@ -31,47 +31,40 @@ class Project extends Controller{
         }else $this->redirect();
     }
 
-    function delete_project(){
-        $this->json();
-        $this->set('status', Constants::PROJECT_DELETE_FAILED);
-
-        if(isset($this->_url_params['project_id'])) $project_id = $this->_url_params['project_id'];
-        else exit();
-        
-        /**
-         * @var \AWorDS\App\Models\Project $project
-         */
-        $project = $this->set_model();;
-        $logged_in = $project->login_check();
-        if($logged_in){
-            $this->set('status', $project->delete($project_id));
-        }
-    }
-
     /**
-     * download_project method.
+     * result method.
      *
-     * Downloads a project as a zip file
+     * Downloads project(s) as a zip file
      */
-    function download_project(){
-        $this->_HTML = false;
-        if(isset($this->_url_params['project_id'])) $project_id = $this->_url_params['project_id'];
-        else exit();
-        /**
-         * @var \AWorDS\App\Models\Project $project
-         */
-        $project = $this->set_model();;
-        $logged_in = $project->login_check();
-        if($logged_in){
-            if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)) {
-                $file = $project->export($project_id, Constants::EXPORT_ALL);
-                if ($file != null) {
-                    header('Content-Type: ' . $file['mime']);
-                    header('Content-Disposition: attachment; filename="' . $file['name'] . '"');
-                    readfile($file['path']);
-                } else $this->redirect(Config::WEB_DIRECTORY . 'projects');
-            }else $this->redirect(Config::WEB_DIRECTORY . 'projects');
-        }else $this->redirect();
+    function result(){
+        extract($this->get_params());
+        /** @var string|array $project_ids A comma separated list of project IDs (eg. 1,2,3) */
+        /** @var \AWorDS\App\Models\Project $project */
+        $project = $this->set_model('Project');
+        if($project->login_check()){
+            if($project_ids != null){
+                $project_ids = explode(',', $project_ids);
+                foreach ($project_ids as &$project_id){
+                    $project_id = (int) $project_id;
+                    if(!$project->verify($project_id)){
+                        $this->status(HttpStatusCode::UNPROCESSABLE_ENTITY, "One or more project IDs do not exists.");
+                        exit();
+                    }
+                }
+                $file = $project->exportAll($project_ids);
+                if($file !== null){
+                    $this->load_view(false);
+                    $this->response(HttpStatusCode::OK);
+                    header('Content-Type: application/zip');
+                    header('Content-Disposition: attachment; filename="projects.zip"');
+                    readfile($file);
+                    exit();
+                }
+                $this->status(HttpStatusCode::INTERNAL_SERVER_ERROR, "Failed to get results.");
+            }else{
+                $this->status(HttpStatusCode::BAD_REQUEST, "No project id is provided.");
+            }
+        }else $this->forbidden();
     }
 
     /**
@@ -114,28 +107,6 @@ class Project extends Controller{
         $this->json($json);
     }
 
-    function new_project_page(){
-        /**
-         * @var \AWorDS\App\Models\Project $project
-         */
-        $project = $this->set_model();
-        $logged_in = $project->login_check();
-        if(!$logged_in){
-            $this->redirect();
-            exit();
-        }
-        if(isset($_SESSION['forked_id'])){
-            $project_id = $_SESSION['forked_id'];
-            unset($_SESSION['forked_id']);
-            if($project->verify($project_id)){
-                $this->set('project_id', $project_id);
-            }
-        }
-        $this->set('logged_in', $logged_in);
-        $this->set('active_tab', 'new');
-        $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
-    }
-    
     function file_upload(){
         $json = ['status' => FileUploader::FILE_UPLOAD_FAILED];
         /**
@@ -242,27 +213,109 @@ class Project extends Controller{
         }else $this->redirect();
     }
 
-    function status(){
+    /**
+     * get_status method.
+     *
+     * Get the status of the pending projects or the given project IDs
+     */
+    function get_status(){
         extract($this->get_params());
-        $json = [];
-        /** @var string $project_id A JSON string containing all configurations */
+        /** @var string|array $project_ids A comma separated list of project IDs (eg. 1,2,3) */
+        $projects = [];
         /** @var \AWorDS\App\Models\Project $project */
-        $project = $this->set_model();
-        $logged_in = $project->login_check();
-        if($logged_in){
-            $json = ['status_code' => PendingProjects::PROJECT_FAILURE, "status" => null];
-            if($project->verify($project_id)){
-                $pending_project = new PendingProjects($project_id);
-                if($pending_project->isA()){
-                    $status = $pending_project->get();
-                    $json['status_code'] = $status['status_code'];
-                    $json['status']      = $status['status'];
-                }else{
-                    $json['status_code'] = $pending_project::PROJECT_SUCCESS;
+        $project = $this->set_model('Project');
+        if($project->login_check()){
+            $pending_projects = (new PendingProjects())->getAll();
+            if(isset($project_ids) && $project_ids != null){
+                $project_ids = explode(',', $project_ids);
+                foreach ($project_ids as $project_id){
+                    $_project = $this->in_pending_list($pending_projects, $project_id);
+                    if($_project == false){
+                        $projectF = [
+                            "id" => (int)$project_id,
+                            "status" => [
+                                "code" => 0,
+                                "message" => PendingProjects::STATUS[PendingProjects::PROJECT_SUCCESS]
+                            ]
+                        ];
+                    }else{
+                        $projectF = [
+                            "id" => $_project['id'],
+                            "status" => [
+                                "code" => $_project['status_code'],
+                                "message" => $_project['status']
+                            ]
+                        ];
+                    }
+                    array_push($projects, $projectF);
+                }
+            }else{
+                foreach ($pending_projects as $_project){
+                    $projectF = [
+                        "id" => $_project['id'],
+                        "status" => [
+                            "code" => $_project['status_code'],
+                            "message" => $_project['status']
+                        ]
+                    ];
+                    array_push($projects, $projectF);
                 }
             }
-        }
-        $this->json($json);
+            // Output
+            if(count($projects) > 0){
+                $this->status(HttpStatusCode::OK, "Success.");
+                $this->set("projects", $projects);
+            }else{
+                $this->status(HttpStatusCode::NOT_FOUND, "No pending projects.");
+            }
+        }else $this->forbidden();
+
+    }
+
+    /**
+     * delete method.
+     *
+     * Deletes the requested project(s)
+     */
+    function delete(){
+        extract($this->get_params());
+        /** @var string|array $project_ids A comma separated list of project IDs (eg. 1,2,3) */
+        /** @var \AWorDS\App\Models\Project $project */
+        $project = $this->set_model('Project');
+        if($project->login_check()){
+            if($project_ids != null){
+                $projects = [];
+                $project_ids = explode(',', $project_ids);
+                foreach ($project_ids as $project_id){
+                    $projectF = [
+                        "id" => (int)$project_id,
+                        "status" => [
+                            "code" => null,
+                            "message" => null
+                        ]
+                    ];
+                    switch($project->delete((int)$project_id)){
+                        case $project::PROJECT_DELETE_SUCCESS:
+                            $projectF['status']['code'] = HttpStatusCode::OK;
+                            $projectF['status']['message'] = "Success!";
+                            break;
+                        case $project::PROJECT_DELETE_FAILED:
+                            $projectF['status']['code'] = HttpStatusCode::INTERNAL_SERVER_ERROR;
+                            $projectF['status']['message'] = "Failed!";
+                            break;
+                        case $project::PROJECT_DOES_NOT_EXIST:
+                        $projectF['status']['code'] = HttpStatusCode::NOT_FOUND;
+                        $projectF['status']['message'] = "Project does not exit.";
+                        break;
+                    }
+                    array_push($projects, $projectF);
+                }
+                $this->set('projects', $projects);
+                $this->status(HttpStatusCode::OK, "Success.");
+            }else{
+                $this->status(HttpStatusCode::BAD_REQUEST, "No project id is provided.");
+            }
+        }else $this->forbidden();
     }
 
     function cancel_process(){
@@ -301,23 +354,6 @@ class Project extends Controller{
         $this->redirect();
     }
 
-    function edit_project_page(){
-        extract($this->get_params());
-        /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
-        $project   = $this->set_model();
-        $logged_in = $project->login_check();
-        if($logged_in){
-            if($project->can_edit($project_id)){
-                $this->set('logged_in', $logged_in);
-                $this->set('project_id', $project_id);
-                $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
-            }else{
-                $this->redirect('/projects/'. $project_id);
-            }
-        }else $this->redirect();
-    }
-
     function edit_project(){
         extract($this->get_params());
         /**
@@ -339,6 +375,9 @@ class Project extends Controller{
         }else $this->redirect();
     }
 
+    /**
+     * get_unseen method.
+     */
     function get_unseen(){
         /** @var string $project_id A JSON string containing all configurations */
         /** @var \AWorDS\App\Models\Project $project */
@@ -348,5 +387,23 @@ class Project extends Controller{
         if($logged_in){
             $this->set("projects" ,(new Notifications())->getAll());
         }
+    }
+
+    /**
+     * Private functions
+     */
+
+    /**
+     * forbidden method.
+     */
+    private function forbidden(){
+        $this->status(HttpStatusCode::FORBIDDEN, "You don't have the permission to access this.");
+    }
+
+    private function in_pending_list(&$projects, $project_id){
+        foreach ($projects as &$project){
+            if($project['id'] == $project_id) return $project;
+        }
+        return false;
     }
 }

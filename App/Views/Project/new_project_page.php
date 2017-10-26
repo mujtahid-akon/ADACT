@@ -2,9 +2,21 @@
 /**
  * @var bool  $logged_in
  * @var array $dissimilarity_index
+ * @var int   $project_id
  */
+
 if(!$logged_in){
     exit();
+}
+
+$isForked = isset($project_id);
+if($isForked){
+    $config = new \AWorDS\App\Models\ProjectConfig((new \AWorDS\App\Models\FileManager($project_id))->get(\AWorDS\App\Models\FileManager::CONFIG_JSON));
+    /** @var string[] $ids */
+    $ids = [];
+    foreach ($config->data as $datum){
+        array_push($ids, $datum['id']);
+    }
 }
 ?>
 <style>
@@ -24,7 +36,44 @@ if(!$logged_in){
         margin-bottom: 10px !important;
     }*/
 </style>
-<script src="/js/app.js"></script>
+<!--script src="/js/app.js"></script-->
+
+<script>
+    $(document).ready(function(){
+        // Set K-Mer
+        $('#kmer_min').val(<?php print ($isForked ? $config->kmer['min'] : 9) ?>);
+        $('#kmer_max').val(<?php print ($isForked ? $config->kmer['max'] : 13) ?>);
+        // Set Absent Word type
+        var aw_type = "<?php print ($isForked ? $config->aw_type : 'maw') ?>";
+        $('input[name=\'aw_type\'][value=\'' + aw_type + '\']').attr('checked', true);
+
+        <?php if ($isForked): ?>
+
+        // Show Dissimilarity Index based on Absent Word type
+        if(aw_type === 'maw'){
+            $('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();
+        }else{
+            $('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();
+        }
+        // Set project name
+        $('#project_name').val("<?php print ($isForked ? $config->project_name : '') ?>");
+        // Set Dissimilarity Index based on Absent Word type
+        $('option[value=\'<?php print ($isForked ? $config->dissimilarity_index : '') ?>\']').attr('selected', true);
+        // Set input method
+        $('option[value=\'input_accn_gin\']').attr('selected', true);
+        InputMethod.setCurrent($('#method').val());
+        $('#accn_gin').val('<?php print ($isForked ? implode(', ', $ids) : '') ?>');
+        // Set sequence type
+        var seq_type = "<?php print $config->sequence_type ?>";
+        $('input[value=\'' + seq_type + '\']').attr('checked', true);
+        if(seq_type === 'nucleotide')   $('#inversion_box').show();
+        else if(seq_type === 'protein') $('#inversion_box').hide();
+        // Set reverse complement
+        $('#inversion').attr('checked', <?php print ($config->inversion ? 'true' : 'false'); ?>);
+        <?php endif; ?>
+
+    });
+</script>
 
 <div class="row">
     <div class="col-md-3"></div>
@@ -84,12 +133,12 @@ if(!$logged_in){
                 <fieldset>
                     <label>Absent Word Type *: </label>
                     <label>
-                        <input type="radio" id="aw_type" name="aw_type" value="maw" checked
+                        <input type="radio" name="aw_type" value="maw"
                                onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();" />
                         <abbr title="Minimal Absent Words">MAW</abbr>
                     </label>
                     <label>
-                        <input type="radio" id="aw_type" name="aw_type" value="raw"
+                        <input type="radio" name="aw_type" value="raw"
                                onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();"/>
                         <abbr title="Relative Absent Words">RAW</abbr>
                     </label>
@@ -98,19 +147,19 @@ if(!$logged_in){
                 <fieldset>
                     <label>K-Mer Size *: </label>
                     <input class="form-control" type="number" id="kmer_min" name="kmer_min" min="1"
-                           style="width: 100px;display: inline-block;" placeholder="Min" value="9" required />
+                           style="width: 100px;display: inline-block;" placeholder="Min" required />
                     <input class="form-control" type="number" id="kmer_max" name="kmer_max" min="1"
-                           style="width: 100px;display: inline-block" placeholder="Max" value="13" required />
-                </fieldset>
-                <!-- Inversion -->
-                <fieldset>
-                    <label><input type="checkbox" id="inversion" name="inversion" /> Use Reverse Complement</label>
+                           style="width: 100px;display: inline-block" placeholder="Max" required />
                 </fieldset>
                 <!-- MAW Type -->
                 <fieldset>
                     <label>Sequence Type *: </label>
-                    <label><input type="radio" class="seq_type" name="seq_type" value="nucleotide" checked  /> Nucleotide</label>
-                    <label><input type="radio" class="seq_type" name="seq_type" value="protein" /> Protein</label>
+                    <label><input type="radio" class="seq_type" name="seq_type" value="nucleotide" onchange="$('#inversion_box').show()" checked  /> Nucleotide</label>
+                    <label><input type="radio" class="seq_type" name="seq_type" value="protein" onchange="$('#inversion_box').hide()" /> Protein</label>
+                </fieldset>
+                <!-- Inversion -->
+                <fieldset id="inversion_box">
+                    <label><input type="checkbox" id="inversion" name="inversion" /> Use Reverse Complement</label>
                 </fieldset>
                 <!-- Dissimilarity Index -->
                 <fieldset>

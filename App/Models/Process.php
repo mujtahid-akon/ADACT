@@ -8,9 +8,6 @@
 
 namespace AWorDS\App\Models;
 
-
-use AWorDS\App\Constants;
-
 /**
  * Class Process
  *
@@ -85,7 +82,7 @@ class Process extends Model{
             exit();
         }
         // Config file
-        $this->_config       = new ProjectConfig($config_file); //json_decode(file_get_contents($config_file), true);
+        $this->_config       = new ProjectConfig($config_file);
         // get platform
         $this->_platform     = exec('uname -s') == self::DARWIN ? self::DARWIN : self::LINUX;
         // Pending Process
@@ -94,40 +91,40 @@ class Process extends Model{
 
     function init(){
         // 1. Fetch files
-        $this->_pending_process->status(PendingProjects::PROJECT_FETCHING_FASTA);
+        $this->_pending_process->set_status(PendingProjects::PROJECT_FETCHING_FASTA);
         if(!$this->fetchFiles()){
-            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
+            $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
             $this->halt('Fetching files failed!');
         }
         // 2. Generate {short_name}.[m|r]aw.txt files
-        $this->_pending_process->status(PendingProjects::PROJECT_FINDING_AW);
+        $this->_pending_process->set_status(PendingProjects::PROJECT_FINDING_AW);
         if(!$this->generateAW()){
-            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
+            $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
             $this->halt('Generating absent words failed!');
         }
         // 3. Generate distance matrix (by creating SpeciesFull.txt)
-        $this->_pending_process->status(PendingProjects::PROJECT_GENERATE_DM);
+        $this->_pending_process->set_status(PendingProjects::PROJECT_GENERATE_DM);
         if(!$this->generate_distance_matrix()){
-            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
+            $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
             $this->halt('Generating distance matrix failed!');
         }
         // 4. Generate phylogenetic trees: FIXME
-        $this->_pending_process->status(PendingProjects::PROJECT_GENERATE_PT);
-        if(!$this->generate_phylogenetic_trees()){
-            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
-            $this->halt('Generating Phylogenetic trees failed!');
-        }
+//        $this->_pending_process->status(PendingProjects::PROJECT_GENERATE_PT);
+//        if(!$this->generate_phylogenetic_trees()){
+//            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
+//            $this->halt('Generating Phylogenetic trees failed!');
+//        }
         // 5. Copy them to the project directory
-        $this->_pending_process->status(PendingProjects::PROJECT_TAKE_CARE);
+        $this->_pending_process->set_status(PendingProjects::PROJECT_TAKE_CARE);
         if(!$this->takeCare()){
-            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
+            $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
             $this->halt('Copying files failed!');
         }
         // Success
         $this->_pending_process->remove();
         // Send mail
         $this->send_mail();
-        $this->_pending_process->status(PendingProjects::PROJECT_SUCCESS);
+        $this->_pending_process->set_status(PendingProjects::PROJECT_SUCCESS);
     }
 
     /**
@@ -141,9 +138,6 @@ class Process extends Model{
         $fm  = new FileManager($this->_project_id, Project::NEW_PROJECT);
         $this->_tc_fm = $fm;
         $project_dir = self::PROJECT_DIRECTORY;
-//        error_log($project_dir);
-//        error_log($fm->generated());
-        // Move /tmp/Projects/{project_id}/ to /Projects/{project_id}/
         passthru("mv \"{$this->_fm->root()}\" \"{$project_dir}\"");
         // CD to root directory
         $fm->cd($fm->root());
@@ -152,8 +146,8 @@ class Process extends Model{
         $this->_move($fm::SPECIES_RELATION_JSON);
         $this->_move($fm::DISTANT_MATRIX);
         $this->_move($fm::DISTANT_MATRIX_FORMATTED);
-        $this->_move($fm::NEIGHBOUR_TREE);
-        $this->_move($fm::UPGMA_TREE);
+//        $this->_move($fm::NEIGHBOUR_TREE);
+//        $this->_move($fm::UPGMA_TREE);
         // Store config.json
         $fm->store($fm::CONFIG_JSON, $this->_config->getConfigJSON(), $fm::STORE_STRING);
         return true;
@@ -182,9 +176,9 @@ EOF;
      * @return bool
      */
     private function fetchFiles(){
-        if($this->_config->type == Constants::PROJECT_TYPE_FILE){
+        if($this->_config->type == Project::INPUT_TYPE_FILE){
             return $this->move_uploaded_files();
-        }else /* if($this->_config->type == Constants::PROJECT_TYPE_ACCN_GIN) */{
+        }else /* if($this->_config->type == Project::INPUT_TYPE_ACCN_GIN) */{
             return $this->download_fasta($this->_config->sequence_type);
         }
     }
@@ -200,13 +194,15 @@ EOF;
         }
     }
 
-    private function generate_phylogenetic_trees(){
+    function generate_phylogenetic_trees(){
+        $pwd = $this->_fm->pwd();
         $this->_fm->cd($this->_fm->generated());
         $c_species = count($this->_config->data);
         //exec(self::EXECS['phylogenetic_tree'] . ' "'. $this->_fm->generated() .'/"', $output, $return);
         exec(self::EXECS['phy_tree']['upgma'] . ' "'. $this->_fm->get('SpeciesFull.txt') .'" "'. $this->_fm->get(FileManager::DISTANT_MATRIX) .'" '.$c_species, $output, $return); // FIXME
-        exec(self::EXECS['phy_tree'][   'nj'] . ' "'. $this->_fm->get('SpeciesFull.txt') .'" "'. $this->_fm->get(FileManager::DISTANT_MATRIX) .'" '.$c_species, $output, $return); // FIXME
+        exec(self::EXECS['phy_tree']['NJTree'] . ' "'. $this->_fm->get('SpeciesFull.txt') .'" "'. $this->_fm->get(FileManager::DISTANT_MATRIX) .'" '.$c_species, $output, $return); // FIXME
         $this->_log(implode("\n", $output));
+        $this->_fm->cd($pwd);
         return $return === 0 ? true : false;
     }
 
@@ -368,7 +364,7 @@ EOF;
         $assoc  = [];
         $c_keys = count($data);
         for($i = 0; $i < $c_keys; ++$i){
-            $assoc[($this->_config->type == Constants::PROJECT_TYPE_ACCN_GIN ? $data[$i]['title'] : $data[$i]['id'])] = $data[$i]['short_name'];
+            $assoc[($this->_config->type == Project::INPUT_TYPE_ACCN_GIN ? $data[$i]['title'] : $data[$i]['id'])] = $data[$i]['short_name'];
         }
         return $assoc;
     }

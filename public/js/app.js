@@ -7,7 +7,7 @@
  * @param {string|undefined} [text]
  * @constructor
  */
-var ProgressBar = function(selector, max_value, init_value, text){
+function ProgressBar(selector, max_value, init_value, text){
     /**
      * Progressbar selector
      * @type {*|jQuery|null}
@@ -38,19 +38,19 @@ var ProgressBar = function(selector, max_value, init_value, text){
      */
     this.increment = function(byWhat){
         if(this.selector === null) return false;
-        this.selector.val(this.selector.val() + (byWhat === undefined ? 1 : byWhat));
+        this.selector.val(this.selector.val() + (byWhat || 1));
         return true;
     };
     // __construct
-    text = (text === undefined) ? "" : "<div>" + text + "</div>";
-    if(this.max_value !== undefined){
-        this.selector.html(text + "<progress max=\"" + this.max_value + "\" value=\"" + this.init_value + "\" style=\"width: 100%\" />");
-        this.selector = this.selector.children().eq((text === "" ? 0 : 1));
+    const caption = text || " " || "<div>" + text + "</div>";
+    if(this.max_value){
+        this.selector.html(caption + "<progress max=\"" + this.max_value + "\" value=\"" + this.init_value + "\" style=\"width: 100%\" />");
+        this.selector = this.selector.children().eq((text ? 1 : 0));
     }else{
-        this.selector.html(text + "<progress style=\"width: 100%\" />");
+        this.selector.html(caption + "<progress style=\"width: 100%\" />");
         this.selector = null;
     }
-};
+}
 
 /*
 // May need later
@@ -64,6 +64,70 @@ var lock_fasta_method = function(){
 };
 */
 
+Object.freeze(Messages = {
+    ShortName : {
+        CHAR_CONSTRAINT     : "Short names must contain a to z (uppercase or lower case) letters, underscores, hyphens or commas.",
+        /** @return {string} */
+        CHAR_LIMIT_EXCEEDED : function(max){ return "Short names can contain at most " + max + " characters!"; },
+        UNFILLED_FIELDS     : "You must fill all the short names!",
+        DUPLICATE_ENTRIES   : "There are duplicate values. You must set unique short names!"
+    },
+    InputAnalyzer : {
+        ANALYZING_TEXT : "Analyzing...",
+        UPLOADING_TEXT : "Uploading...",
+        PostProcess    : {
+            MIXED_INPUTS   : "It looks like you are trying to use nucleotides & proteins at the same time. Please use only nucleotide or only proteins.",
+            /** @return {string} */
+            INVALID_INPUTS : function (invalid_ids) {
+                return (invalid_ids.length > 1 ?
+                    "These Accession/GI numbers appear to be invalid: " :
+                    "This Accession/GI number appears to be invalid: ")
+                    + invalid_ids.join(', ');
+            }
+        },
+        Upload : {
+            UPLOAD_NEW_TEXT : "Upload a new file",
+            SUCCESS_TEXT : "Upload success!",
+            SUCCESS_MESSAGE : "The file was uploaded successfully.",
+            FAILURE_ALERT : "upload failed!",
+            CONNECTION_PROBLEM : this.CONNECTION_PROBLEM,
+            MAKE_SURE : "Make sure,",
+            /** @return {Array} */
+            FAILURE_MESSAGE : function () {
+                return [
+                'The zip file is valid and in the right format',
+                'The size of the zip file is less than 100MB',
+                'The size of each sequence is less than 20MB'];
+            }
+        },
+        BuildTable : {
+            /** @return {String} */
+            SEQ_FOUND : function (seq_count) { return "Found: " + seq_count + " FASTA Sequences"; },
+            SHORT_NAME_MESSAGE : "Add short names using the table below: (A short name can only contain a to z (uppercase or lower case) letters, underscores, hyphens or commas)",
+            ID_TEXT : "ID",
+            HEADER_TEXT : "Title/Header",
+            SHORT_NAME_TEXT : "Short Name"
+        }
+    },
+    Project: {
+        UNFILLED_FIELDS : "It seems, you've left out some mandatory fields. Please fill them in.",
+        LOADING_TEXT : "Loading...",
+        FAILURE_ALERT : "An error occurred, try again",
+        Status : {
+            FETCH_TEXT : "Fetching last status...",
+            FAILURE_ALERT : "Something's wrong with your project. Please try again.",
+            FAILURE_TEXT : "Error fetching last status. Trying again..."
+        },
+        Cancel : {
+            /** @return {String} */
+            CANCEL_MESSAGE : function (project_name) { return "Are you sure want to cancel " + project_name + "?"; },
+            SUCCESS_MESSAGE : "Project was cancelled successfully!",
+        }
+    },
+    FAILURE_ALERT : "Failed!",
+    CONNECTION_PROBLEM : "Please try again. There may be connection problem."
+});
+
 /**
  * InputMethod Object
  *
@@ -71,7 +135,7 @@ var lock_fasta_method = function(){
  *
  * @type {{FILE: string, ACCN_GIN: string, current: null|string, setCurrent: InputMethod.setCurrent, getCurrent: InputMethod.getCurrent}}
  */
-var InputMethod = {
+InputMethod = {
     // Constants
     FILE     : "file",
     ACCN_GIN : "accn_gin",
@@ -116,7 +180,7 @@ var InputMethod = {
  *
  * @type {{GIN: string, ACCN: string, NUCLEOTIDE: string, PROTEIN: string, DB_NUCCORE: string, DB_PROTEIN: string, inputs: Array, selector: null, progress: null, results: Array, file_id: null, init: InputAnalyzer.init, addShortNames: InputAnalyzer.addShortNames, getMetaData: InputAnalyzer.getMetaData, renderer: InputAnalyzer.renderer, upload: InputAnalyzer.upload, buildTable: InputAnalyzer.buildTable, getShortName: InputAnalyzer.getShortName}}
  */
-var InputAnalyzer = {
+InputAnalyzer = {
     // ID Constants
     GIN  : "gin",
     ACCN : "accn",
@@ -126,6 +190,8 @@ var InputAnalyzer = {
     // DB Constants
     DB_NUCCORE: "nuccore",
     DB_PROTEIN: "protein",
+    // Char limit
+    CHAR_LIMIT: 15,
     /**
      * Store input values from the input fields
      * (only for InputMethod.ACCN_GIN)
@@ -133,35 +199,19 @@ var InputAnalyzer = {
      * @type {string[]}
      */
     inputs: [],
-    /**
-     * @type {*|jQuery|null}
-     */
+    /** @type {*|jQuery|null} */
     selector: null,
-    /**
-     * @type {null|ProgressBar}
-     */
+    /** @type {null|ProgressBar} */
     progress: null,
-    /**
-     * @type {Array}
-     * @type {{id: int|string, id_type: string, title: string|null, type: string|null, gin: int|null, short_name: string|null}[]}
-     */
+    /** @type {{id: int|string, id_type: string, title: string|null, type: string|null, gin: int|null, short_name: string|null}[]} */
     results: [],
-    /**
-     * @type {string|null} file id (only for InputMethod.FILE)
-     */
+    /** @type {string|null} File id (only for InputMethod.FILE) */
     file_id: null,
-    /**
-     * Whether analyzing input finished
-     * @type boolean
-     */
+    /** @type boolean Whether analyzing input finished */
     done: false,
-    /**
-     * Initialize analyzer based on current input method
-     *
-     * @param [form]
-     */
+    /** @param [form] form Initialize analyzer based on current input method */
     init: function (form) {
-        var parent = this;
+        const parent = this;
         this.selector = $('#fasta_status');
         // show status
         this.selector.html("");
@@ -173,13 +223,10 @@ var InputAnalyzer = {
             this.inputs = this.inputs.split(/\s*,\s*/);
             this.results = [];
             //console.log(this.inputs);
-            this.progress = new ProgressBar(this.selector, this.inputs.length, 0, "Analyzing...");
+            this.progress = new ProgressBar(this.selector, this.inputs.length, 0, Messages.InputAnalyzer.ANALYZING_TEXT);
             $.each(this.inputs, function (i, id) {
-                /**
-                 * Which type of ID the user inserted
-                 * @type {string}
-                 */
-                var id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
+                /** @type {string} Which type of ID the user inserted */
+                const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
                 parent.getMetaData(id, id_type);
             });
         }else if(InputMethod.getCurrent() === InputMethod.FILE){
@@ -188,19 +235,19 @@ var InputAnalyzer = {
         }
     },
     addShortNames: function(){
+        const CHAR_LIMIT          = 15;
         // FIXME: Also filters these in PHP file
         const CHAR_LIMIT_EXCEEDED = 1;
         const UNFILLED_FIELDS     = 2;
         const DUPLICATE_ENTRIES   = 3;
         const CHAR_CONSTRAINT     = 4;
-        const MAX_FILE_EXCEEDED   = 5; //TODO
+        // const MAX_FILE_EXCEEDED   = 5; //TODO
 
-        const CHAR_LIMIT          = 15;
         /**
          * Count total entries
          * @type {Number}
          */
-        var c_entries = this.results.length;
+        const c_entries = this.results.length;
         /**
          * Status code for filters
          * Code    Constant            Meaning
@@ -212,13 +259,11 @@ var InputAnalyzer = {
          * 4       CHAR_CONSTRAINT     Used any character other than /\w-\s/
          * @type {int}
          */
-        var status = 0;
-        var parent = this;
-        var i;
+        let status = 0;
+        const parent = this;
 
         // Get current short name values
-        for(i = 0; i<c_entries; ++i){
-            //var selector = $('#sn_' + i).val();
+        for(let i = 0; i < c_entries; ++i){
             this.results[i].short_name = $('#sn_' + i).val();
         }
 
@@ -226,10 +271,10 @@ var InputAnalyzer = {
         // 1. Check if all the fields are set
         // 2. Check for Character limits
         // 4. Character usage
-        for(i = 0; i<c_entries; ++i){
-            var s_name = $('#sn_' + i).val();
+        for(let i = 0; i<c_entries; ++i){
+            const s_name = $('#sn_' + i).val();
             this.results[i].short_name = s_name;
-            if(s_name === null || s_name === ""){
+            if(!s_name){
                 status = UNFILLED_FIELDS;
                 break;
             }
@@ -243,25 +288,25 @@ var InputAnalyzer = {
             }
         }
         // 4. Check for duplicate values
-        var duplicates = getDuplicates(getShortNames());
+        const duplicates = getDuplicates(getShortNames());
         if(duplicates.length > 0) status = DUPLICATE_ENTRIES;
 
         switch(status){
             case CHAR_CONSTRAINT:
-                alert("Short names must contain a to z (uppercase or lower case) letters, underscores, hyphens or commas.");
+                alert(Messages.ShortName.CHAR_CONSTRAINT);
                 break;
             case CHAR_LIMIT_EXCEEDED:
-                alert("Short names can contain at most " + CHAR_LIMIT + " characters!");
+                alert(Messages.ShortName.CHAR_LIMIT_EXCEEDED(CHAR_LIMIT));
                 break;
             case UNFILLED_FIELDS:
-                alert("You must fill all the short names!");
+                alert(Messages.ShortName.UNFILLED_FIELDS);
                 break;
             case DUPLICATE_ENTRIES:
-                alert("There are duplicate values. You must set unique short names!");
+                alert(Messages.ShortName.DUPLICATE_ENTRIES);
                 break;
             default: // Success = 0
                 this.done = true;
-                var chk = $('#fasta_check_out');
+                let chk = $('#fasta_check_out');
                 chk.attr('disabled', '');
                 chk.removeClass('btn-primary');
                 chk.addClass('btn-default');
@@ -276,8 +321,8 @@ var InputAnalyzer = {
                 chk.removeClass('btn-primary');
                 chk.addClass('btn-default');
 
-                for(i = 0; i<c_entries; ++i){
-                    var selector = $('#sn_' + i).parent();
+                for(let i = 0; i<c_entries; ++i){
+                    const selector = $('#sn_' + i).parent();
                     selector.html(this.results[i].short_name);
                 }
         }
@@ -287,8 +332,8 @@ var InputAnalyzer = {
          * @return {Array}
          */
         function getShortNames() {
-            var short_names = [];
-            for(var i = 0; i<parent.results.length; ++i){
+            const short_names = [];
+            for(let i = 0; i < parent.results.length; ++i){
                 if(parent.results[i].short_name !== null) short_names.push(parent.results[i].short_name);
             }
             return short_names;
@@ -301,7 +346,7 @@ var InputAnalyzer = {
          * @return {Array}
          */
         function getDuplicates(array) {
-            var i = 0, m = [];
+            let i = 0, m = [];
             return array.filter(function (n) {
                 return !m[n] * ~array.indexOf(n, m[n] = ++i);
             });
@@ -315,12 +360,12 @@ var InputAnalyzer = {
      * @param {string} id_type
      */
     getMetaData: function(id, id_type){
-        var parent = this;
+        const parent = this;
         /**
          * Response data
          * @type {{id: int|string, id_type: string, title: string|null, type: string|null, gin: int|null, short_name: string|null}}
          */
-        var response = {
+        const response = {
             id: id,
             id_type: id_type,
             title: null,
@@ -336,19 +381,17 @@ var InputAnalyzer = {
          */
         function processData(db, data) {
             /**
-             * @var {uids|{organism}[]} data.result
-             * @var {int[]}         data.result.uids
+             * @var {uids|Object[]}  data.result
+             * @var {int[]} data.result.uids
              */
-            if(data.hasOwnProperty('result') && data.result.hasOwnProperty('uids')){
-                /**
-                 * GI Numbers
-                 * @type {int[]}
-                 */
-                var gin = data.result.uids;
+            if(data.result && data.result.uids){
+                /** @type {int[]} GI Numbers */
+                const gin = data.result.uids;
                 if(gin.length === 1){
                     response.gin   = gin[0];
                     response.title = data.result[gin].title;
                     response.type  = (db === parent.DB_NUCCORE) ? parent.NUCLEOTIDE : parent.PROTEIN;
+                    /** @var {{organism: String}} data.result */
                     response.short_name = data.result[gin].organism;
                 }
             }
@@ -363,28 +406,25 @@ var InputAnalyzer = {
                 // Nucleotides only or Proteins only are correct, but not the mixed one
 
                 // Set SEQ_TYPE based on retrieved info
-                var len  = parent.results.length;
+                const len  = parent.results.length;
                 if(len <= 0) return;
                 // Get the common type
-                var type = parent.results[0].type;
+                const type = parent.results[0].type;
                 // Get invalid ACCN/GID
-                var invalid_ids = [];
+                const invalid_ids = [];
                 // Analyze
-                for(var i = 0; i<len; ++i){
+                for(let i = 0; i < len; ++i){
                     if(parent.results[i].type === null){
                         invalid_ids.push(parent.results[i].id);
                     }else if(parent.results[i].type !== type){
-                        alert("It looks like you are trying to use nucleotides & proteins at the same time. Please use only nucleotide or only proteins.");
+                        alert(Messages.InputAnalyzer.PostProcess.MIXED_INPUTS);
                         parent.selector.hide();
                         return;
                     }
                 }
                 // Show warning for invalid ACCN/GID
                 if(invalid_ids.length > 0){
-                    var msg = "";
-                    if(invalid_ids.length > 1) msg = "These Accession/GI numbers appear to be invalid: ";
-                    else msg = "This Accession/GI number appears to be invalid: ";
-                    alert(msg + invalid_ids.join(', '));
+                    alert(Messages.InputAnalyzer.PostProcess.INVALID_INPUTS(invalid_ids));
                     parent.selector.hide();
                     return;
                 }
@@ -422,6 +462,7 @@ var InputAnalyzer = {
      * @param {function} callBack
      */
     renderer: function(db, id, callBack){
+        const parent = this;
         $.ajax({
             method: 'get',
             url: 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi',
@@ -430,6 +471,12 @@ var InputAnalyzer = {
             dataType: 'json',
             success: function (data) {
                 callBack(db, data);
+            },
+            error: function(){
+                parent.selector.html('<div class="alert alert-danger">' +
+                    '<strong>' + Messages.FAILURE_ALERT + '</strong> ' +
+                    Messages.CONNECTION_PROBLEM +
+                    '</div>');
             }
         });
     },
@@ -437,10 +484,10 @@ var InputAnalyzer = {
      * Upload file to server
      * @param form
      */
-    upload: function (form) {
-        var upload_sel = $('#filef_status');
+    upload: function (form) { // TODO: check if this user previously uploaded any files in the same project and delete it
+        const upload_sel = $('#filef_status');
         upload_sel.show();
-        var parent = this;
+        const parent = this;
 
         $.ajax({
             url: "projects/file_upload",
@@ -451,7 +498,7 @@ var InputAnalyzer = {
             processData: false,
             dataType: 'JSON',
             beforeSend: function(){
-                new ProgressBar(upload_sel, undefined, undefined, "Uploading...");
+                new ProgressBar(upload_sel, undefined, undefined, Messages.InputAnalyzer.UPLOADING_TEXT);
             },
             /**
              * Do this on success
@@ -461,10 +508,14 @@ var InputAnalyzer = {
                 switch(res.status){
                     case 0: // FILE_UPLOAD_SUCCESS
                         $('#upload_file').hide();
-                        upload_sel.html('<div class="alert alert-success"><strong>Success!</strong> ' +
-                            'The file was uploaded successfully.</div>' +
+                        upload_sel.html('<div class="alert alert-success">' +
+                            '<strong>' + Messages.InputAnalyzer.Upload.SUCCESS_TEXT + '</strong> ' +
+                            Messages.InputAnalyzer.Upload.SUCCESS_MESSAGE +
+                            '</div>' +
                             '<div class="btn btn-primary" id="upload_new" onclick="$(\'#filef_status\').hide();' +
-                            '$(\'#upload_file\').show();$(\'#method\').removeAttr(\'disabled\');">Upload a new file</div>');
+                            '$(\'#upload_file\').show();$(\'#method\').removeAttr(\'disabled\');">' +
+                            Messages.InputAnalyzer.Upload.UPLOAD_NEW_TEXT +
+                            '</div>');
                         /**
                          * @var {{id: int, header: string}[]} res.data
                          */
@@ -472,11 +523,11 @@ var InputAnalyzer = {
                          * Result as status is FILE_UPLOAD_SUCCESS
                          * @type {{id: int, header: string}[]}
                          */
-                        var results    = res.data;
+                        const results    = res.data;
                         parent.file_id = res.id;
                         parent.results = [];
-                        for(var i = 0; i < results.length; ++i){
-                            var result = {
+                        for(let i = 0; i < results.length; ++i){
+                            let result = {
                                 id: results[i].id,
                                 id_type: 'file',
                                 title: results[i].header,
@@ -489,33 +540,45 @@ var InputAnalyzer = {
                         parent.buildTable();
                         break;
                     case 1: // FILE_SIZE_EXCEEDED
-                        upload_sel.html('<div class="alert alert-danger"><strong>Upload Failed!</strong> Make sure,<br />' +
+                        upload_sel.html('<div class="alert alert-danger">' +
+                            '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
+                            Messages.InputAnalyzer.Upload.MAKE_SURE + '<br />' +
                             '<ul>' +
-                            '<li>The zip file size is less than 100MB</li>' +
-                            '<li>The FASTA file size is less than 20MB</li>' +
+                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE().join('</li><li>') + '</li>' +
                             '</ul>' +
                             '</div>');
                         break;
                     case 2: // FILE_INVALID_MIME
-                        upload_sel.html('<div class="alert alert-danger"><strong>Upload Failed!</strong> Make sure the file is a valid zip file.</div>');
+                        upload_sel.html('<div class="alert alert-danger">' +
+                            '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
+                            Messages.InputAnalyzer.Upload.MAKE_SURE + '<br />' +
+                            '<ul>' +
+                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE().join('</li><li>') + '</li>' +
+                            '</ul>' +
+                            '</div>');
                         break;
                     case 3: // FILE_INVALID_FILE
-                        upload_sel.html('<div class="alert alert-danger"><strong>Upload Failed!</strong> Make sure,<br />' +
+                        upload_sel.html('<div class="alert alert-danger">' +
+                            '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
+                            Messages.InputAnalyzer.Upload.MAKE_SURE + '<br />' +
                             '<ul>' +
-                            '<li>The zip file is valid</li>' +
-                            '<li>The zip file is in right format.</li>' +
-                            '<li>The zip file size is less than 100MB</li>' +
-                            '<li>The FASTA file size is less than 20MB</li>' +
+                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE().join('</li><li>') + '</li>' +
                             '</ul>' +
                             '</div>');
                         break;
                     default: // FILE_UPLOAD_FAILED
-                        upload_sel.html('<div class="alert alert-danger"><strong>Upload Failed!</strong> Please try again. There may be connection problem.</div>');
+                        upload_sel.html('<div class="alert alert-danger">' +
+                            '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
+                            Messages.InputAnalyzer.Upload.CONNECTION_PROBLEM +
+                            '</div>');
                 }
                 $("#filef").val('');
             },
             error: function(){
-                upload_sel.html('<div class="alert alert-danger"><strong>Upload Failed!</strong> There may be connection problem.</div>');
+                upload_sel.html('<div class="alert alert-danger">' +
+                    '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
+                    Messages.InputAnalyzer.Upload.CONNECTION_PROBLEM +
+                    '</div>');
             }
         });
     },
@@ -527,17 +590,22 @@ var InputAnalyzer = {
          * Count total species
          * @type {int}
          */
-        var c_species = this.results.length;
+        const c_species = this.results.length;
         /**
          * HTML output
          * @type {string}
          */
-        var html = "<p class='text-success'>Found: " + c_species + " FASTA Sequences</p>"
-            + "<p>Add short names using the table below: "
-            + "(A short name can only contain letters and hyphens)</p>"
+        let html = "<p class='text-success'>" + Messages.InputAnalyzer.BuildTable.SEQ_FOUND(c_species) + "</p>"
+            + "<p>" + Messages.InputAnalyzer.BuildTable.SHORT_NAME_MESSAGE + "</p>"
             + "<table class='table table-bordered table-striped table-hover'>"
-            + "<thead><tr><th>ID</th><th>Title/Header</th><th>Short Name</th></tr></thead>";
-        for(var i = 0; i<c_species; ++i){
+            + "<thead>"
+            + "<tr>"
+            + "<th>" + Messages.InputAnalyzer.BuildTable.ID_TEXT + "</th>"
+            + "<th>" + Messages.InputAnalyzer.BuildTable.HEADER_TEXT + "</th>"
+            + "<th>" + Messages.InputAnalyzer.BuildTable.SHORT_NAME_TEXT + "</th>"
+            + "</tr>"
+            + "</thead>";
+        for(let i = 0; i < c_species; ++i){
             html += "<tr>"
                 + "<td>" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.results[i].id) + "</td>"
                 + "<td>" + this.results[i].title + "</td>"
@@ -551,7 +619,24 @@ var InputAnalyzer = {
     },
     getShortName: function (seq_info) {
         if(seq_info.short_name === null) return "";
-        return seq_info.short_name.replace(/\s/g, '_');
+        /** @type {{organism: String}|string} */
+        const name = seq_info.short_name;
+        if(name.length > this.CHAR_LIMIT){
+            const name_parts = name.split(' ');
+            if(name_parts[0].length > this.CHAR_LIMIT){
+                return name_parts[0].substring(0, this.CHAR_LIMIT);
+            }else{
+                let name = [];
+                let count = 0;
+                for(let parts of name_parts){
+                    count += parts.length;
+                    if(count <= this.CHAR_LIMIT) name.push(parts);
+                }
+                return name.join('_');
+            }
+        }else{
+            return name.replace(/\s/g, '_');
+        }
     }
 };
 
@@ -559,7 +644,7 @@ var InputAnalyzer = {
  * Project Object
  * @type {{config:Project.config, result: {Project.result}, process: {Project.process}, delete: {Project.delete}}}
  */
-var Project = {};
+Project = {};
 
 /**
  * Project Result
@@ -584,8 +669,8 @@ Project.result = {
             project_name: $('#project_name').val(), // #1
             aw_type: $("input[name='aw_type'][value='raw']").is(':checked') ? this.RAW : this.MAW, // #2
             kmer: { // #3
-                min: toInt($('#kmer_min').val()),
-                max: toInt($('#kmer_max').val())
+                min: parseInt($('#kmer_min').val()),
+                max: parseInt($('#kmer_max').val())
             },
             inversion: $('#inversion').is(":checked"), // #4
             dissimilarity_index: $('#dissimilarity_index').val(), // #5
@@ -600,17 +685,9 @@ Project.result = {
             if(this.config.file_id === null) return false;
         }
 
-        // Check configs
-        function isEmpty(field) {
-            return field === "" || field === null;
-        }
-        function toInt(field) {
-            return field | 0;
-        }
-
-        return ( !isEmpty(this.config.project_name)
+        return ( this.config.project_name
             && (0 <= this.config.kmer.min <= this.config.kmer.max)
-            && !isEmpty(this.config.dissimilarity_index)
+            && this.config.dissimilarity_index
             && InputAnalyzer.done);
     },
     /**
@@ -620,7 +697,7 @@ Project.result = {
      */
     verify: function(){
         if(!this.prepare()){
-            alert('It seems, you\'ve left out some mandatory fields. Please fill them in.');
+            alert(Messages.Project.UNFILLED_FIELDS);
             return false;
         }
         return true;
@@ -632,7 +709,7 @@ Project.result = {
         if(!this.verify()) return false;
         this.submit_btn = $('#p_btn');
 
-        var parent = this;
+        const parent = this;
         $.ajax({
             method: 'post',
             url: 'projects/new',
@@ -640,25 +717,25 @@ Project.result = {
             cache: false,
             dataType: 'json',
             beforeSend: function() {
-                var btn = parent.submit_btn;
+                const btn = parent.submit_btn;
                 btn.removeClass('btn-primary');
                 btn.addClass('btn-default disabled');
                 btn.attr('onclick', null);
-                btn.html("<img width='11' src='css/images/spinner.gif'> Loading...");
+                btn.html("<img width='11' src='css/images/spinner.gif'>" + Messages.Project.LOADING_TEXT);
             },
             success: function(res){
-                if(res !== null && res.id !== null){
+                if(res && res.id){
                     parent.project_id = res.id;
-                    var url = '/projects/' + res.id;
-                    var form = $('<form action="' + url + '" method="get"></form>');
+                    const url = '/projects/' + res.id;
+                    const form = $('<form action="' + url + '" method="get"></form>');
                     $('body').append(form);
                     form.submit();
                 }else{
                     parent.restore();
                 }
             },
-            error: function(xhr, status){
-                if(status !== null) parent.restore();
+            error: function(){
+                parent.restore();
             }
         });
     },
@@ -666,8 +743,8 @@ Project.result = {
      * Restore form if an error occurs
      */
     restore: function(){
-        alert("An error occurred, try again");
-        var btn = this.submit_btn;
+        alert(Messages.Project.FAILURE_ALERT);
+        const btn = this.submit_btn;
         btn.removeClass('btn-default disabled');
         btn.addClass('btn-primary');
         btn.attr('onclick', 'Project.result.send()');
@@ -678,13 +755,15 @@ Project.result = {
 /**
  * Do the process
  *
+ * FIXME: Move the translations
+ *
  * @type {{status: Project.process.status, cancel: Project.process.cancel}}
  */
 Project.process = {
     /**
      *
-     * @param {*|jQuery} selector
-     * @param project_id
+     * @param {*}      selector
+     * @param {Number} project_id
      */
     status: function (selector, project_id) {
         $.ajax({
@@ -694,7 +773,7 @@ Project.process = {
             cache: false,
             dataType: 'json',
             beforeSend: function(){
-                selector.html("Fetching last status...");
+                selector.html(Messages.Project.Status.FETCH_TEXT);
             },
             /**
              * @param {{status: string, status_code: int}} res
@@ -706,13 +785,13 @@ Project.process = {
                         window.location.reload();
                         break;
                     case 1: // FAILED
-                        alert("Something's wrong with your project. Please try again.");
+                        alert(Messages.Project.Status.FAILURE_ALERT);
                         window.location.assign('/projects');
                         break;
                 }
             },
             error: function(){
-                selector.html("Error fetching last status. Trying again...");
+                selector.html(Messages.Project.Status.FAILURE_TEXT);
             }
         });
     },
@@ -724,12 +803,12 @@ Project.process = {
             cache: false,
             dataType: 'json',
             beforeSend: function(){
-                return confirm("Are you sure want to cancel " + project_name + "?");
+                return confirm(Messages.Project.Cancel.CANCEL_MESSAGE(project_name));
             },
             success: function(res){
                 switch(res.status){
                     case 0:
-                        alert("Project was cancelled successfully!");
+                        alert(Messages.Project.Cancel.SUCCESS_MESSAGE);
                         window.location.assign('/projects');
                         break;
                     case 2:
@@ -748,6 +827,8 @@ Project.process = {
 
 /**
  * Delete a project
+ *
+ * FIXME: Move the translations
  *
  * @param {int}    project_id
  * @param {string} project_name
@@ -779,12 +860,58 @@ Project.delete = function (project_id, project_name) {
     });
 };
 
-var elapsed_time = function (selector, date_created) {
-    var now = new Date().getTime();
-    var distance = now - date_created;
-    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+Project.notification_handler = function () {
+    let selector  = $("#notification_bar");
+    let count_sel = $("#notification_count");
+    // Get unseen
+    $.ajax({
+        method: 'post',
+        url: 'projects/get_unseen',
+        cache: false,
+        dataType: 'json',
+        beforeSend: function(){
+            selector.html("<li style=\"padding: 5px 10px\"><em>Fetching notifications...</em></li>");
+            return true;
+        },
+        /** @param {object[]} res.projects */
+        success: function(res){
+            if(res.projects && res.projects.length > 0){
+                let rows = [];
+                count_sel.text(res.projects.length); // class='unread-count'
+                count_sel.addClass('unread-count');
+                /**
+                 * @var {int}    project.id
+                 * @var {string} project.name
+                 * @var {string} project.date_created
+                 */
+                for(let project of res.projects){
+                    rows.push("<li><a href='/projects/" + project.id + "'>#" + project.id + " " + project.name + "</a></li>");
+                }
+                selector.html(rows.join("<li class='divider'></li>"));
+            }else{
+                count_sel.html("");
+                count_sel.removeClass('unread-count');
+                selector.html("<li style=\"padding: 5px 10px\"><em>No new notification.</em></li>");
+            }
+        },
+        error: function(){
+            selector.html("<li style=\"padding: 5px 10px\"><em>Connection problem!</em></li>");
+        }
+    });
+};
+
+/**
+ * Show elapsed time
+ *
+ * @param selector
+ * @param date_created
+ */
+function elapsed_time(selector, date_created) {
+    const now = new Date().getTime();
+    const distance = now - date_created;
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
     selector.html(days + "d " + hours + "h " + minutes + "m " + seconds + "s ");
 }

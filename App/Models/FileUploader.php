@@ -21,6 +21,8 @@ class FileUploader extends Model{
     const FILE_UPLOAD_FAILED  = 4;
     const FILE_UPLOAD_SUCCESS = 0;
 
+    const HEADER_PREFIX = '>';
+
     private $_zip_file = null;
 
     function __construct(){
@@ -117,7 +119,7 @@ class FileUploader extends Model{
         $count = 0;
         while(!feof($source_fp)){
             $line = fgets($source_fp);
-            if(substr($line, 0, 1) === '>'){ // header is found
+            if(substr($line, 0, 1) === self::HEADER_PREFIX){ // header is found
                 $header = trim(substr($line, 1, strlen($line)-1));
                 do{
                     $id = time() + ($count++);
@@ -128,7 +130,7 @@ class FileUploader extends Model{
                 $info = ["header" => $header, "id" => $id];
                 array_push($data, $info);
             }
-            if(isset($target_fp)) fwrite($target_fp, $line);
+            if(isset($target_fp)) fwrite($target_fp, trim($line) . "\n");
         }
         unlink($filename);
         return $data;
