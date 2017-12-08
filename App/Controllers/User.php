@@ -1,9 +1,9 @@
 <?php
 
-namespace AWorDS\App\Controllers;
+namespace ADACT\App\Controllers;
 
-use \AWorDS\App\Constants;
-use AWorDS\Config;
+use \ADACT\App\Constants;
+use ADACT\Config;
 
 class User extends Controller
 {
@@ -49,7 +49,7 @@ class User extends Controller
          */
         $this->set_model();
         /**
-         * @var \AWorDS\App\Models\User $user
+         * @var \ADACT\App\Models\User $user
          */
         $user = $this->{$this->_model};
         // Go home if already logged in
@@ -77,13 +77,11 @@ class User extends Controller
     public function login_page(){
         extract($this->get_params());
         /**
+         * Parameters
          * @var string $email
          */
-        $this->set_model();
-        /**
-         * @var \AWorDS\App\Models\User $user
-         */
-        $user = $this->{$this->_model};
+        /** @var \ADACT\App\Models\User $user */
+        $user = $this->set_model();
         // Go home if already logged in
         if($user->login_check()){
             $this->redirect();
@@ -113,18 +111,19 @@ class User extends Controller
     public function reset_password(){
         extract($this->get_params());
         /**
+         * Parameters
          * @var string $email
          * @var string $pass
          */
-        $this->set_model();/**
-         * @var \AWorDS\App\Models\User $user
-         */
-        $user = $this->{$this->_model};
+        /** @var \ADACT\App\Models\User $user */
+        $user = $this->set_model();
+        $logged_in = $user->login_check();
         if(empty($pass)){    // If only email is provided, send an activation code to the email
             $user->email_reset_request($email);
             $this->set('alert_type', 'request');
         }else{              // If email and password are provided, save password, provide a notification and redirect to the login page.
             if(isset($_SESSION['valid_reset_request'])){
+                if($logged_in) $this->set('logged_in', $logged_in);
                 $user->reset_password($_SESSION['reset_email'], $pass);
                 $this->set('alert_type', 'reset');
             }else $this->redirect(Config::WEB_DIRECTORY . 'reset_pass');
@@ -134,20 +133,21 @@ class User extends Controller
     public function reset_password_page(){
         extract($this->get_params());
         /**
+         * Parameters
          * @var string $email
          * @var string $key
          */
-        $this->set_model();
-        /**
-         * @var \AWorDS\App\Models\User $user
-         */
-        $user = $this->{$this->_model};
+        /** @var \ADACT\App\Models\User $user */
+        $user = $this->set_model();
         $logged_in = $user->login_check();
         if(empty($key) AND !$logged_in){ // load the password reset request form
             $form_type = 'request';
         }else{                           // load the password reset form if the reset request is valid
             if($user->valid_reset_request($email, $key) OR $logged_in){
-                if($logged_in) $email = $user->get_email();
+                if($logged_in){
+                    $email = $user->get_email();
+                    $this->set('logged_in', $logged_in);
+                }
                 $_SESSION['valid_reset_request'] = true;
                 $_SESSION['reset_email'] = $email;
                 $form_type = 'reset';

@@ -4,9 +4,9 @@
 #   Locates the smallest cell in the table
 import sys
 from graphviz import Graph
-ps = Graph(name='UPGMATree', node_attr={'shape': 'plaintext'})
+ps = Graph(filename='UPGMATree', node_attr={'shape': 'plaintext'})
 ps.format = 'jpg'
-ps.render()
+#ps.render()
 
 def lowest_cell(table):
     # Set default to infinity

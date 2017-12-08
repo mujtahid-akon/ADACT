@@ -1,9 +1,9 @@
 <?php
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
-use \AWorDS\App\Constants;
-use \AWorDS\Config;
+use \ADACT\App\Constants;
+use \ADACT\Config;
 
 /**
  * @property string   project_dir
@@ -43,6 +43,8 @@ class Project extends Model{
      * @var null|int
      */
     private $_project_id;
+    private $_user_id;
+
     /**
      * @var ProjectConfig
      */
@@ -51,10 +53,11 @@ class Project extends Model{
     function __construct($project_id = null){
         parent::__construct();
         $this->_project_id = $project_id;
+        $this->_user_id = $_SESSION['user_id'];
     }
 
     /**
-     * new_project method
+     * add method
      *
      * Creates a new project
      *
@@ -70,7 +73,7 @@ class Project extends Model{
         $project_id = null;
         // Save project info in the DB, and get inserted id (which is the project id)
         if(@$stmt = $this->mysqli->prepare('INSERT INTO `projects`(`user_id`, `project_name`, `date_created`) VALUE(?, ?, NOW())')){
-            $stmt->bind_param('is', $_SESSION['user_id'], $this->config->project_name);
+            $stmt->bind_param('is', $this->_user_id, $this->config->project_name);
             $stmt->execute();
             $stmt->store_result();
             if($stmt->affected_rows == 1){
@@ -93,39 +96,25 @@ class Project extends Model{
     }
 
     /**
-     * getAll method.
+     * addMultiple method
      *
-     * Returns all the projects associated with the respective user
+     * Creates multiple projects
+     * Currently a user can request to create up to 5 projects at a time
      *
-     * @return array containing 'id', 'name', 'date_created' and 'editable' or just empty array on failure
+     * @param string $config
+     * @return array
      */
-    function getAll(){
-        $projects = [];
-        // Last project id
-        $last_project_id = (new LastProjects())->get();
-        // Get projects info in descending order
-        if(@$stmt = $this->mysqli->prepare('SELECT project_id, project_name, CONVERT_TZ(date_created,\'SYSTEM\',\'UTC\') FROM `projects` WHERE `user_id` = ? ORDER BY `date_created` DESC')){
-            $stmt->bind_param('i', $_SESSION['user_id']);
-            $stmt->execute();
-            $stmt->store_result();
-            $pending_projects = (new PendingProjects())->getAll(true);
-            if($pending_projects === false) $pending_projects = [];
-            for($i = 0; $i < $stmt->num_rows; $i++){
-                $project = ['id' => null, 'name' => null, 'date_created' => null, 'editable' => false, 'pending' => false];
-
-                $stmt->bind_result($project['id'], $project['name'], $project['date_created']);
-                $stmt->fetch();
-                // If a project id matches with the last project id and is not pending, the project is editable
-                if($project['id'] == $last_project_id) $project['editable'] = true;
-                if(in_array($project['id'], $pending_projects)){
-                    $project['pending'] = true;
-                    $project['editable'] = false;
-                }
-                // Push the project to the array
-                array_push($projects, $project);
-            }
+    function addMultiple($config){
+        $project_info = [];
+        $config = json_decode($config, true);
+        foreach ($config as $conf){
+            $project = [
+                'name' => isset($conf['project_name']) ? $conf['project_name'] : "#porject",
+                'id' => $this->add($conf)
+            ];
+            array_push($project_info, $project);
         }
-        return $projects;
+        return $project_info;
     }
 
     /**
@@ -135,19 +124,42 @@ class Project extends Model{
      *
      * @return array containing 'id', 'name', 'date_created' and 'editable' or just empty array on failure
      */
-    function getAllPending(){
+    function getAll(){
         $projects = [];
         // Get projects info in descending order
-        if(@$stmt = $this->mysqli->prepare('SELECT a.project_id, a.project_name, CONVERT_TZ(a.date_created,\'SYSTEM\',\'UTC\') FROM projects AS a INNER JOIN pending_projects AS b ON a.project_id = b.project_id WHERE a.user_id = ?;')){
-            $stmt->bind_param('i', $_SESSION['user_id']);
+        if(@$stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, count(pen.project_id) AS pending FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? GROUP BY p.project_id ORDER BY p.date_created DESC')){
+            $stmt->bind_param('i', $this->_user_id);
             $stmt->execute();
             $stmt->store_result();
             for($i = 0; $i < $stmt->num_rows; $i++){
-                $project = ['id' => null, 'name' => null, 'date_created' => null];
-                $stmt->bind_result($project['id'], $project['name'], $project['date_created']);
-                $stmt->fetch();
                 // Push the project to the array
-                array_push($projects, $project);
+                array_push($projects, $this->_fetch_project_overview($stmt));
+            }
+        }
+        return $projects;
+    }
+
+    /**
+     * getMany method.
+     *
+     * Get project overviews for only the requested IDs
+     *
+     * @param array $project_ids
+     * @return array
+     */
+    function getMultiple($project_ids){
+        $projects = [];
+        foreach ($project_ids as &$project_id){
+            $project_id = '(' . $project_id . ')';
+        }
+        $project_ids = implode(',', $project_ids);
+        if($stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, count(pen.project_id) AS pending FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? AND p.project_id IN (' . $project_ids . ') GROUP BY p.project_id ORDER BY p.date_created DESC;')){
+            $stmt->bind_param('i', $this->_user_id);
+            $stmt->execute();
+            $stmt->store_result();
+            for($i = 0; $i < $stmt->num_rows; $i++){
+                // Push the project to the array
+                array_push($projects, $this->_fetch_project_overview($stmt));
             }
         }
         return $projects;
@@ -162,28 +174,76 @@ class Project extends Model{
      * @return array containing 'id', 'name', 'date_created' and 'editable' or empty array on failure
      */
     function get($project_id){
-        // Last project id
-        $last_project_id = (new LastProjects())->get();
         // Get projects info in descending order
-        if(@$stmt = $this->mysqli->prepare('SELECT project_id, project_name, CONVERT_TZ(date_created,\'SYSTEM\',\'UTC\') FROM `projects` WHERE `user_id` = ? AND `project_id` = ?')){
-            $stmt->bind_param('ii', $_SESSION['user_id'], $project_id);
+        if(@$stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, count(pen.project_id) AS pending FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? AND p.project_id = '.$project_id)){
+            $stmt->bind_param('i', $this->_user_id);
             $stmt->execute();
             $stmt->store_result();
             if($stmt->num_rows > 0){
-                $project = ['id' => null, 'name' => null, 'date_created' => null, 'editable' => false, 'pending' => false];
-
-                $stmt->bind_result($project['id'], $project['name'], $project['date_created']);
-                $stmt->fetch();
-                // If a project id matches with the last project id and is not pending, the project is editable
-                if($project['id'] == $last_project_id) $project['editable'] = true;
-                if((new PendingProjects($project['id']))->isA()){
-                    $project['pending'] = true;
-                    $project['editable'] = false;
-                }
-                return $project;
+                return $this->_fetch_project_overview($stmt);
             }
         }
         return [];
+    }
+
+    /**
+     * getAllPending method.
+     *
+     * Returns all the pending projects associated with the respective user
+     *
+     * @return array containing 'id', 'name', 'date_created' and 'editable' or just empty array on failure
+     */
+    function getAllPending(){
+        $projects = [];
+        // Get projects info in descending order
+        if(@$stmt = $this->mysqli->prepare('SELECT a.project_id, a.project_name, CONVERT_TZ(a.date_created,\'SYSTEM\',\'UTC\') FROM projects AS a INNER JOIN pending_projects AS b ON a.project_id = b.project_id WHERE a.user_id = ?;')){
+            $stmt->bind_param('i', $this->_user_id);
+            $stmt->execute();
+            $stmt->store_result();
+            for($i = 0; $i < $stmt->num_rows; $i++){
+                $project = ['id' => null, 'name' => null, 'date_created' => null];
+                $stmt->bind_result($project['id'], $project['name'], $project['date_created']);
+                $stmt->fetch();
+                // Push the project to the array
+                array_push($projects, $project);
+            }
+        }
+        return $projects;
+    }
+
+    function getDetails($project_id){
+        $this->_project_id = $project_id;
+        $type = $this->getType();
+        if($type != self::PENDING_PROJECT){
+            $project_dir = Config::PROJECT_DIRECTORY . '/' . $this->_project_id;
+            // Get Species Relation
+            $relation_file = $project_dir . '/SpeciesRelation.json';
+            $species_relations = json_decode(file_get_contents($relation_file), true);
+            // Get Species names
+            $species = $this->_get_species_from_species_relation($species_relations);
+            $tree = new Tree($this->_project_id, Tree::GENERAL);
+            $dm = $this->_get_distance_matrix($species, $project_dir);
+            array_unshift($dm[0], null);
+            $upgma_tree = $tree->generate_tree($tree::UPGMA)->getFormattedLabels();
+            $nj_tree = $tree->generate_tree($tree::NJ)->getFormattedLabels();
+        }else{
+            $dm = null;
+            $species_relations = null;
+            $upgma_tree = null;
+            $nj_tree = null;
+        }
+
+        $project_info = [
+            'config' => (new ProjectConfig((new FileManager($this->_project_id))->get(FileManager::CONFIG_JSON)))->getConfigAssocArray(),
+            'editable' => ($type == self::LAST_PROJECT),
+            'pending' => ($type == self::PENDING_PROJECT),
+            'distance_matrix' => $dm,
+            'sorted_species_relations' => $species_relations,
+            'UPGMA_tree' => $upgma_tree,
+            'NJ_tree' => $nj_tree
+        ];
+
+        return $project_info;
     }
 
     /**
@@ -279,21 +339,21 @@ class Project extends Model{
      * @return int Status
      */
     function delete($project_id, $user_id = null){
-        if($user_id === null) $user_id = $_SESSION['user_id'];
+        if($user_id !== null) $this->_user_id = $user_id;
         // If the project to be deleted is the last project of the user,
         // delete it from that table too.
-        $lastProject = new LastProjects($user_id);
+        $lastProject = new LastProjects($this->_user_id);
         if($lastProject->isA($project_id)) $lastProject->remove();
         // Delete as pending project if it is in the list
-        $pendingProject = new PendingProjects($project_id, $user_id);
+        $pendingProject = new PendingProjects($project_id, $this->_user_id);
         $isAPendingProject = $pendingProject->isA();
         if($isAPendingProject){
             $pendingProject->cancel();
             $pendingProject->remove();
         }
         // Delete project from the database
-        if(@$stmt = $this->mysqli->prepare('DELETE FROM `projects` WHERE `user_id` = ? AND `project_id` = ?')){
-            $stmt->bind_param('ii', $user_id, $project_id);
+        if(@$stmt = $this->mysqli->prepare('DELETE FROM projects WHERE user_id = ? AND project_id = ?')){
+            $stmt->bind_param('ii', $this->_user_id, $project_id);
             $stmt->execute();
             $stmt->store_result();
             if($stmt->affected_rows == 1){
@@ -323,9 +383,8 @@ class Project extends Model{
      * @return bool
      */
     function verify($project_id){
-        $user_id = $_SESSION['user_id'];
         if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM projects WHERE user_id = ? AND project_id = ?')){
-            $stmt->bind_param('ii', $user_id, $project_id);
+            $stmt->bind_param('ii', $this->_user_id, $project_id);
             $stmt->execute();
             $stmt->store_result();
             $stmt->bind_result($count);
@@ -361,5 +420,57 @@ class Project extends Model{
             }
         }
         return null;
+    }
+
+    /**
+     * Helper for get() and getAll()
+     * @param \mysqli_stmt $stmt
+     * @return array
+     */
+    private function _fetch_project_overview(&$stmt){
+        $project = ['id' => null, 'name' => null, 'date_created' => null, 'editable' => false, 'pending' => false];
+        $stmt->bind_result($project['id'], $project['name'], $project['date_created'], $project['editable'], $project['pending']);
+        $stmt->fetch();
+        $project['pending'] = $project['pending'] ? true : false;
+        // If a project id matches with the last project id and is not pending, the project is editable
+        $project['editable'] = $project['pending'] ? false : ($project['editable'] ? true : false);
+        return $project;
+    }
+
+    private function _get_species_from_species_relation($species_relations){
+        $species_list = [];
+        foreach ($species_relations as $species => $relation){
+            array_push($species_list, $species);
+        }
+        return $species_list;
+    }
+
+    /**
+     * Get distance matrix HTML table
+     *
+     * @param array  $species
+     * @param string $project_dir
+     * @return array Each member is a table row
+     */
+    private function _get_distance_matrix($species, $project_dir){
+        $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
+        $distance_matrix = file($project_dir . '/DistanceMatrix.txt');
+        $dm_i = 0; // Distance matrix pointer
+        $table_rows = [];
+        array_push($table_rows, $species);
+        for($row_i  = 0; $row_i < $total_species; ++$row_i){
+            $table_row = [];
+            // Header first
+            array_push($table_row, $species[$row_i]);
+            // Blank columns
+            for($col_i = 0; $col_i <= $row_i; ++$col_i) array_push($table_row, null);
+            // Now, the rest
+            for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
+                array_push($table_row, round($distance_matrix[$dm_i++], 4));
+            }
+            // add the row
+            array_push($table_rows, $table_row);
+        }
+        return $table_rows;
     }
 }

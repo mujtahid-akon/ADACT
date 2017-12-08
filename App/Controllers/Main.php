@@ -6,25 +6,33 @@
  * Time: 10:11 PM
  */
 
-namespace AWorDS\App\Controllers;
+namespace ADACT\App\Controllers;
 
-use AWorDS\Config;
+use ADACT\Config;
 
 class Main extends Controller
 {
     public function home(){
-        $this->set_model('User');
-
-        /**
-         * @var \AWorDS\App\Models\User $user
-         */
-        $user = $this->{$this->_model};
+        /** @var \ADACT\App\Models\User $user */
+        $user = $this->set_model('User');
         $logged_in = $user->login_check();
         $this->set('title', Config::SITE_TITLE);
         $this->set('logged_in', $logged_in);
-        if(!$logged_in) $this->_template->hide_header(); // FIXME
-        else{
+        if(!$logged_in){
+            $this->_template->hide_header(); // FIXME
+        }else{
             $this->set('active_tab', 'home');
+        }
+    }
+
+    public function feedback_page(){
+        /** @var \ADACT\App\Models\User $user */
+        $user = $this->set_model('User');
+        $logged_in = $user->login_check();
+        if(!$logged_in){
+            $this->_template->hide_header(); // FIXME
+        }else{
+            $this->set('logged_in', $logged_in);
         }
     }
 }

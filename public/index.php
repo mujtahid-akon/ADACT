@@ -2,9 +2,9 @@
 
 require_once __DIR__ . '/../autoload.php';
 
-use \AWorDS\App\Route;
-use \AWorDS\Config;
-use \AWorDS\App\Session;
+use \ADACT\App\Route;
+use \ADACT\Config;
+use \ADACT\App\Session;
 
 Session::start();
 
@@ -45,9 +45,12 @@ if(strlen($location) > 1) $location = preg_replace('/[\/]+$/', '', $location);
 /**
  * Add routes
  */
-// Main page
+// Main pages
 Route::add(Route::GET,  '/', 'Main@home');
 Route::add(Route::GET,  '/home', 'Main@home');
+Route::add(Route::GET,  '/about', 'Main@about'); // TODO
+Route::add(Route::GET,  '/feedback', 'Main@feedback_page');
+Route::add(Route::POST, '/feedback', 'Main@feedback', []); // TODO
 /* === User Login/logout/reg === */
 Route::add(Route::POST, '/reg', 'User@register', ['name' => Route::STRING, 'email' => Route::EMAIL, 'pass' => Route::STRING]);
 Route::add(Route::POST, '/login', 'User@login', ['email' => Route::EMAIL, 'pass' => Route::STRING]);
@@ -58,6 +61,7 @@ Route::add(Route::GET,  '/login', 'User@login_page', ['email' => Route::EMAIL]);
 Route::add(Route::GET,  '/unlock', 'User@unlock', ['email' => Route::EMAIL, 'key' => Route::STRING]);
 Route::add(Route::GET,  '/reset_pass', 'User@reset_password_page', ['email' => Route::EMAIL, 'key' => Route::STRING]);
 Route::add(Route::GET,  '/logout', 'User@logout');
+Route::add(Route::GET,  '/delete_ac', 'User@delete'); // TODO
 /* === Project: Serial must be maintained! === */
 Route::add(Route::GET,  '/projects', 'Project@all_projects');
 Route::add(Route::GET,  '/projects/pending', 'Project@pending_projects');
@@ -78,19 +82,32 @@ Route::add(Route::POST, '/projects/{project_id}/delete', 'Project@delete_project
 Route::add(Route::GET,  '/projects/{project_id}/download', 'Project@download_project');
 Route::add(Route::GET,  '/projects/{project_id}/get/{file_name}', 'Project@get_file');
 // API
-// - These things can be put in another index.php in case a sub-domain is used instead of the document root
+// - These things can be put in another index.php (along with the fixed contents) in case a sub-domain is used instead of the document root
 // - If want to use different versions of API (eg. v2), copy the routes bellow with API replaced with APIv2 and copy the API directory as APIv2 at /App/Controllers, also change the namespaces
+// - The serial must be maintained
+
+// Login/logout
 Route::add(Route::POST,   '/api/login',  'API\\User@login', ['email' => Route::EMAIL, 'pass' => Route::STRING]);
 Route::add(Route::DELETE, '/api/logout', 'API\\User@logout');
-Route::add(Route::POST,   '/api/projects/new', 'API\\Project@new_project', ['project_configs' => Route::STRING]); // TODO
-Route::add(Route::POST,   '/api/projects/upload', 'API\\Project@upload'); // TODO
+// Project details
+Route::add(Route::GET,    '/api/projects/details/last', 'API\\Project@get_details'); // TODO
+Route::add(Route::GET,    '/api/projects/details/{project_id}', 'API\\Project@get_details');
+// Project status
 Route::add(Route::GET,    '/api/projects/status', 'API\\Project@get_status');
 Route::add(Route::GET,    '/api/projects/status/{project_ids}', 'API\\Project@get_status');
+// New project
+Route::add(Route::PUT,    '/api/projects/new', 'API\\Project@new_project');
+Route::add(Route::POST,   '/api/projects/upload', 'API\\Project@upload');
+Route::add(Route::DELETE, '/api/projects/cancel/{project_ids}', 'API\\Project@cancel'); // todo
+// Others
 Route::add(Route::GET,    '/api/projects/result/{project_ids}', 'API\\Project@result');
 Route::add(Route::DELETE, '/api/projects/delete/{project_ids}', 'API\\Project@delete');
+// Project overview
+Route::add(Route::GET,    '/api/projects', 'API\\Project@all_projects');
+Route::add(Route::GET,    '/api/projects/{project_ids}', 'API\\Project@get_projects');
 // The route bellow must always be at the end of the API routes
 Route::add(Route::ALL,    '/api.*',  'API\\API@handle_default');
 
-/** Load views or do other specific tasks describe in the respective controller */
+/** Load views or do other specific tasks described in the respective controller */
 Route::load(Route::verify(strtoupper($_SERVER['REQUEST_METHOD']),$location));
 exit;

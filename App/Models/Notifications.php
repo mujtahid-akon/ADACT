@@ -6,7 +6,7 @@
  * Time: 6:25 PM
  */
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
 
 class Notifications extends Model{

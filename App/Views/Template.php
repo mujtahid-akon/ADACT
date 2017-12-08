@@ -6,10 +6,10 @@
  * Time: 9:23 PM
  */
 
-namespace AWorDS\App\Views;
+namespace ADACT\App\Views;
 
-use AWorDS\App\HttpStatusCode;
-use \AWorDS\Config;
+use ADACT\App\HttpStatusCode;
+use \ADACT\Config;
 
 class Template
 {
@@ -45,7 +45,7 @@ class Template
     /**
      * render method.
      *
-     * Default template for AWorDS:
+     * Default template for ADACT:
      *  It looks for header, footer, extra and {action} files at Views/{Controller}/ directory
      *  If a file not found, the default will be used instead (located at Views/Defaults/)
      * NOTE: headers and footers are hidden if 'logged_in' variable is not set using the Template::set()
@@ -98,7 +98,7 @@ class Template
 	<meta charset="utf-8" />
 	<meta name="Author" content="Mujtahid Akon" />
 	<base href="{$DIR}">
-	<meta name="Description" content="AWorDS" />
+	<meta name="Description" content="ADACT" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<!--link href="https://www.fontify.me/wf/7d6c4da9e6ebf1836a1c32879c63dbfc" rel="stylesheet" type="text/css" /-->
 	<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
@@ -116,6 +116,7 @@ EOF;
         print <<< EOF
 </head>
 <body>
+
 EOF;
 
         // Show header if wanted

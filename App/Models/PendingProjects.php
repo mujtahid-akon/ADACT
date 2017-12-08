@@ -6,9 +6,9 @@
  * Time: 3:58 PM
  */
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
-use AWorDS\App\Constants;
+use ADACT\App\Constants;
 
 class PendingProjects extends Model
 {

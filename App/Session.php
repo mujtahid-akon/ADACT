@@ -6,9 +6,9 @@
  * Time: 12:52 AM
  */
 
-namespace AWorDS\App;
+namespace ADACT\App;
 
-use \AWorDS\Config;
+use \ADACT\Config;
 
 
 class Session implements \SessionHandlerInterface {

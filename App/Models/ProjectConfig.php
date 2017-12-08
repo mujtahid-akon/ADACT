@@ -6,7 +6,7 @@
  * Time: 5:35 PM
  */
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
 /**
  * Class ProjectConfig.
@@ -48,6 +48,13 @@ class ProjectConfig extends Model{
         ]
     ];
 
+    /**
+     * ProjectConfig constructor.
+     *
+     * FIXME: may need additional filtering
+     *
+     * @param string $config_file
+     */
     function __construct($config_file = null){
         parent::__construct();
         $this->_config_file = $config_file;
@@ -58,6 +65,8 @@ class ProjectConfig extends Model{
      * load_config method.
      *
      * Load configuration file as an array instead of file
+     *
+     * FIXME: may need additional filtering
      *
      * @param array $config_data
      */
@@ -78,7 +87,6 @@ class ProjectConfig extends Model{
      * verify method
      *
      * Check whether the provided config is valid or not
-     * FIXME
      *
      * @return bool
      */
@@ -111,12 +119,19 @@ class ProjectConfig extends Model{
             AND (($aw_type == 'maw'   AND in_array($dissimilarity_index, $d_i_maw))
                 OR ($aw_type == 'raw' AND in_array($dissimilarity_index, $d_i_raw)))
             AND isset($type) AND in_array($type, ['file', 'accn_gin'])
-            AND (($type == 'file' AND (new FileUploader())->getFromID($file_id) !== false) OR ($type == 'accn_gin'))
+            AND (($type == 'file' AND isset($file_id) AND (new FileUploader())->getFromID($file_id) !== false) OR ($type == 'accn_gin'))
             AND isset($data)
         ) return true;
         return false;
     }
 
+    /** Private methods */
+
+    /**
+     * Loads configurations as the public members of the class
+     *
+     * @param bool $is_a_file
+     */
     private function _load_config($is_a_file){
         if($is_a_file) $this->_config_data = json_decode(file_get_contents($this->_config_file), true);
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
-use \AWorDS\App\Constants;
+use ADACT\Config;
 
 class User extends Model{
     const ACTIVATION_KEY_LENGTH = 16;   // Can be up to 50
@@ -51,36 +51,43 @@ class User extends Model{
                 }
             }
         }
-
-        $this->add_to_login_attempts($email);
+        (new LoginAttempts($email, LoginAttempts::EMAIL))->add();
         return self::LOGIN_FAILURE;
     }
-    
+
+    /**
+     * Log out of the current session
+     *
+     * @return void
+     */
     function logout(){
         session_destroy(); // This can essentially do everything
     }
-    
+
+    /**
+     * Register a new user
+     *
+     * @param string $name
+     * @param string $email
+     * @param string $pass
+     * @return int ACCOUNT_EXISTS | REGISTER_SUCCESS | REGISTER_FAILURE
+     */
     function register($name, $email, $pass){
-        $hash = password_hash($pass, PASSWORD_DEFAULT);
+        // Does the account already exist?
         if($this->user_exists($email) == self::ACCOUNT_EXISTS) return self::ACCOUNT_EXISTS;
+        // Nah, go on
+        $hash = password_hash($pass, PASSWORD_DEFAULT);
         $activation_key = $this->activation_key();
         if(@$stmt = $this->mysqli->prepare('INSERT INTO `users`(`name`, `email`, `password`, `joined_date`, `locked`, `activation_key`) VALUE(?,?,?, NOW(), 1, ?)')){
             $stmt->bind_param('ssss', $name, $email, $hash, $activation_key);
             $stmt->execute();
-            if($stmt->affected_rows == 1){
-                if($this->email_new_ac($name, $email, $activation_key)){
-                    return self::REGISTER_SUCCESS;
-                }else{
-                    // TODO: delete a/c too
-                    return self::REGISTER_FAILURE;
-                }
-            }
+            if($stmt->affected_rows == 1) $this->email_new_ac($name, $email, $activation_key);
         }
         return self::REGISTER_FAILURE;
     }
     
     function unlock($email, $key){
-        if(@$stmt = $this->mysqli->prepare('UPDATE `users` SET `locked` = 0, `activation_key` = \'\' WHERE `email` = ? AND activation_key = ?')){
+        if(@$stmt = $this->mysqli->prepare('UPDATE users SET locked = 0, activation_key = \'\' WHERE email = ? AND activation_key = ?')){
             $stmt->bind_param('ss', $email, $key);
             $stmt->execute();
             $stmt->store_result();
@@ -131,7 +138,7 @@ EOF;
         $subject = 'Welcome to ' . self::SITE_TITLE . '!';
         $verification_address = self::WEB_ADDRESS . '/unlock' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
         $body = <<< EOF
-<p>Your email was used to create a new account in <a href="{$website}" target='_blank'>AWorDS</a>.
+<p>Your email was used to create a new account in <a href="{$website}" target='_blank'>ADACT</a>.
       If this was really you please verify your account by following the link below:</p>
 <p><a href="{$verification_address}" target='_blank'>{$verification_address}</a></p>
 <p>Thanks for creating account with us.</p>
@@ -150,7 +157,7 @@ EOF;
     }
     
     function get_email(){
-        $user_id = isset($_SESSION['session']) ? $_SESSION['session']['id'] : $_COOKIE['u_id'];
+        $user_id = $_SESSION['user_id'];
         if(@$stmt = $this->mysqli->prepare('SELECT `email` FROM `users` WHERE `user_id` = ?')){
             $stmt->bind_param('i', $user_id);
             $stmt->execute();
@@ -163,25 +170,36 @@ EOF;
         }
         return false;
     }
-    
-    private function new_session($user_id, $session_id){
-        error_log("user: $user_id, session: $session_id");
-        $_SESSION['session']['id'] = $user_id;
 
-        if(@$stmt = $this->mysqli->prepare('UPDATE `active_sessions` SET user_id = ? WHERE session_id = ?')){
+    /** Private functions */
+
+    /**
+     * new_session method.
+     *
+     * @param int    $user_id
+     * @param string $session_id
+     */
+    private function new_session($user_id, $session_id){
+        if(Config::DEBUG_MODE) error_log("user: $user_id, session: $session_id");
+        // Set the user ID of the current user as the session data to quickly access it
+        $_SESSION['user_id'] = $user_id;
+        if(@$stmt = $this->mysqli->prepare('UPDATE active_sessions SET user_id = ? WHERE session_id = ?')){
             $stmt->bind_param('is', $user_id, $session_id);
-            error_log(var_dump($stmt->execute()));
+            $stmt->execute();
             $stmt->store_result();
         }
-
+        (new LoginAttempts($user_id))->delete();
     }
-    
-    private function activation_key(){
+
+    /**
+     * Generate unique activation key
+     *
+     * @return bool|string
+     */
+    public function activation_key(){
         $max = ceil(self::ACTIVATION_KEY_LENGTH / 40);
         $random = '';
-        for ($i = 0; $i < $max; $i ++) {
-        $random .= sha1(microtime(true).mt_rand(10000,90000));
-        }
+        for($i = 0; $i < $max; $i ++) $random .= sha1(microtime(true).mt_rand(10000,90000));
         $random = substr($random, 0, self::ACTIVATION_KEY_LENGTH);
         if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM users WHERE activation_key=?')){
             $stmt->bind_param('s', $random);
@@ -192,43 +210,6 @@ EOF;
             if($count == 1) return $this->activation_key();
         }
         return $random;
-    }
-
-    // TODO: Not implemented yet
-    private function add_to_login_attempts($email){
-        if($this->user_exists($email) == self::ACCOUNT_EXISTS){
-            // Doesn't need to check if the a/c is locked, since it's already being checked at login()
-            if(@$stmt = $this->mysqli->prepare('SELECT `user_id` FROM `users` WHERE `email` = ?')){
-                $stmt->bind_param('s', $email);
-                $stmt->execute();
-                $stmt->store_result();
-                if($stmt->num_rows == 1){
-                    $stmt->bind_result($user_id);
-                    $stmt->fetch();
-                    if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `login_attempts` WHERE `user_id` = '. $user_id)){
-                        $stmt->execute();
-                        $stmt->store_result();
-                        $stmt->bind_result($count);
-                        $stmt->fetch();
-                        $sql = ($count == 1) ?
-                            'UPDATE `login_attempts` SET `attempts` = `attempts` + 1' : 'INSERT INTO `login_attempts` VALUE(' . $user_id . ', 1)';
-                        // First, get the no. of attempts
-                        if($count == 1){
-                            if($stmt = $this->mysqli->prepare('SELECT `attempts` FROM `login_attempts` WHERE `user_id` = '. $user_id)){
-                                $stmt->execute();
-                                $stmt->store_result();
-                                $stmt->bind_result($attempts);
-                                $stmt->fetch();
-                                if($attempts == self::MAX_LOGIN_ATTEMPTS){
-                                    // The account is locked
-                                    return self::LOGIN_LOCKED;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -249,7 +230,7 @@ EOF;
             $stmt->bind_param('i', $user_id);
             $stmt->execute();
             $stmt->store_result();
-            if($stmt->num_rows == Constants::COUNT_ONE){
+            if($stmt->num_rows == 1){
                 $info = [];
                 $stmt->bind_result($info['name'], $info['email'], $info['joined_date'], $info['locked']);
                 $stmt->fetch();

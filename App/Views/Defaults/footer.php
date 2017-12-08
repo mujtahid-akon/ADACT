@@ -1,3 +1,4 @@
 <footer style="border-top: 1px solid #ccc;margin-top: 5px;">
-    <?php print date('Y') ?> &copy; All rights reserved.
+    <div class="pull-left"><a href="/about">About</a> | <a href="/feedback">Feedback</a></div>
+    <div class="pull-right"><?php print date('Y') . ' &copy; ' . \ADACT\Config::SITE_TITLE ?></div>
 </footer>

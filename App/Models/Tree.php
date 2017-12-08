@@ -6,19 +6,24 @@
  * Time: 1:16 PM
  */
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
 require_once __DIR__ . "/../../Libraries/PHPPhylogeneticTrees/autoload.php";
 
 use PHPPhylogeneticTrees\TreeGenerator;
 
 class Tree extends TreeGenerator{
+    const GENERAL   = 1;
+    const TREANT_JS = 2;
     /** @var FileManager */
     protected $_fm;
     /** @var ProjectConfig */
     protected $_config;
+    /** @var int For whom the tree is generated */
+    private $_type;
 
-    function __construct($project_id){
+    function __construct($project_id, $type = self::TREANT_JS){
+        $this->_type = $type;
         $this->_fm = new FileManager($project_id);
         $this->_config = new ProjectConfig($this->_fm->get(FileManager::CONFIG_JSON));
         $this->_fm->cd($this->_fm->root());
@@ -81,9 +86,20 @@ class Tree extends TreeGenerator{
             foreach ($labels as &$label){
                 if(is_array($label)){
                     $this->format_labels($label);
-                    $label = ["children" => $label];
+                    switch ($this->_type){
+                        case self::TREANT_JS:
+                            $label = ["children" => $label];
+                            break;
+                        case self::GENERAL:
+                    }
                 }else{
-                    $label = ["text" => ["name" => $this->_labels[$label-1]]];
+                    switch ($this->_type){
+                        case self::TREANT_JS:
+                            $label = ["text" => ["name" => $this->_labels[$label-1]]];
+                            break;
+                        case self::GENERAL:
+                            $label = $this->_labels[$label-1];
+                    }
                 }
             }
         }

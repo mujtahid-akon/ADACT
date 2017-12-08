@@ -6,7 +6,7 @@
  * Time: 9:49 AM
  */
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
 /**
  * Class FileManager
@@ -41,7 +41,7 @@ namespace AWorDS\App\Models;
  *                                       ./UPGMA tree.jpg
  *                                       ./Neighbour tree.jpg
  *
- * @package AWorDS\App\Models
+ * @package ADACT\App\Models
  */
 class FileManager extends Model{
     // File constants

@@ -6,7 +6,7 @@
  * Time: 1:33 AM
  */
 
-namespace AWorDS\App;
+namespace ADACT\App;
 
 require_once __DIR__ . '/../autoload.php';
 
@@ -101,7 +101,7 @@ class Route
             $controller = $tmp[0];
             $action     = $tmp[1];
             unset($tmp);
-            $controller_class = '\\AWorDS\\App\\Controllers\\' . $controller;
+            $controller_class = '\\ADACT\\App\\Controllers\\' . $controller;
             if(class_exists($controller_class)){
                 if(method_exists($controller_class, $action)){
                     (new $controller_class($controller, $action, self::$last_route['method'], self::$last_route['params'], self::$matches))->$action();

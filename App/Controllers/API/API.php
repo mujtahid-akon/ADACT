@@ -6,11 +6,11 @@
  * Time: 4:46 PM
  */
 
-namespace AWorDS\App\Controllers\API;
+namespace ADACT\App\Controllers\API;
 
 
-use AWorDS\App\Controllers\Controller;
-use AWorDS\App\HttpStatusCode;
+use ADACT\App\Controllers\Controller;
+use ADACT\App\HttpStatusCode;
 
 class API extends Controller{
     private $_status = [

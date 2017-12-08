@@ -10,7 +10,7 @@ require_once __DIR__.'/../Libraries/autoload.php';
 require_once __DIR__.'/../Config.php';
 
 use GO\Scheduler;
-use AWorDS\Config;
+use ADACT\Config;
 
 // Create a new scheduler
 $scheduler = new Scheduler();

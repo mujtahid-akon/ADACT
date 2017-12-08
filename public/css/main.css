@@ -45,8 +45,12 @@ html, body, .container-table {
     text-decoration: none;
 }
 
-td{
+td, th{
     vertical-align: middle !important;
+}
+
+th{
+    width: max-content;
 }
 
 a, a:hover, a:active, a:visited{

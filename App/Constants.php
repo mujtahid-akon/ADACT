@@ -6,13 +6,13 @@
  * Time: 7:20 PM
  */
 
-namespace AWorDS\App;
+namespace ADACT\App;
 
 require_once __DIR__ . '/../autoload.php';
 
 /**
  * Class Constants
- * @package AWorDS\App
+ * @package ADACT\App
  * @deprecated
  */
 class Constants{

@@ -5,10 +5,10 @@
  * Date: 6/7/17
  * Time: 6:40 PM
  */
-use \AWorDS\App\Models\FileManager;
-use \AWorDS\App\Models\ProjectConfig;
-use \AWorDS\App\Models\Project;
-use \AWorDS\Config;
+use \ADACT\App\Models\FileManager;
+use \ADACT\App\Models\ProjectConfig;
+use \ADACT\App\Models\Project;
+use \ADACT\Config;
 /**
  * @var bool $logged_in
  */
@@ -75,9 +75,7 @@ function get_distance_matrix($species, $project_dir){
         // Header first
         $table_row .= "<th>{$species[$row_i]}</th>";
         // Blank columns
-        for($col_i = 0; $col_i <= $row_i; ++$col_i){
-            $table_row .= "<td></td>";
-        }
+        for($col_i = 0; $col_i <= $row_i; ++$col_i) $table_row .= "<td></td>";
         // Now, the rest
         for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
             $table_row .= "<td>{$distance_matrix[$dm_i++]}</td>";
@@ -102,8 +100,8 @@ if($isAPendingProject):
     <p class="text text-danger"><em>The project is currently running...</em></p>
     <script>
         $(document).ready(function(){
-            var date_created = new Date("<?php print $project_info['date_created'] ?> UTC").getTime();
-            var selector = $("#elapsed_time");
+            let date_created = new Date("<?php print $project_info['date_created'] ?> UTC").getTime();
+            let selector = $("#elapsed_time");
             // Show elapsed time
             elapsed_time(selector, date_created);
             setInterval(function(){
@@ -175,13 +173,13 @@ endif; // isAPendingProject
 <br />
 <?php
 if(!$isAPendingProject):
-    $tree = new \AWorDS\App\Models\Tree($project_id);
+    $tree = new \ADACT\App\Models\Tree($project_id);
 ?>
 <script src="Treant.js"></script>
 <script src="vendor/raphael.js"></script>
 <script src="vendor/jquery.easing.js"></script>
 <script>
-    var file = document.createElement("link");
+    let file = document.createElement("link");
     file.setAttribute("rel", "stylesheet");
     file.setAttribute("type", "text/css");
     file.setAttribute("href", "Treant.css");
@@ -222,12 +220,44 @@ if(!$isAPendingProject):
             children: JSON.parse(nj)
         }
     };
+
+    function show_result_tab(tab){
+        $('.output').hide();
+        let tab_id, toc_id;
+        switch(tab){
+            default:
+                tab_id = '#distance_matrix';
+                toc_id = 0;
+                break;
+            case 'sorted_species_relation':
+                tab_id = '#sorted_species_relation';
+                toc_id = 1;
+                break;
+            case 'neighbour_tree':
+                tab_id = '#neighbour_tree';
+                toc_id = 2;
+                new Treant(nj_config);
+                break;
+            case 'upgma_tree':
+                tab_id = '#upgma_tree';
+                toc_id = 3;
+                new Treant(upgma_config);
+        }
+        $(tab_id).show();
+        $('.views').removeClass('active');
+        $('#tab_toc').children().eq(toc_id).addClass('active');
+    }
+
+    $(document).ready(function () {
+        const url = document.URL.split('#')[1];
+        show_result_tab(url);
+    });
 </script>
-<div style="padding-bottom: 10px;">
-    <a href="/projects/<?php print $project_id ?>#distance_matrix" onclick="$('.output').hide();$('#distance_matrix').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default active">Distance Matrix</a>
-    <a href="/projects/<?php print $project_id ?>#sorted_species_relation" onclick="$('.output').hide();$('#sorted_species_relation').show();$('.views').removeClass('active');$(this).addClass('active');" class="views btn btn-default">Sorted Species Relation</a>
-    <a href="/projects/<?php print $project_id ?>#neighbour_tree" onclick="$('.output').hide();$('#neighbour_tree').show();$('.views').removeClass('active');$(this).addClass('active');new Treant(nj_config);" class="views btn btn-default">Neighbour Joining Tree</a>
-    <a href="/projects/<?php print $project_id ?>#upgma_tree" onclick="$('.output').hide();$('#upgma_tree').show();$('.views').removeClass('active');$(this).addClass('active');new Treant(upgma_config);" class="views btn btn-default">UPGMA tree</a>
+<div id="tab_toc" style="padding-bottom: 10px;">
+    <a href="/projects/<?php print $project_id ?>#distance_matrix" onclick="show_result_tab()" class="views btn btn-default active">Distance Matrix</a>
+    <a href="/projects/<?php print $project_id ?>#sorted_species_relation" onclick="show_result_tab('sorted_species_relation')" class="views btn btn-default">Sorted Species Relation</a>
+    <a href="/projects/<?php print $project_id ?>#neighbour_tree" onclick="show_result_tab('neighbour_tree')" class="views btn btn-default">Neighbour Joining Tree</a>
+    <a href="/projects/<?php print $project_id ?>#upgma_tree" onclick="show_result_tab('upgma_tree')" class="views btn btn-default">UPGMA Tree</a>
 </div>
 <div>
     <?php

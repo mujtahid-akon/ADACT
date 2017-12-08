@@ -6,7 +6,7 @@
  * Time: 4:26 PM
  */
 
-namespace AWorDS\App;
+namespace ADACT\App;
 
 
 /** HTTP status codes */

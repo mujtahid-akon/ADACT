@@ -6,7 +6,7 @@
  * Time: 10:32 AM
  */
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
 /**
  * Class Process
@@ -20,7 +20,7 @@ namespace AWorDS\App\Models;
  * 4. Generate phylogenic trees
  * 5. Copy them to the project directory
  *
- * @package AWorDS\App\Models
+ * @package ADACT\App\Models
  */
 
 class Process extends Model{
