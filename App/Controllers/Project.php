@@ -1,15 +1,15 @@
 <?php
 
-namespace AWorDS\App\Controllers;
+namespace ADACT\App\Controllers;
 
-use \AWorDS\App\Constants;
-use AWorDS\App\HttpStatusCode;
-use AWorDS\App\Models\FileUploader;
-use AWorDS\App\Models\LastProjects;
-use AWorDS\App\Models\Notifications;
-use AWorDS\App\Models\PendingProjects;
-use AWorDS\App\Models\ProjectConfig;
-use \AWorDS\Config;
+use \ADACT\App\Constants;
+use ADACT\App\HttpStatusCode;
+use ADACT\App\Models\FileUploader;
+use ADACT\App\Models\LastProjects;
+use ADACT\App\Models\Notifications;
+use ADACT\App\Models\PendingProjects;
+use ADACT\App\Models\ProjectConfig;
+use \ADACT\Config;
 
 class Project extends Controller{
     /**
@@ -20,7 +20,7 @@ class Project extends Controller{
      */
     function all_projects(){
         /**
-         * @var \AWorDS\App\Models\Project $project
+         * @var \ADACT\App\Models\Project $project
          */
         $project = $this->set_model();
         $logged_in = $project->login_check();
@@ -39,7 +39,7 @@ class Project extends Controller{
         else exit();
         
         /**
-         * @var \AWorDS\App\Models\Project $project
+         * @var \ADACT\App\Models\Project $project
          */
         $project = $this->set_model();;
         $logged_in = $project->login_check();
@@ -58,7 +58,7 @@ class Project extends Controller{
         if(isset($this->_url_params['project_id'])) $project_id = $this->_url_params['project_id'];
         else exit();
         /**
-         * @var \AWorDS\App\Models\Project $project
+         * @var \ADACT\App\Models\Project $project
          */
         $project = $this->set_model();;
         $logged_in = $project->login_check();
@@ -81,7 +81,7 @@ class Project extends Controller{
      */
     function last_project(){
         /**
-         * @var \AWorDS\App\Models\LastProjects $lastProject
+         * @var \ADACT\App\Models\LastProjects $lastProject
          */
         $lastProject = $this->set_model('LastProjects');;
         $logged_in = $lastProject->login_check();
@@ -103,7 +103,7 @@ class Project extends Controller{
          * @var string $config A JSON string containing all configurations
          */
         /**
-         * @var \AWorDS\App\Models\Project $project
+         * @var \ADACT\App\Models\Project $project
          */
         $project = $this->set_model();
         $logged_in = $project->login_check();
@@ -116,7 +116,7 @@ class Project extends Controller{
 
     function new_project_page(){
         /**
-         * @var \AWorDS\App\Models\Project $project
+         * @var \ADACT\App\Models\Project $project
          */
         $project = $this->set_model();
         $logged_in = $project->login_check();
@@ -139,7 +139,7 @@ class Project extends Controller{
     function file_upload(){
         $json = ['status' => FileUploader::FILE_UPLOAD_FAILED];
         /**
-         * @var \AWorDS\App\Models\FileUploader $project
+         * @var \ADACT\App\Models\FileUploader $project
          */
         $project = $this->set_model('FileUploader');
         $logged_in = $project->login_check();
@@ -168,7 +168,7 @@ class Project extends Controller{
          */
         $this->load_view(false);
         if(!isset($file_name, $project_id)) goto redirect;
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in AND $project->verify($project_id)){
@@ -209,7 +209,7 @@ class Project extends Controller{
             exit();
         }
 
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
 
@@ -232,7 +232,7 @@ class Project extends Controller{
     }
 
     function pending_projects(){
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -246,7 +246,7 @@ class Project extends Controller{
         extract($this->get_params());
         $json = [];
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -267,9 +267,9 @@ class Project extends Controller{
 
     function cancel_process(){
         extract($this->get_params());
-        $json = ['status' => Constants::PROJECT_DELETE_FAILED]; // Failed
+        $json = ['status' => \ADACT\App\Models\Project::PROJECT_DELETE_FAILED]; // Failed
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -286,7 +286,7 @@ class Project extends Controller{
     function fork_project(){
         extract($this->get_params());
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project   = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -304,7 +304,7 @@ class Project extends Controller{
     function edit_project_page(){
         extract($this->get_params());
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project   = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -324,7 +324,7 @@ class Project extends Controller{
          * @var string $project_id A JSON string containing all configurations
          * @var string $config
          */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project   = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -341,7 +341,7 @@ class Project extends Controller{
 
     function get_unseen(){
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project   = $this->set_model();
         $logged_in = $project->login_check();
         $this->json();

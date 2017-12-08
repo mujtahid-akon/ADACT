@@ -6,10 +6,10 @@
  * Time: 3:07 PM
  */
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
 
-use AWorDS\App\Constants;
+use ADACT\App\Constants;
 
 class LastProjects extends Model
 {

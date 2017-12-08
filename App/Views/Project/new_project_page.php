@@ -11,7 +11,7 @@ if(!$logged_in){
 
 $isForked = isset($project_id);
 if($isForked){
-    $config = new \AWorDS\App\Models\ProjectConfig((new \AWorDS\App\Models\FileManager($project_id))->get(\AWorDS\App\Models\FileManager::CONFIG_JSON));
+    $config = new \ADACT\App\Models\ProjectConfig((new \ADACT\App\Models\FileManager($project_id))->get(\ADACT\App\Models\FileManager::CONFIG_JSON));
     /** @var string[] $ids */
     $ids = [];
     foreach ($config->data as $datum){
@@ -44,11 +44,10 @@ if($isForked){
         $('#kmer_min').val(<?php print ($isForked ? $config->kmer['min'] : 9) ?>);
         $('#kmer_max').val(<?php print ($isForked ? $config->kmer['max'] : 13) ?>);
         // Set Absent Word type
-        var aw_type = "<?php print ($isForked ? $config->aw_type : 'maw') ?>";
+        const aw_type = "<?php print ($isForked ? $config->aw_type : 'maw') ?>";
         $('input[name=\'aw_type\'][value=\'' + aw_type + '\']').attr('checked', true);
 
-        <?php if ($isForked): ?>
-
+        <?php if($isForked){ ?>
         // Show Dissimilarity Index based on Absent Word type
         if(aw_type === 'maw'){
             $('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();
@@ -64,13 +63,13 @@ if($isForked){
         InputMethod.setCurrent($('#method').val());
         $('#accn_gin').val('<?php print ($isForked ? implode(', ', $ids) : '') ?>');
         // Set sequence type
-        var seq_type = "<?php print $config->sequence_type ?>";
+        const seq_type = "<?php print $config->sequence_type ?>";
         $('input[value=\'' + seq_type + '\']').attr('checked', true);
         if(seq_type === 'nucleotide')   $('#inversion_box').show();
         else if(seq_type === 'protein') $('#inversion_box').hide();
         // Set reverse complement
         $('#inversion').attr('checked', <?php print ($config->inversion ? 'true' : 'false'); ?>);
-        <?php endif; ?>
+        <?php } ?>
 
     });
 </script>
@@ -105,7 +104,7 @@ if($isForked){
                 <form class="fasta_method" id="upload_file" action="" method="post"
                       enctype="multipart/form-data" onsubmit="return false;" style="display: none;">
                     <input type="hidden" name="MAX_FILE_SIZE"
-                           value="<?php print \AWorDS\Config::MAX_UPLOAD_SIZE ?>" />
+                           value="<?php print \ADACT\Config::MAX_UPLOAD_SIZE ?>" />
                     <label for="filef" class="btn btn-primary">Upload a zip file...</label><br />
                     <small>Zip file consists of a number of FASTA (the extension can be of any type)
                         files with no directories.</small>

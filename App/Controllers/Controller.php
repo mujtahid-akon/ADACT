@@ -6,12 +6,12 @@
  * Time: 9:15 PM
  */
 
-namespace AWorDS\App\Controllers;
+namespace ADACT\App\Controllers;
 
-use AWorDS\App\HttpStatusCode;
-use AWorDS\App\Views\Template;
-use AWorDS\App\Route;
-use AWorDS\Config;
+use ADACT\App\HttpStatusCode;
+use ADACT\App\Views\Template;
+use ADACT\App\Route;
+use ADACT\Config;
 
 class Controller
 {
@@ -19,6 +19,7 @@ class Controller
      * @var int $response_code Any constant form HttpStatusCode
      */
     private $response_code = HttpStatusCode::OK;
+    private $input_content = "";
 
     protected $_model;
     protected $_controller;
@@ -64,7 +65,6 @@ class Controller
         $this->_method      = $method;
         $this->_url_params  = $url_params;
 
-        // FIXME: only GET and POST is implemented
         if(in_array($method, [Route::GET, Route::POST, Route::PUT, Route::DELETE, Route::HEAD, Route::PATCH, Route::OPTIONS])){
             switch ($method){
                 case Route::GET:
@@ -72,7 +72,6 @@ class Controller
                     $input_method = INPUT_GET;
                     break;
                 case Route::POST:
-//                    file_get_contents("php://input", false, stream_context_get_default(), 0, $_SERVER["CONTENT_LENGTH"]);
                     $parameters = $_POST;
                     $input_method = INPUT_POST;
                     break;
@@ -81,7 +80,6 @@ class Controller
                     $input_method = INPUT_REQUEST;
             }
 
-//            if(in_array($method, [Route::GET, Route::POST]))
             foreach($params as $param => &$value){
                 $filter_type = $value;
                 switch($filter_type){
@@ -102,6 +100,10 @@ class Controller
         }
         $this->_params= $params;
 
+        if(in_array($method, [Route::POST, Route::PUT, Route::PATCH])){
+            $this->input_content = file_get_contents("php://input", false, stream_context_get_default(), 0, $_SERVER["CONTENT_LENGTH"]);
+        }
+
         if($this->_HTML AND $this->_HTML_load_view) $this->_template = new Template($controller, $action);
     }
 
@@ -114,13 +116,21 @@ class Controller
     }
 
     /**
+     * Get input contents from php://input
+     * @return string
+     */
+    function get_contents(){
+        return $this->input_content;
+    }
+
+    /**
      * Call a particular model class
      *
      * @param null|string $model
      */
     function set_model($model = null){
         if($model == null) $model = $this->_controller;
-        $model = '\\AWorDS\\App\\Models\\' . $model;
+        $model = '\\ADACT\\App\\Models\\' . $model;
         $this->_model = $model;
         $this->$model = new $model;
         return $this->$model;

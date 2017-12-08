@@ -1,34 +1,42 @@
 <?php
 
-namespace AWorDS\App\Controllers\API;
+namespace ADACT\App\Controllers\API;
 
-use \AWorDS\App\Constants;
-use AWorDS\App\HttpStatusCode;
-use AWorDS\App\Models\FileUploader;
-use AWorDS\App\Models\LastProjects;
-use AWorDS\App\Models\Notifications;
-use AWorDS\App\Models\PendingProjects;
-use AWorDS\App\Models\ProjectConfig;
-use \AWorDS\Config;
+use \ADACT\App\Constants;
+use ADACT\App\HttpStatusCode;
+use ADACT\App\Models\FileUploader;
+use ADACT\App\Models\LastProjects;
+use ADACT\App\Models\Notifications;
+use ADACT\App\Models\PendingProjects;
+use ADACT\App\Models\ProjectConfig;
+use \ADACT\Config;
 
 class Project extends API{
     /**
-     * all_projects method
-     *
-     * Prints all the project for the current user
-     * or redirect to home, if not logged in
+     * all_projects method.
      */
     function all_projects(){
-        /**
-         * @var \AWorDS\App\Models\Project $project
-         */
-        $project = $this->set_model();
-        $logged_in = $project->login_check();
-        if($logged_in){
-            $this->set('logged_in', $logged_in);
-            $this->set('active_tab', 'projects');
+        /** @var \ADACT\App\Models\Project $project */
+        $project = $this->set_model('Project');
+        if($project->login_check()){
             $this->set('projects', $project->getAll());
-        }else $this->redirect();
+            $this->status(HttpStatusCode::OK, "Success.");
+        }else $this->_forbidden();
+    }
+
+    function get_projects(){
+        extract($this->get_params());
+        /** @var string $project_ids */
+        if(!$this->_validate_projects($project_ids)){
+            $this->handle_default();
+            return;
+        }
+        /** @var \ADACT\App\Models\Project $project */
+        $project = $this->set_model('Project');
+        if($project->login_check()){
+            $this->set('projects', $project->getMultiple(explode(',', $project_ids)));
+            $this->status(HttpStatusCode::OK, "Success.");
+        }else $this->_forbidden();
     }
 
     /**
@@ -39,7 +47,7 @@ class Project extends API{
     function result(){
         extract($this->get_params());
         /** @var string|array $project_ids A comma separated list of project IDs (eg. 1,2,3) */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model('Project');
         if($project->login_check()){
             if($project_ids != null){
@@ -64,7 +72,7 @@ class Project extends API{
             }else{
                 $this->status(HttpStatusCode::BAD_REQUEST, "No project id is provided.");
             }
-        }else $this->forbidden();
+        }else $this->_forbidden();
     }
 
     /**
@@ -72,9 +80,9 @@ class Project extends API{
      *
      * Load the last project of the current user
      */
-    function last_project(){
+    function get_last_project(){
         /**
-         * @var \AWorDS\App\Models\LastProjects $lastProject
+         * @var \ADACT\App\Models\LastProjects $lastProject
          */
         $lastProject = $this->set_model('LastProjects');;
         $logged_in = $lastProject->login_check();
@@ -90,40 +98,50 @@ class Project extends API{
     }
     
     function new_project(){
-        extract($this->get_params());
-        $json = ['id' => null];
-        /**
-         * @var string $config A JSON string containing all configurations
-         */
-        /**
-         * @var \AWorDS\App\Models\Project $project
-         */
-        $project = $this->set_model();
-        $logged_in = $project->login_check();
-        if($logged_in && $config != null){
-            $project_id = $project->add(json_decode(htmlspecialchars_decode($config), true));
-            $json['id'] = $project_id;
+        $contents = $this->get_contents();
+        if(empty($contents)){
+            $this->handle_default();
+            return;
         }
-        $this->json($json);
+        /** @var \ADACT\App\Models\Project $project */
+        $project = $this->set_model('Project');
+        if($project->login_check()){
+            $this->set('projects', $project->addMultiple($contents));
+            $this->status(HttpStatusCode::OK, "Success!");
+        }
     }
 
-    function file_upload(){
-        $json = ['status' => FileUploader::FILE_UPLOAD_FAILED];
+    /**
+     * upload method.
+     */
+    function upload(){
         /**
-         * @var \AWorDS\App\Models\FileUploader $project
+         * @var \ADACT\App\Models\FileUploader $uploader
          */
-        $project = $this->set_model('FileUploader');
-        $logged_in = $project->login_check();
-        if($logged_in && isset($_FILES['filef'])){
-            $json = $project->upload($_FILES['filef']);
-            if(is_array($json)){ // File uploaded successfully
-                $json['status'] = FileUploader::FILE_UPLOAD_SUCCESS;
+        $uploader = $this->set_model('FileUploader');
+        if($uploader->login_check()){
+            if(isset($_FILES) && count($_FILES) > 0){
+                $files = [];
+                foreach ($_FILES as $file){
+                    $status = $uploader->upload($file);
+                    $status_code = (is_int($status) ? $status : $uploader::FILE_UPLOAD_SUCCESS);
+                    $fileF = [
+                        "name" => $file['name'],
+                        "id"   => (is_int($status) ? null : $status['id']),
+                        "data" => (is_int($status) ? null : $status['data']),
+                        "status" => [
+                            "code" => $status_code,
+                            "message" => $this->_get_uploader_message($status_code)
+                        ]
+                    ];
+                    array_push($files, $fileF);
+                }
+                $this->set('files', $files);
+                $this->status(HttpStatusCode::OK, "Success.");
             }else{
-                $json = ['status' => $json];
+                $this->status(HttpStatusCode::BAD_REQUEST, "No file to upload.");
             }
-        }
-        $this->json($json);
-
+        }else $this->_forbidden();
     }
 
     /**
@@ -139,7 +157,7 @@ class Project extends API{
          */
         $this->load_view(false);
         if(!isset($file_name, $project_id)) goto redirect;
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in AND $project->verify($project_id)){
@@ -168,42 +186,27 @@ class Project extends API{
     }
 
     /**
-     * project_overview method
-     *
-     * Returns the overview of the current project
+     * get_details method
      */
-    function project_overview(){
+    function get_details(){
         extract($this->get_params());
         /** @var int $project_id */
-        if(!isset($project_id)){
-            $this->redirect();
-            exit();
-        }
-
-        /** @var \AWorDS\App\Models\Project $project */
-        $project = $this->set_model();
-        $logged_in = $project->login_check();
-
-        if($logged_in){
-            if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)){
-                $this->set('logged_in', $logged_in);
-                $this->set('project_id', $project_id);
-                $this->set(Constants::ACTIVE_TAB, 'projects');
-                $this->set('isTheLastProject', (new LastProjects())->isA($project_id));
-                $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
-                $this->set('isAPendingProject', (new PendingProjects())->isA($project_id));
-                $this->set('project_info', $project->get($project_id));
-                (new Notifications())->set_seen($project_id);
-            }else{
-                $this->redirect(Config::WEB_DIRECTORY . 'projects');
-            }
-        }else{
-            $this->redirect();
-        }
+        /** @var \ADACT\App\Models\Project $project */
+        $project = $this->set_model('Project');
+        if($project->login_check()){
+            if(preg_match('/^\d+$/', $project_id)){
+                if($project->verify($project_id)){
+                    $this->set('project', $project->getDetails($project_id));
+                    $this->status(HttpStatusCode::OK, "Success!");
+                }else{
+                    $this->status(HttpStatusCode::UNPROCESSABLE_ENTITY, "Invalid project ID");
+                }
+            }else $this->handle_default();
+        }else $this->_forbidden();
     }
 
     function pending_projects(){
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -221,23 +224,37 @@ class Project extends API{
     function get_status(){
         extract($this->get_params());
         /** @var string|array $project_ids A comma separated list of project IDs (eg. 1,2,3) */
+        if(isset($project_ids) && !$this->_validate_projects($project_ids)){
+            $this->handle_default();
+            return;
+        }
         $projects = [];
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model('Project');
         if($project->login_check()){
             $pending_projects = (new PendingProjects())->getAll();
-            if(isset($project_ids) && $project_ids != null){
+            if(isset($project_ids)){
                 $project_ids = explode(',', $project_ids);
                 foreach ($project_ids as $project_id){
-                    $_project = $this->in_pending_list($pending_projects, $project_id);
+                    $_project = $this->_in_pending_list($pending_projects, $project_id);
                     if($_project == false){
-                        $projectF = [
-                            "id" => (int)$project_id,
-                            "status" => [
-                                "code" => 0,
-                                "message" => PendingProjects::STATUS[PendingProjects::PROJECT_SUCCESS]
-                            ]
-                        ];
+                        if($project->verify($project_id)){
+                            $projectF = [
+                                "id" => (int)$project_id,
+                                "status" => [
+                                    "code" => 0,
+                                    "message" => PendingProjects::STATUS[PendingProjects::PROJECT_SUCCESS]
+                                ]
+                            ];
+                        }else{
+                            $projectF = [
+                                "id" => (int)$project_id,
+                                "status" => [
+                                    "code" => 8,
+                                    "message" => "Project does not exist!"
+                                ]
+                            ];
+                        }
                     }else{
                         $projectF = [
                             "id" => $_project['id'],
@@ -268,8 +285,7 @@ class Project extends API{
             }else{
                 $this->status(HttpStatusCode::NOT_FOUND, "No pending projects.");
             }
-        }else $this->forbidden();
-
+        }else $this->_forbidden();
     }
 
     /**
@@ -280,7 +296,11 @@ class Project extends API{
     function delete(){
         extract($this->get_params());
         /** @var string|array $project_ids A comma separated list of project IDs (eg. 1,2,3) */
-        /** @var \AWorDS\App\Models\Project $project */
+        if(!$this->_validate_projects($project_ids)){
+            $this->handle_default();
+            return;
+        }
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model('Project');
         if($project->login_check()){
             if($project_ids != null){
@@ -305,7 +325,7 @@ class Project extends API{
                             break;
                         case $project::PROJECT_DOES_NOT_EXIST:
                         $projectF['status']['code'] = HttpStatusCode::NOT_FOUND;
-                        $projectF['status']['message'] = "Project does not exit.";
+                        $projectF['status']['message'] = "Project does not exist.";
                         break;
                     }
                     array_push($projects, $projectF);
@@ -315,14 +335,14 @@ class Project extends API{
             }else{
                 $this->status(HttpStatusCode::BAD_REQUEST, "No project id is provided.");
             }
-        }else $this->forbidden();
+        }else $this->_forbidden();
     }
 
     function cancel_process(){
         extract($this->get_params());
         $json = ['status' => Constants::PROJECT_DELETE_FAILED]; // Failed
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -339,7 +359,7 @@ class Project extends API{
     function fork_project(){
         extract($this->get_params());
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project   = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -360,7 +380,7 @@ class Project extends API{
          * @var string $project_id A JSON string containing all configurations
          * @var string $config
          */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project   = $this->set_model();
         $logged_in = $project->login_check();
         if($logged_in){
@@ -380,7 +400,7 @@ class Project extends API{
      */
     function get_unseen(){
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \AWorDS\App\Models\Project $project */
+        /** @var \ADACT\App\Models\Project $project */
         $project   = $this->set_model();
         $logged_in = $project->login_check();
         $this->json();
@@ -396,14 +416,41 @@ class Project extends API{
     /**
      * forbidden method.
      */
-    private function forbidden(){
+    private function _forbidden(){
         $this->status(HttpStatusCode::FORBIDDEN, "You don't have the permission to access this.");
     }
 
-    private function in_pending_list(&$projects, $project_id){
+    /**
+     * in_pending_list method.
+     *
+     * @param array $projects
+     * @param int   $project_id
+     * @return false|array
+     */
+    private function _in_pending_list(array &$projects, $project_id){
         foreach ($projects as &$project){
             if($project['id'] == $project_id) return $project;
         }
         return false;
+    }
+
+    /**
+     * get_uploader_message method.
+     *
+     * @param int $status_code
+     * @return string
+     */
+    private function _get_uploader_message($status_code){
+        switch ($status_code){
+            case FileUploader::FILE_UPLOAD_SUCCESS: return "Success!";
+            case FileUploader::INVALID_FILE: return "Invalid file!";
+            case FileUploader::INVALID_MIME_TYPE: return "Invalid mime type!";
+            case FileUploader::SIZE_LIMIT_EXCEEDED: return "File size limit exceeded!";
+            default: return "File upload failed!"; // Mimic
+        }
+    }
+
+    private function _validate_projects($project_ids){
+        return preg_match('/^\d+(,\d+)*$/', $project_ids) ? true : false;
     }
 }

@@ -6,7 +6,7 @@
  * Time: 10:23 PM
  */
 
-namespace AWorDS;
+namespace ADACT;
 
 define('PROJECT_DIRECTORY', __DIR__ . '/Projects');
 define('URL_SEPARATOR', (php_sapi_name() == 'cli-server') ? "?" : "&");

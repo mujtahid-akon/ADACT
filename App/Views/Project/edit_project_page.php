@@ -5,9 +5,9 @@
  * Date: 9/29/17
  * Time: 2:36 PM
  */
-use \AWorDS\App\Models\FileManager;
-use \AWorDS\App\Models\ProjectConfig;
-use \AWorDS\App\Models\Project;
+use \ADACT\App\Models\FileManager;
+use \ADACT\App\Models\ProjectConfig;
+use \ADACT\App\Models\Project;
 /**
  * Variables exported from Project controller
  *

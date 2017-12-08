@@ -1,18 +1,19 @@
 <?php
-namespace AWorDS\App\Controllers\API;
+namespace ADACT\App\Controllers\API;
 
-use AWorDS\App\HttpStatusCode;
+use ADACT\App\HttpStatusCode;
 
 class User extends API{
 
     public function login(){
         extract($this->get_params());
+        error_log(implode(';', $this->get_params()));
         /**
          * @var string $email
          * @var string $pass
          */
         /**
-         * @var \AWorDS\App\Models\User $user
+         * @var \ADACT\App\Models\User $user
          */
         $user = $this->set_model('User');
         // Go home if already logged in
@@ -40,7 +41,7 @@ class User extends API{
 
     public function logout(){
         /**
-         * @var \AWorDS\App\Models\User $user
+         * @var \ADACT\App\Models\User $user
          */
         $user = $this->set_model('User');
         // Go home if already logged in

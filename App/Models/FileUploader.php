@@ -6,10 +6,10 @@
  * Time: 5:22 PM
  */
 
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
 
-use AWorDS\Config;
+use ADACT\Config;
 
 class FileUploader extends Model{
     /**
@@ -29,15 +29,20 @@ class FileUploader extends Model{
         parent::__construct();
     }
 
+    /**
+     * @param array $zip_file
+     * @return array|int
+     */
     function upload($zip_file){
         $this->_zip_file = $zip_file;
+        if($zip_file['error'] !== 0) return self::FILE_UPLOAD_FAILED;
         // 1. Size limit
         if($zip_file['size'] > Config::MAX_UPLOAD_SIZE){
             unlink($zip_file['tmp_name']);
             return self::SIZE_LIMIT_EXCEEDED;
         }
         // 2. MIME: not always check-able: skip
-        //if(!($zip['type'] == 'application/zip' || $zip['type'] == 'application/octet-stream')) return self::INVALID_MIME_TYPE;
+        if(!($zip_file['type'] == 'application/zip' || $zip_file['type'] == 'application/octet-stream')) return self::INVALID_MIME_TYPE;
         // 3. See if it can be moved
         $tmp_dir = Config::WORKING_DIRECTORY . '/' . (time() + mt_rand());
         mkdir($tmp_dir, 0777, true);
@@ -48,11 +53,10 @@ class FileUploader extends Model{
         }
         // 4. Is it a valid zip?
         $zip_archive = new \ZipArchive();
-        if($zip_archive->open($tmp_file) !== true) {
+        if($zip_archive->open($tmp_file, \ZipArchive::CHECKCONS) !== true) {
             exec("rm -Rf {$tmp_dir}");
             return self::INVALID_FILE;
         }
-
         // Extract file to $tmp_dir
         $zip_archive->extractTo($tmp_dir);
         $zip_archive->close();

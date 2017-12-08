@@ -5,13 +5,13 @@
  * Date: 4/19/2017
  * Time: 9:24 PM
  */
-namespace AWorDS\App\Models;
+namespace ADACT\App\Models;
 
 require_once __DIR__ . '/../../autoload.php';
 require_once __DIR__ . '/../../Libraries/PHPMailer/PHPMailerAutoload.php';
 
-use \AWorDS\Config;
-use \AWorDS\App\Constants;
+use \ADACT\Config;
+use \ADACT\App\Constants;
 
 class Model implements Config
 {
@@ -114,16 +114,12 @@ EOF;
         $session_id = session_id();
         if($session_id){
             if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM `active_sessions` WHERE `user_id` = ? AND `session_id` = ?')){
-                $stmt->bind_param('is', $_SESSION['session']['id'], $session_id);
+                $stmt->bind_param('is', $_SESSION['user_id'], $session_id);
                 $stmt->execute();
                 $stmt->store_result();
                 $stmt->bind_result($count);
                 $stmt->fetch();
-                if($count == Constants::COUNT_ONE){
-                    // Make things easy and quick by setting session
-                    $_SESSION['user_id'] = $_SESSION['session']['id'];
-                    return true;
-                }
+                if($count == 1) return true;
             }
         }
         return false;

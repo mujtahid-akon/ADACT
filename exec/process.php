@@ -9,11 +9,11 @@
 require_once __DIR__ . '/../autoload.php';
 
 // get all the pending projects
-$pending_projects = (new \AWorDS\App\Models\PendingProjects())->getAll();
+$pending_projects = (new \ADACT\App\Models\PendingProjects())->getAll();
 
 if($pending_projects !== false) {
     foreach ($pending_projects as $project) {
-        (new \AWorDS\App\Models\Process($project['id'], $project['user']))->init();
+        (new \ADACT\App\Models\Process($project['id'], $project['user']))->init();
     }
 }else{
     null;

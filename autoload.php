@@ -20,7 +20,7 @@ if (version_compare(PHP_VERSION, '5.6.0', '<')) {
 spl_autoload_register(function ($class)
 {
     $file = str_replace('\\', '/', $class);
-    $file = str_replace('AWorDS/', '', $file);
+    $file = str_replace('ADACT/', '', $file);
     $file = __DIR__ . '/' . $file . '.php';
     // if the file exists, require it once
     if (file_exists($file)) require_once $file;

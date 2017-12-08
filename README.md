@@ -1,4 +1,4 @@
-# AWorDS
+# ADACT
 For both macOS & Linux
 
 ***NOTE: `Match7.java` isn't working properly on macOS.***
@@ -37,11 +37,15 @@ bash ./scripts/add_to_crontab.sh
 ```
 
 #### Run server
-
 ```bash
 php -S 127.0.0.1:8080 ./router.php
 ```
 (Also works with Apache2 when `htaccess` and `modrewrite` enabled)
+
+#### Enable timezone to mysql
+```bash
+mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql
+```
 
 #### Enable directory writing for /Projects
 (This process is only applied to Linux distributions with Apache Server)
@@ -65,8 +69,7 @@ For the sake of convenience, two scripts have been added in the `scripts` folder
 - `revert.sh` : Revert the configuration file to the one that you were using previously (if you were)
 
 ## Not Implemented
-- Edit last project
-- Fork this project
+- Edit last project (partially)
 - Change info
 - Delete account
 - Homepage

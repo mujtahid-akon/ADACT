@@ -48,7 +48,7 @@ $active = "class=\"active\"";
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">Settings <b class="caret"></b></a>
                     <ul role="menu" class="dropdown-menu">
                         <li><a href="/reset_pass">Change Password</a></li>
-                        <li><a href="#">Change Info</a></li>
+                        <!--li><a href="#">Change Info</a></li-->
                         <li class="divider"></li>
                         <li><a href="#" style="color: #a94442;">Delete Account</a></li>
                     </ul>
