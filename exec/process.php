@@ -1,5 +1,9 @@
 <?php
 /**
+ * File: process.php
+ *
+ * Runs all the pending processes.
+ *
  * Created by PhpStorm.
  * User: muntashir
  * Date: 9/7/17

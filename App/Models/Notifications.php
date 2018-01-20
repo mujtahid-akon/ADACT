@@ -38,4 +38,16 @@ class Notifications extends Model{
         }
         return false;
     }
+
+    function set_unseen($project_id){
+        if(@$stmt = $this->mysqli->prepare('UPDATE projects SET seen = FALSE WHERE project_id = ? AND user_id = ?')){
+            $stmt->bind_param('ii', $project_id, $_SESSION['user_id']);
+            $stmt->execute();
+            $stmt->store_result();
+            if($stmt->affected_rows == 1){
+                return true;
+            }
+        }
+        return false;
+    }
 }

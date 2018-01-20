@@ -6,8 +6,15 @@
  * Time: 1:42 AM
  */
 
+// Version checking
 if (version_compare(PHP_VERSION, '5.6.0', '<')) {
     print 'This application requires PHP version 5.6 or higher.';
+    exit();
+}
+
+// Platform checking
+if (!in_array(PHP_OS, ['Linux', 'Darwin'])) {
+    print 'This application can only be run on Linux or macOS';
     exit();
 }
 

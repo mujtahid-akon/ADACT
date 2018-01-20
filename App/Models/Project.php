@@ -3,6 +3,7 @@
 namespace ADACT\App\Models;
 
 use \ADACT\App\Constants;
+use ADACT\App\HttpStatusCode;
 use \ADACT\Config;
 
 /**
@@ -106,7 +107,7 @@ class Project extends Model{
      */
     function addMultiple($config){
         $project_info = [];
-        $config = json_decode($config, true);
+        $config = json_decode(htmlspecialchars_decode($config), true);
         foreach ($config as $conf){
             $project = [
                 'name' => isset($conf['project_name']) ? $conf['project_name'] : "#porject",
@@ -115,6 +116,49 @@ class Project extends Model{
             array_push($project_info, $project);
         }
         return $project_info;
+    }
+
+    /**
+     * @param array $config
+     * @param int   $project_id
+     * @return bool
+     */
+    function edit($config, $project_id){
+        $this->_project_id = $project_id;
+        if($this->can_edit()){
+            $base_cf = new ProjectConfig((new FileManager($this->_project_id))->get(FileManager::CONFIG_JSON));
+            $part_cf = (new ProjectConfig())->load_config($config);
+            // Is the config is modified at all?
+            $modification_level = PendingProjects::PROJECT_INIT_FROM_INIT; // 0 = No, 1 = AW, 2 = DM
+            if($base_cf->aw_type !== $part_cf->aw_type){
+                $modification_level = PendingProjects::PROJECT_INIT_FROM_AW;
+                $base_cf->setConfig('aw_type', $part_cf->aw_type);
+            }
+            if($base_cf->kmer['max'] !== $part_cf->kmer['max'] OR $base_cf->kmer['min'] !== $part_cf->kmer['min']){
+                $modification_level = PendingProjects::PROJECT_INIT_FROM_DM;
+                $kmer = [
+                    'min' => $part_cf->kmer['min'],
+                    'max' => $part_cf->kmer['max']
+                ];
+                $base_cf->setConfig('kmer', $kmer);
+            }
+            if($base_cf->inversion !== $part_cf->inversion){
+                $modification_level = PendingProjects::PROJECT_INIT_FROM_DM;
+                $base_cf->setConfig('inversion', $part_cf->inversion);
+            }
+            if($base_cf->dissimilarity_index !== $part_cf->dissimilarity_index){
+                $modification_level = PendingProjects::PROJECT_INIT_FROM_DM;
+                $base_cf->setConfig('dissimilarity_index', $part_cf->dissimilarity_index);
+            }
+            if($modification_level === PendingProjects::PROJECT_INIT_FROM_INIT) return HttpStatusCode::NOT_MODIFIED;
+            // OK, save the modified config
+            if(!$base_cf->save()) return HttpStatusCode::INTERNAL_SERVER_ERROR;
+            // Now add to pending list with edit mode 2 (Edit Project)
+            if(!(new PendingProjects())->add($this->_project_id, $modification_level)) return HttpStatusCode::INTERNAL_SERVER_ERROR;
+            (new Notifications())->set_unseen($this->_project_id);
+            return 0; // Success
+        }
+        return HttpStatusCode::BAD_REQUEST;
     }
 
     /**
@@ -273,12 +317,12 @@ class Project extends Model{
                 $file['path'] = Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . FileManager::DISTANT_MATRIX_FORMATTED;
                 break;
             case self::EXPORT_NEIGHBOUR_TREE:
-                $file['mime'] = 'image/jpeg';
+                $file['mime'] = 'image/png';
                 $file['name'] = FileManager::NEIGHBOUR_TREE;
                 $file['path'] = Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . FileManager::NEIGHBOUR_TREE;
                 break;
             case self::EXPORT_UPGMA_TREE:
-                $file['mime'] = 'image/jpeg';
+                $file['mime'] = 'image/png';
                 $file['name'] = FileManager::UPGMA_TREE;
                 $file['path'] = Config::PROJECT_DIRECTORY . '/' . $project_id . '/' . FileManager::UPGMA_TREE;
                 break;
@@ -401,8 +445,9 @@ class Project extends Model{
         return true;
     }
 
-    public function can_edit($project_id){
-        return !(new PendingProjects($project_id))->isA() AND (new LastProjects())->isA($project_id);
+    public function can_edit($project_id = null){
+        if($this->_project_id == null) $this->_project_id = $project_id;
+        return !(new PendingProjects($this->_project_id))->isA() AND (new LastProjects())->isA($this->_project_id);
     }
 
     /**

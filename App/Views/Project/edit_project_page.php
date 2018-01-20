@@ -97,6 +97,7 @@ function get_distance_matrix($species, $project_dir){
             MAW: 'maw',
             RAW: 'raw',
             info: {},
+            submit_btn: null,
             collect: function(){
                 // Similar to Project.result.prepare()
                 this.info = {
@@ -109,14 +110,51 @@ function get_distance_matrix($species, $project_dir){
                     dissimilarity_index: $('#dissimilarity_index').val(), // #4
                 };
             },
-            send: function () {
+            send: function (p_id) {
                 this.collect();
-                //
+                this.submit_btn = $('#submit_btn');
+                const parent = this;
+                $.ajax({
+                    method: 'post',
+                    url: 'projects/' + p_id + '/edit',
+                    data: {config: JSON.stringify(this.info)},
+                    cache: false,
+                    dataType: 'json',
+                    beforeSend: function() {
+                        const btn = parent.submit_btn;
+                        btn.removeClass('btn-primary');
+                        btn.addClass('btn-default disabled');
+                        btn.attr('onclick', null);
+                        btn.html("<img width='11' src='css/images/spinner.gif'>&nbsp;" + Messages.Project.LOADING_TEXT);
+                    },
+                    success: function(res){
+                        if(res && res.status === 0){
+                            parent.project_id = res.id;
+                            const url = '/projects/' + p_id;
+                            const form = $('<form action="' + url + '" method="get"></form>');
+                            $('body').append(form);
+                            form.submit();
+                        }else{
+                            parent.restore();
+                        }
+                    },
+                    error: function(){
+                        parent.restore();
+                    }
+                });
+            },
+            restore: function(){
+                alert(Messages.Project.FAILURE_ALERT);
+                const btn = this.submit_btn;
+                btn.removeClass('btn-default disabled');
+                btn.addClass('btn-primary');
+                btn.attr('onclick', 'Project.edit.send(<?php print $project_id ?>)');
+                btn.html("Run & Show Result");
             }
         };
     </script>
     <div>
-        <button onclick="Project.edit(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" class="btn btn-primary">Run & Show Result</button>
+        <button onclick="Project.edit.send(<?php print $project_id ?>)" id="submit_btn" class="btn btn-primary">Run & Show Result</button>
         <a class="btn btn-default" href="/projects/<?php print $project_id; ?>">Go back</a>
     </div>
     <div id="project_info">
@@ -158,13 +196,11 @@ function get_distance_matrix($species, $project_dir){
                         <option value="" disabled selected>Select One</option>
                         <?php
                         // MAW Dissimilarity Indexes
-                        foreach ($dissimilarity_index['MAW'] as $short_form => $full_form){
+                        foreach ($dissimilarity_index['MAW'] as $short_form => $full_form)
                             print "<option class=\"maw_dissimilarity\" value=\"{$short_form}\">{$full_form}</option>\n";
-                        }
                         // RAW Dissimilarity Indexes
-                        foreach ($dissimilarity_index['RAW'] as $short_form => $full_form){
+                        foreach ($dissimilarity_index['RAW'] as $short_form => $full_form)
                             print "<option style=\"display: none;\" class=\"raw_dissimilarity\" value=\"{$short_form}\">{$full_form}</option>\n";
-                        }
                         ?>
                     </select>
                 </td>
