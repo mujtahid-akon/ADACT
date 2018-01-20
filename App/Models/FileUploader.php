@@ -109,6 +109,32 @@ class FileUploader extends Model{
     }
 
     /**
+     * Delete upload files from server from a particular time.
+     * @param \DateTime $leastTime
+     * @return int|false number of files that were deleted on success (returns 0 if no files) and False on failure
+     */
+    function deleteUploaded($leastTime){
+        $time = $leastTime->format('Y-m-d H:i:s');
+        if($stmt = $this->mysqli->prepare('SELECT directory FROM uploaded_files WHERE date <= ?')){
+            $stmt->bind_param('s', $time);
+            $stmt->execute();
+            $stmt->store_result();
+            for($i = 0; $i < $stmt->num_rows; ++$i){
+                $stmt->bind_result($directory);
+                $stmt->fetch();
+                if(file_exists($directory)) exec('rm -Rf "'.$directory.'"');
+            }
+        }
+        if($stmt = $this->mysqli->prepare('DELETE FROM uploaded_files WHERE date <= ?')){
+            $stmt->bind_param('s', $time);
+            $stmt->execute();
+            $stmt->store_result();
+            if(!$stmt->errno) return $stmt->affected_rows;
+        }
+        return false;
+    }
+
+    /**
      * Extracts single FASTA from multiple FASTA
      *
      * Note: The output file is located at $target/$id.fasta
@@ -158,7 +184,7 @@ class FileUploader extends Model{
     }
 
     private function _store($tmp_dir, $sha512_value){
-        if(@$stmt = $this->mysqli->prepare('INSERT INTO uploaded_files(sha512_value, directory) VALUE (?, ?)')){
+        if(@$stmt = $this->mysqli->prepare('INSERT INTO uploaded_files(sha512_value, directory, date) VALUE (?, ?, NOW())')){
             $stmt->bind_param('ss', $sha512_value, $tmp_dir);
             if($stmt->execute()) return true;
         }

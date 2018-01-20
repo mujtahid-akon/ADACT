@@ -69,10 +69,26 @@ class ProjectConfig extends Model{
      * FIXME: may need additional filtering
      *
      * @param array $config_data
+     * @return $this
      */
     function load_config($config_data){
         $this->_config_data = $config_data;
         $this->_load_config(false);
+        return $this;
+    }
+
+    function save(){
+        if(!empty($this->_config_file)){
+            return file_put_contents($this->_config_file, json_encode($this->_config_data, JSON_PRETTY_PRINT));
+        }
+        return false;
+    }
+
+    function setConfig($title, $value){
+        if(isset($this->_config_data[$title])) {
+            $this->_config_data[$title] = $value;
+            $this->$title = $value;
+        }
     }
 
     function getConfigAssocArray(){

@@ -1,11 +1,14 @@
 # ADACT
-For both macOS & Linux
-
-***NOTE: `Match7.java` isn't working properly on macOS.***
+Alignment-free Dissimilarity Analysis & Comparison Tool;
+ADACT in short. This tool produces the distance matrix,
+species relation, phylogenetic trees
+based on a number of indices.
 
 ## Installation
 
-php 5.6.1+ is required.
+Applied for both macOS & Linux.
+
+php 5.6.1+ is required, supports php 7+.
 
 #### Edit Config.php
 Edit the `Config.php` located at the root of the project,
@@ -27,9 +30,6 @@ Interface Config{
     .
 }
 ```
-
-#### Disable output buffering
-Set `output_buffering = off` in `php.ini` file.
 
 #### Enable Cron Job for running pending project(s)
 ```bash
@@ -60,6 +60,9 @@ mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql
     sudo chgrp -R  www-data ./ && sudo chmod -R g+w ./
     ```
 
+#### SQL files
+See the README file inside the `sql` folder
+
 ## Contributing
 For the sake of convenience, two scripts have been added in the `scripts` folder.
 - `deploy.sh` : Run this before committing as it'll switch the configuration file
@@ -69,7 +72,6 @@ For the sake of convenience, two scripts have been added in the `scripts` folder
 - `revert.sh` : Revert the configuration file to the one that you were using previously (if you were)
 
 ## Not Implemented
-- Edit last project (partially)
 - Change info
 - Delete account
 - Homepage

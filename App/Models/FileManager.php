@@ -29,8 +29,8 @@ namespace ADACT\App\Models;
  *                                       ./Output.txt
  *                                       ./SpeciesRelation.json
  *                                       ./SpeciesRelation.txt
- *                                       ./UPGMA tree.jpg
- *                                       ./Neighbour tree.jpg
+ *                                       ./UPGMA tree.png
+ *                                       ./Neighbour tree.png
  * 3. Other projects: REGULAR_PROJECT
  * Config::PROJECT_DIRECTORY/{project_id}/
  *                                       ./config.json
@@ -38,8 +38,8 @@ namespace ADACT\App\Models;
  *                                       ./Output.txt
  *                                       ./SpeciesRelation.json
  *                                       ./SpeciesRelation.txt
- *                                       ./UPGMA tree.jpg
- *                                       ./Neighbour tree.jpg
+ *                                       ./UPGMA tree.png
+ *                                       ./Neighbour tree.png
  *
  * @package ADACT\App\Models
  */
@@ -49,8 +49,8 @@ class FileManager extends Model{
     const SPECIES_RELATION_JSON    = 'SpeciesRelation.json';
     const DISTANT_MATRIX           = 'DistanceMatrix.txt';
     const DISTANT_MATRIX_FORMATTED = 'Output.txt';
-    const NEIGHBOUR_TREE           = 'Neighbour tree.jpg';
-    const UPGMA_TREE               = 'UPGMA tree.jpg';
+    const NEIGHBOUR_TREE           = 'Neighbour tree.png';
+    const UPGMA_TREE               = 'UPGMA tree.png';
     const CONFIG_JSON              = 'config.json';
 
 
@@ -68,6 +68,7 @@ class FileManager extends Model{
     private $_files = [];
     private $_project_type;
     private $_project_id;
+    private $_edit_mode;
 
     /**
      * Directories constructor.
@@ -76,8 +77,9 @@ class FileManager extends Model{
      */
     function __construct($project_id, $project_type = null){
         parent::__construct();
-        $this->_project_id   = $project_id;
-        $this->_project_type = ($project_type === null) ? (new Project($project_id))->getType() : $project_type;
+        $this->_project_id = $project_id;
+        $this->_project_type = $project_type === null ? (new Project($project_id))->getType() : $project_type;
+        $this->_edit_mode = $project_type !== null ? null : (new PendingProjects($project_id))->getEditMode();
         $this->_set_directories();
     }
 
@@ -119,6 +121,14 @@ class FileManager extends Model{
     function getAll(){
         $this->loadFiles();
         return array_values($this->_files);
+    }
+
+    function getProjectType(){
+        return $this->_project_type;
+    }
+
+    function getEditMode(){
+        return $this->_edit_mode;
     }
 
     /**
@@ -206,22 +216,19 @@ class FileManager extends Model{
     }
 
     private function _set_directories(){
-        $working_dir = ($this->_project_type === Project::PENDING_PROJECT) ?
+        $working_dir = ($this->_edit_mode === PendingProjects::PROJECT_INIT_FROM_INIT) ?
             self::WORKING_DIRECTORY . '/Projects' : self::PROJECT_DIRECTORY;
         $this->_directories = [
             'root' => $working_dir . "/{$this->_project_id}",
             'generated' => null,
             'original'  => null,
-            'project'   => $working_dir . "/{$this->_project_id}/Files"
+            'project'   => null
         ];
         if($this->_project_type != Project::REGULAR_PROJECT){
             $this->_directories['project']   = $this->_directories['root'] . "/Files";
             $this->_directories['generated'] = $this->_directories['project'] . '/generated';
             $this->_directories['original']  = $this->_directories['project'] . '/original';
-
-            $this->_pwd = $this->_directories['project'];
-        }else{
-            $this->_pwd = $this->_directories['root'];
         }
+        $this->_pwd = ($this->_edit_mode === PendingProjects::PROJECT_INIT_FROM_INIT) ? $this->_directories['project'] : $this->_directories['root'];
     }
 }

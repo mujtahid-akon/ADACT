@@ -33,7 +33,7 @@ class Project extends Controller{
 
     function delete_project(){
         $this->json();
-        $this->set('status', Constants::PROJECT_DELETE_FAILED);
+        $this->set('status', \ADACT\App\Models\Project::PROJECT_DELETE_FAILED);
 
         if(isset($this->_url_params['project_id'])) $project_id = $this->_url_params['project_id'];
         else exit();
@@ -215,14 +215,15 @@ class Project extends Controller{
 
         if($logged_in){
             if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)){
+                $isPending = (new PendingProjects())->isA($project_id);
                 $this->set('logged_in', $logged_in);
                 $this->set('project_id', $project_id);
                 $this->set(Constants::ACTIVE_TAB, 'projects');
                 $this->set('isTheLastProject', (new LastProjects())->isA($project_id));
                 $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
-                $this->set('isAPendingProject', (new PendingProjects())->isA($project_id));
+                $this->set('isAPendingProject', $isPending);
                 $this->set('project_info', $project->get($project_id));
-                (new Notifications())->set_seen($project_id);
+                if(!$isPending) (new Notifications())->set_seen($project_id);
             }else{
                 $this->redirect(Config::WEB_DIRECTORY . 'projects');
             }
@@ -329,13 +330,7 @@ class Project extends Controller{
         $logged_in = $project->login_check();
         if($logged_in){
             $this->json();
-            if($project->can_edit($project_id)){
-                error_log($config);
-                $this->set('status', 0);
-            }else{
-                //$this->redirect('/projects/'. $project_id);
-                $this->set('status', 1);
-            }
+            $this->set('status', $project->edit(json_decode(htmlspecialchars_decode($config), true), $project_id));
         }else $this->redirect();
     }
 

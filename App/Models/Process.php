@@ -8,6 +8,8 @@
 
 namespace ADACT\App\Models;
 
+require_once __DIR__ . "/../../Libraries/phptreegraph/GDRenderer.php";
+
 /**
  * Class Process
  *
@@ -42,11 +44,6 @@ class Process extends Model{
         "dm"  => [
             self::LINUX  => self::EXEC_LOCATION . '/dm',
             self::DARWIN => self::EXEC_LOCATION . '/dm_mac'
-        ],
-        //"phylogenetic_tree" => 'java -cp ' . self::EXEC_LOCATION . ' Match7',
-        "phy_tree" => [
-            "upgma" => 'python ' . self::EXEC_LOCATION . '/upgma.py', // UPGMA Tree
-            "nj" => 'python ' . self::EXEC_LOCATION . '/nj.py'       // Neighbour Trees
         ]
     ];
     private $_platform;
@@ -65,6 +62,7 @@ class Process extends Model{
     private $_project_id;
     private $_user_id;
     private $_pending_process;
+    private $_edit_mode;
 
     /**
      * Process constructor.
@@ -87,41 +85,58 @@ class Process extends Model{
         $this->_platform     = exec('uname -s') == self::DARWIN ? self::DARWIN : self::LINUX;
         // Pending Process
         $this->_pending_process = new PendingProjects($project_id, $user_id);
+        // Edit mode
+        $this->_edit_mode = $this->_pending_process->getEditMode();
     }
 
+    /**
+     * TODO: cancel project, edit project
+     */
     function init(){
-        // 1. Fetch files
-        $this->_pending_process->set_status(PendingProjects::PROJECT_FETCHING_FASTA);
-        if(!$this->fetchFiles()){
-            $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
-            $this->halt('Fetching files failed!');
+        if($this->_edit_mode === null) return;
+        $this->_log("Edit Mode: " . $this->_edit_mode);
+        switch ($this->_edit_mode){ // Deliberate fallthrough
+            /** @noinspection PhpMissingBreakStatementInspection */
+            case PendingProjects::PROJECT_INIT_FROM_INIT:
+                $this->_log("@PendingProjects::PROJECT_INIT_FROM_INIT");
+                // 1. Fetch files
+                $this->_pending_process->set_status(PendingProjects::PROJECT_FETCHING_FASTA);
+                if(!$this->fetchFiles()){
+                    $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
+                    $this->halt('Fetching files failed!');
+                }
+            /** @noinspection PhpMissingBreakStatementInspection */
+            case PendingProjects::PROJECT_INIT_FROM_AW:
+                $this->_log("@PendingProjects::PROJECT_INIT_FROM_AW");
+                // 2. Generate {short_name}.[m|r]aw.txt files
+                $this->_pending_process->set_status(PendingProjects::PROJECT_FINDING_AW);
+                if(!$this->generateAW()){
+                    $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
+                    $this->halt('Generating absent words failed!');
+                }
+            case PendingProjects::PROJECT_INIT_FROM_DM:
+                $this->_log("@PendingProjects::PROJECT_INIT_FROM_DM");
+                // 3. Generate distance matrix (by creating SpeciesFull.txt)
+                $this->_pending_process->set_status(PendingProjects::PROJECT_GENERATE_DM);
+                if(!$this->generate_distance_matrix()){
+                    $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
+                    $this->halt('Generating distance matrix failed!');
+                }
+                // 4. Generate phylogenetic trees
+                $this->_pending_process->set_status(PendingProjects::PROJECT_GENERATE_PT);
+                if(!$this->generate_phylogenetic_trees()){
+                    $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
+                    $this->halt('Generating Phylogenetic trees failed!');
+                }
+                // 5. Copy them to the project directory
+                $this->_pending_process->set_status(PendingProjects::PROJECT_TAKE_CARE);
+                if(!$this->takeCare()){
+                    $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
+                    $this->halt('Copying files failed!');
+                }
+                // Success
+                $this->_pending_process->remove();
         }
-        // 2. Generate {short_name}.[m|r]aw.txt files
-        $this->_pending_process->set_status(PendingProjects::PROJECT_FINDING_AW);
-        if(!$this->generateAW()){
-            $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
-            $this->halt('Generating absent words failed!');
-        }
-        // 3. Generate distance matrix (by creating SpeciesFull.txt)
-        $this->_pending_process->set_status(PendingProjects::PROJECT_GENERATE_DM);
-        if(!$this->generate_distance_matrix()){
-            $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
-            $this->halt('Generating distance matrix failed!');
-        }
-        // 4. Generate phylogenetic trees: FIXME
-//        $this->_pending_process->status(PendingProjects::PROJECT_GENERATE_PT);
-//        if(!$this->generate_phylogenetic_trees()){
-//            $this->_pending_process->status(PendingProjects::PROJECT_FAILURE);
-//            $this->halt('Generating Phylogenetic trees failed!');
-//        }
-        // 5. Copy them to the project directory
-        $this->_pending_process->set_status(PendingProjects::PROJECT_TAKE_CARE);
-        if(!$this->takeCare()){
-            $this->_pending_process->set_status(PendingProjects::PROJECT_FAILURE);
-            $this->halt('Copying files failed!');
-        }
-        // Success
-        $this->_pending_process->remove();
         // Send mail
         $this->send_mail();
         $this->_pending_process->set_status(PendingProjects::PROJECT_SUCCESS);
@@ -136,6 +151,7 @@ class Process extends Model{
      */
     function takeCare(){
         $fm  = new FileManager($this->_project_id, Project::NEW_PROJECT);
+        // Secondary fm
         $this->_tc_fm = $fm;
         $project_dir = self::PROJECT_DIRECTORY;
         passthru("mv \"{$this->_fm->root()}\" \"{$project_dir}\"");
@@ -146,13 +162,16 @@ class Process extends Model{
         $this->_move($fm::SPECIES_RELATION_JSON);
         $this->_move($fm::DISTANT_MATRIX);
         $this->_move($fm::DISTANT_MATRIX_FORMATTED);
-//        $this->_move($fm::NEIGHBOUR_TREE);
-//        $this->_move($fm::UPGMA_TREE);
+        $this->_move($fm::NEIGHBOUR_TREE);
+        $this->_move($fm::UPGMA_TREE);
         // Store config.json
         $fm->store($fm::CONFIG_JSON, $this->_config->getConfigJSON(), $fm::STORE_STRING);
         return true;
     }
 
+    /**
+     * @return bool
+     */
     private function send_mail(){
         $user_info = (new User())->get_info($this->_user_id);
         $project_link = self::WEB_ADDRESS . '/projects/' . $this->_project_id;
@@ -194,18 +213,63 @@ EOF;
         }
     }
 
-    function generate_phylogenetic_trees(){
-        $pwd = $this->_fm->pwd();
-        $this->_fm->cd($this->_fm->generated());
-        $c_species = count($this->_config->data);
-        //exec(self::EXECS['phylogenetic_tree'] . ' "'. $this->_fm->generated() .'/"', $output, $return);
-        exec(self::EXECS['phy_tree']['upgma'] . ' "'. $this->_fm->get('SpeciesFull.txt') .'" "'. $this->_fm->get(FileManager::DISTANT_MATRIX) .'" '.$c_species, $output, $return); // FIXME
-        exec(self::EXECS['phy_tree']['NJTree'] . ' "'. $this->_fm->get('SpeciesFull.txt') .'" "'. $this->_fm->get(FileManager::DISTANT_MATRIX) .'" '.$c_species, $output, $return); // FIXME
-        $this->_log(implode("\n", $output));
-        $this->_fm->cd($pwd);
-        return $return === 0 ? true : false;
+    const FONT_SIZE  = 10;
+    /**
+     * @return bool
+     */
+    private function generate_phylogenetic_trees(){
+        $tree = new Tree($this->_project_id, Tree::GENERAL);
+        $nj = $tree->generate_tree(Tree::NJ)->getFormattedLabels();
+        $upgma = $tree->generate_tree(Tree::UPGMA)->getFormattedLabels();
+        $objTree1 = new \GDRenderer(30, 150, 15 * self::FONT_SIZE, 15 * self::FONT_SIZE, 0); // MAX_CHAR * FONT_SIZE
+        $this->saveTree($objTree1, $upgma, $this->_fm->generated() . '/' . $this->_fm::UPGMA_TREE);
+        $objTree2 = new \GDRenderer(30, 150, 15 * self::FONT_SIZE, 15 * self::FONT_SIZE, 0);
+        $this->saveTree($objTree2, $nj, $this->_fm->generated() . '/' . $this->_fm::NEIGHBOUR_TREE);
+        return true;
     }
 
+    private static $current_id = 1;
+    /**
+     * @param \GDRenderer $tree
+     * @param array $graph
+     * @param int $parent_id
+     */
+    private function addToTree(\GDRenderer $tree, $graph, $parent_id){
+        foreach ($graph as $node){
+            if(is_array($node)){
+                $tree->add(++self::$current_id, $parent_id);
+                $this->addToTree($tree, $node, self::$current_id);
+            }else{
+                $tree->add(++self::$current_id, $parent_id, $node, strlen($node) * self::FONT_SIZE);
+            }
+        }
+    }
+
+    /**
+     * @param \GDRenderer $objTree
+     * @param array  $tree
+     * @param string $file_path
+     */
+    private function saveTree(\GDRenderer $objTree, $tree, $file_path){
+        // Set root
+        $objTree->add(1,0);
+        // Current ID = Parent ID
+        self::$current_id = 1;
+        // Add to species names to the tree
+        $this->addToTree($objTree, $tree, self::$current_id);
+        // Do some colouring
+        $objTree->setBGColor([255, 255, 224]);
+        $objTree->setNodeColor([255, 255, 255]);
+//        $objTree->setLinkColor([119, 119, 119]);
+        $objTree->setLinkColor([204, 204, 204]);
+        $objTree->setTextColor([119, 119, 119]);
+        // Save files
+        $objTree->save($file_path);
+    }
+
+    /**
+     * @return bool
+     */
     private function generate_distance_matrix(){
         // set target directory
         $target = $this->_fm->generated();
@@ -394,7 +458,7 @@ EOF;
         foreach($data as $datum){
             array_push($species, $datum['short_name']);
         }
-        array_push($species, '');    // Won't work without this!!! (because dm used gets() to read lines)
+        array_push($species, '');    // Won't work without this!!! (because dm binary file uses gets() to read lines!)
         // Export file
         file_put_contents($this->_fm->generated() . '/SpeciesFull.txt', implode("\n", $species));
     }

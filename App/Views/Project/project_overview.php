@@ -118,23 +118,23 @@ if($isAPendingProject):
 endif; // isAPendingProject
 ?>
 
-<div>
+<section>
     <?php
     if($isAPendingProject):
     ?>
         <!--script src="/js/app.js"></script-->
         <button onclick="Project.process.cancel(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" class="btn btn-default">Cancel Project</button>
     <?php
-    else:
+    else: // !isAPendingProject
     ?>
         <button onclick="$('#project_info').toggle()" class="btn btn-default">Toggle Project Info</button>
     <?php
     endif; // isAPendingProject
     ?>
     <a class="btn btn-default" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"/projects/{$project_id}/fork\"") ?>>Fork This Project</a>
-</div>
+</section>
 
-<div id="project_info" <?php print ($isAPendingProject ? '' : 'style="display: none;"') ?>>
+<section id="project_info" <?php print ($isAPendingProject ? '' : 'style="display: none;"') ?>>
     <table class="table table-bordered table-striped table-hover">
         <caption>Overview</caption>
         <tbody>
@@ -169,7 +169,7 @@ endif; // isAPendingProject
         ?>
         </tbody>
     </table>
-</div>
+</section>
 <br />
 <?php
 if(!$isAPendingProject):
@@ -191,6 +191,9 @@ if(!$isAPendingProject):
         chart: {
             container: "#upgma_tree_view",
             nodeAlign: "BOTTOM",
+            levelSeparation: 30,
+            siblingSeparation: InputAnalyzer.CHAR_LIMIT * 10,
+            subTeeSeparation: InputAnalyzer.CHAR_LIMIT * 10,
             connectors: {
                 type: "step",
                 style: {
@@ -207,7 +210,10 @@ if(!$isAPendingProject):
     const nj_config = {
         chart: {
             container: "#nj_tree_view",
-            nodeAlign: "BOTTOM",
+            nodeAlign: "TOP",
+            levelSeparation: 30,
+            siblingSeparation: InputAnalyzer.CHAR_LIMIT * 10,
+            subTeeSeparation: InputAnalyzer.CHAR_LIMIT * 10,
             connectors: {
                 type: "step",
                 style: {
@@ -221,9 +227,13 @@ if(!$isAPendingProject):
         }
     };
 
+    /**
+     * Show the requested tab
+     * @param {String} [tab]
+     */
     function show_result_tab(tab){
         $('.output').hide();
-        let tab_id, toc_id;
+        let tab_id, toc_id; // toc = table of content
         switch(tab){
             default:
                 tab_id = '#distance_matrix';
@@ -253,13 +263,13 @@ if(!$isAPendingProject):
         show_result_tab(url);
     });
 </script>
-<div id="tab_toc" style="padding-bottom: 10px;">
+<section id="tab_toc" style="padding-bottom: 10px;">
     <a href="/projects/<?php print $project_id ?>#distance_matrix" onclick="show_result_tab()" class="views btn btn-default active">Distance Matrix</a>
     <a href="/projects/<?php print $project_id ?>#sorted_species_relation" onclick="show_result_tab('sorted_species_relation')" class="views btn btn-default">Sorted Species Relation</a>
     <a href="/projects/<?php print $project_id ?>#neighbour_tree" onclick="show_result_tab('neighbour_tree')" class="views btn btn-default">Neighbour Joining Tree</a>
     <a href="/projects/<?php print $project_id ?>#upgma_tree" onclick="show_result_tab('upgma_tree')" class="views btn btn-default">UPGMA Tree</a>
-</div>
-<div>
+</section>
+<section>
     <?php
     /** @var string $download_url */
     /** @var string $project_dir */
@@ -268,14 +278,19 @@ if(!$isAPendingProject):
     $neighbourTree = '/NeighbourTree.jpg';
     $UPGMATree     = '/UPGMATree.jpg';
     ?>
+    <!-- Neighbour Tree -->
     <div id="neighbour_tree" class="output" style="display: none;">
         <a href="<?php print $download_url . $neighbourTree ?>">Download Neighbour Joining Tree</a><br />
+        <!--img src="<?php print $download_url . $neighbourTree ?>" /-->
         <div id="nj_tree_view"></div>
     </div>
+    <!-- UPGMA Tree -->
     <div id="upgma_tree" class="output" style="display: none;">
         <a href="<?php print $download_url . $UPGMATree ?>">Download UPGMA Tree</a><br />
+        <!--img src="<?php print $download_url . $UPGMATree ?>" /-->
         <div id="upgma_tree_view"></div>
     </div>
+    <!-- Sorted Species Relation -->
     <div id="sorted_species_relation" style="text-align: left; display: none;" class="output">
         <a href="<?php print $download_url . '/' . FileManager::SPECIES_RELATION ?>">Download Sorted Species Relation</a><br />
         <table class="table table-striped table-hover">
@@ -288,9 +303,10 @@ if(!$isAPendingProject):
             <tbody>
             <?php
             foreach($species_relations as $_species => $_relation){
+                // Print head of the row
                 print "<tr>";
                 print "<th style=\"border-right: 1px solid #ddd\">{$_species}</th>";
-
+                // Print the relations
                 print "<td>" . implode('</td><td>&xrarr;</td><td>', $_relation) . "</td>";
                 print "</tr>\n";
             }
@@ -298,29 +314,22 @@ if(!$isAPendingProject):
             </tbody>
         </table>
     </div>
+    <!-- Distance Matrix -->
     <div id="distance_matrix" class="output">
         <a href="<?php print $download_url . '/' . FileManager::DISTANT_MATRIX ?>">Download Distance Matrix</a><br />
         <table class="table table-bordered table-striped table-hover">
             <thead>
             <tr>
                 <th></th>
-                <?php
-                foreach($species as $col){
-                    print '<th>' . $col . '</th>';
-                }
-                ?>
+                <?php foreach($species as $col) print '<th>' . $col . '</th>' ?>
             </tr>
             </thead>
             <tbody>
-            <?php
-            foreach (get_distance_matrix($species, $project_dir) as $distance_matrix){
-                print $distance_matrix;
-            }
-            ?>
+            <?php foreach (get_distance_matrix($species, $project_dir) as $distance_matrix) print $distance_matrix ?>
             </tbody>
         </table>
     </div>
-</div>
+</section>
 <?php
 endif; // isAPendingProject
 // Output end

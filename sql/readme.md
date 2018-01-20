@@ -1,8 +1,13 @@
 ## SQL Version Control
 
    ***Only use the latest sql file***
-   
-- `awords_v4.1.sql` [`current`]
+
+- `adact_v4.2.sql` [`current`]
+    
+    - `uploaded_files` : The column `date` is added to handle junk files (uploaded files are deleted after 7 days)
+    - `pending_projects` : The column `edit_mode` is added as part of the implementation of editing the projects
+
+- `awords_v4.1.sql`
     
     - `active_sessions` : The column `type` is removed and `data` and `time`
        columns are added as part of migration to DB based session

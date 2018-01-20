@@ -721,7 +721,7 @@ Project.result = {
                 btn.removeClass('btn-primary');
                 btn.addClass('btn-default disabled');
                 btn.attr('onclick', null);
-                btn.html("<img width='11' src='css/images/spinner.gif'>" + Messages.Project.LOADING_TEXT);
+                btn.html("<img width='11' src='css/images/spinner.gif'>&nbsp;" + Messages.Project.LOADING_TEXT);
             },
             success: function(res){
                 if(res && res.id){
