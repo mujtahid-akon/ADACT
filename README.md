@@ -36,19 +36,19 @@ Interface Config{
 bash ./scripts/add_to_crontab.sh
 ```
 
-#### Run server
+#### Run development server
 ```bash
 php -S 127.0.0.1:8080 ./router.php
 ```
-(Also works with Apache2 when `htaccess` and `modrewrite` enabled)
+(Also works with Apache2 when `htaccess` and `modrewrite` are enabled)
 
 #### Enable timezone to mysql
 ```bash
 mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql
 ```
 
-#### Enable directory writing for /Projects
-(This process is only applied to Linux distributions with Apache Server)
+#### Enable directory writing for ./Projects and ./tmp
+(This process is only applied to Linux distributions with Apache2 Server)
 
 [Help Link](https://stackoverflow.com/a/16373988/4147849)
 1. Check which `user` is running:
@@ -61,15 +61,25 @@ mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql
     ```
 
 #### SQL files
-See the README file inside the `sql` folder
+See the README file inside the `sql` folder. Current sql file is `adact_v4.3.sql`.
+
+#### Sample input files
+Sample files are located in the `Sample Input Files` folder
 
 ## Contributing
 For the sake of convenience, two scripts have been added in the `scripts` folder.
-- `deploy.sh` : Run this before committing as it'll switch the configuration file
+- `./scripts/deploy.sh <sql_version>` : Run this before committing as it'll switch the configuration file
   (ie. `Config.php`) to the factory mode, as well as take care of DB.
   It takes one argument (sql version number) as it backs up the new sql file
   automatically.
-- `revert.sh` : Revert the configuration file to the one that you were using previously (if you were)
+- `./scripts/revert.sh` : Revert the configuration file to the one that you were using previously (if you were)
+
+_Use the project root as present working directory when running the above scripts._
+
+## Notes
+- Default project directory: `./Projects` (you can change this in the `Config.php` but it's not recommended)
+- Default temporary directory: `./tmp` (DON'T change this to `/tmp`, this is done on purpose)
+- 
 
 ## Not Implemented
 - Change info

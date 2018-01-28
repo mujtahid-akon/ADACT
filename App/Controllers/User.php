@@ -2,7 +2,7 @@
 
 namespace ADACT\App\Controllers;
 
-use \ADACT\App\Constants;
+use \ADACT\App\Models\User as UserModel;
 use ADACT\Config;
 
 class User extends Controller
@@ -15,19 +15,19 @@ class User extends Controller
          * @var string $pass
          */
         $this->set_model();
-        if(empty($name) OR empty($email) OR empty($pass)) $status = Constants::SHORTAGE_OF_ARGUMENTS;
+        if(empty($name) OR empty($email) OR empty($pass)) $status = UserModel::SHORTAGE_OF_ARGUMENTS;
         else $status = $this->{$this->_model}->register($name, $email, $pass);
         switch($status){
-            case Constants::ACCOUNT_EXISTS:
+            case UserModel::ACCOUNT_EXISTS:
                 $_SESSION['register_error'] = "<strong>Account already exists!</strong> There's already an account associated with this account. If this email is really yours, <a href=\"reset_pass\">reset your password</a>.";
                 break;
-            case Constants::REGISTER_FAILURE:
+            case UserModel::REGISTER_FAILURE:
                 $_SESSION['register_error'] = "<strong>Failed!</strong> Account creation failed due to technical difficulties, please try again.";
                 break;
-            case Constants::SHORTAGE_OF_ARGUMENTS:
+            case UserModel::SHORTAGE_OF_ARGUMENTS:
                 $_SESSION['register_error'] = "<strong>Failed!</strong> You need to provide your name, email and password (ie. fill up all the boxes) to register.";
         }
-        if($status == Constants::LOGIN_SUCCESS){
+        if($status == UserModel::LOGIN_SUCCESS){
             $_SESSION['register_success'] = true;
             $this->redirect(Config::WEB_DIRECTORY . 'register_success');
         }else $this->redirect();
@@ -47,31 +47,30 @@ class User extends Controller
          * @var string $email
          * @var string $pass
          */
-        $this->set_model();
         /**
          * @var \ADACT\App\Models\User $user
          */
-        $user = $this->{$this->_model};
+        $user = $this->set_model();
         // Go home if already logged in
         if($user->login_check()){
             $this->redirect();
             exit();
         }
         // First check the parameters
-        if(empty($email) OR empty($pass)) $status = Constants::SHORTAGE_OF_ARGUMENTS;
-        else $status = $this->{$this->_model}->login($email, $pass);
+        if(empty($email) OR empty($pass)) $status = UserModel::SHORTAGE_OF_ARGUMENTS;
+        else $status = $user->login($email, $pass);
         switch($status){
-            case Constants::LOGIN_LOCKED:
+            case UserModel::LOGIN_LOCKED:
                 $_SESSION['login_error'] = "<strong>Your account is locked!</strong> An email was sent to your account, use that email to unlock your account.";
                 break;
-            case Constants::LOGIN_FAILURE:
+            case UserModel::LOGIN_FAILURE:
                 $_SESSION['login_error'] = "<strong>Login failed!</strong> Please try again with your email and password or create an account if you don't have one.";
                 break;
-            case Constants::SHORTAGE_OF_ARGUMENTS:
+            case UserModel::SHORTAGE_OF_ARGUMENTS:
                 $_SESSION['login_error'] = "<strong>Login failed!</strong> You need to provide both email and password to login.";
         }
         // Redirect to homepage or login page based on criteria
-        $this->redirect(Config::WEB_DIRECTORY . ($status == Constants::LOGIN_SUCCESS ? '' : 'login'));
+        $this->redirect(Config::WEB_DIRECTORY . ($status == UserModel::LOGIN_SUCCESS ? '' : 'login'));
     }
     
     public function login_page(){

@@ -1,8 +1,6 @@
 # Remove project files
 .idea/
 .DS_Store
-# Remove some scripts for now
-run_server*
 # Remove test.php for now
 public/test.php
 # Remove private project files

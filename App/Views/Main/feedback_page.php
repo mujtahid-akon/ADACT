@@ -20,13 +20,13 @@ if(!isset($logged_in) OR !$logged_in){ ?>
     <div class="col-md-6">
         <h3>Feedback</h3>
         <?php
-        if(isset($_SESSION['register_error'])){
-            print "<div class=\"alert alert-danger\">{$_SESSION['register_error']}</div>";
-            unset($_SESSION['register_error']);
+        if(isset($_SESSION['feedback_error'])){
+            print "<div class=\"alert alert-danger\">{$_SESSION['feedback_error']}</div>";
+            unset($_SESSION['feedback_error']);
         }
         ?>
-        <small class="text-danger"><em>Please fill out all the boxes.</em></small>
-        <form class="form-vertical" id="reg_form" method="post" action="/reg">
+        <small class="text-danger"><em>Please fill out all the fields.</em></small>
+        <form class="form-vertical" id="feedback_form" method="post" action="/feedback">
             <input class="form-control" name="name" placeholder="Full name with title" required /><br />
             <input class="form-control" name="email" placeholder="E-mail address" required /><br />
             <input class="form-control" name="subject" placeholder="Subject" required /><br />

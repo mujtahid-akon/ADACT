@@ -10,7 +10,6 @@ Session::start();
 
 if(Config::DEBUG_MODE){
     error_reporting(E_ALL|E_DEPRECATED|E_ERROR|E_NOTICE);
-    error_log("{$_SERVER['REQUEST_METHOD']}: {$_SERVER['REQUEST_URI']}");
 }else{
     error_reporting(0);
 }
@@ -41,7 +40,10 @@ if(php_sapi_name() == 'cli-server'){ // When using the PHP server
 // back slash fix: convert multiple back slashes to a single one and none if appeared in the end
 $location = preg_replace('/[\/]+/', '/', $location);
 if(strlen($location) > 1) $location = preg_replace('/[\/]+$/', '', $location);
-
+$location = urldecode($location);
+if(Config::DEBUG_MODE){
+    error_log("{$_SERVER['REQUEST_METHOD']}: {$location}");
+}
 /**
  * Add routes
  */
@@ -76,7 +78,7 @@ Route::add(Route::POST, '/projects/file_upload', 'Project@file_upload');
 Route::add(Route::GET,  '/projects/last', 'Project@last_project');
 Route::add(Route::GET,  '/projects/{project_id}', 'Project@project_overview');
 Route::add(Route::GET,  '/projects/{project_id}/edit', 'Project@edit_project_page');
-Route::add(Route::POST, '/projects/{project_id}/edit', 'Project@edit_project', ['config' => Route::STRING]);  // TODO
+Route::add(Route::POST, '/projects/{project_id}/edit', 'Project@edit_project', ['config' => Route::STRING]);
 Route::add(Route::GET,  '/projects/{project_id}/fork', 'Project@fork_project');
 Route::add(Route::POST, '/projects/{project_id}/delete', 'Project@delete_project');
 Route::add(Route::GET,  '/projects/{project_id}/download', 'Project@download_project');
@@ -90,7 +92,7 @@ Route::add(Route::GET,  '/projects/{project_id}/get/{file_name}', 'Project@get_f
 Route::add(Route::POST,   '/api/login',  'API\\User@login', ['email' => Route::EMAIL, 'pass' => Route::STRING]);
 Route::add(Route::DELETE, '/api/logout', 'API\\User@logout');
 // Project details
-Route::add(Route::GET,    '/api/projects/details/last', 'API\\Project@get_details'); // TODO
+//Route::add(Route::GET,    '/api/projects/details/last', 'API\\Project@get_details'); // TODO
 Route::add(Route::GET,    '/api/projects/details/{project_id}', 'API\\Project@get_details');
 // Project status
 Route::add(Route::GET,    '/api/projects/status', 'API\\Project@get_status');
@@ -98,7 +100,8 @@ Route::add(Route::GET,    '/api/projects/status/{project_ids}', 'API\\Project@ge
 // New project
 Route::add(Route::PUT,    '/api/projects/new', 'API\\Project@new_project');
 Route::add(Route::POST,   '/api/projects/upload', 'API\\Project@upload');
-Route::add(Route::DELETE, '/api/projects/cancel/{project_ids}', 'API\\Project@cancel'); // todo
+Route::add(Route::DELETE, '/api/projects/cancel/{project_ids}', 'API\\Project@cancel_process');
+Route::add(Route::PATCH,  '/api/projects/edit/{project_id}', 'API\\Project@edit_project');
 // Others
 Route::add(Route::GET,    '/api/projects/result/{project_ids}', 'API\\Project@result');
 Route::add(Route::DELETE, '/api/projects/delete/{project_ids}', 'API\\Project@delete');

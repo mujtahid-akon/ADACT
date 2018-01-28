@@ -7,7 +7,6 @@ class User extends API{
 
     public function login(){
         extract($this->get_params());
-        error_log(implode(';', $this->get_params()));
         /**
          * @var string $email
          * @var string $pass

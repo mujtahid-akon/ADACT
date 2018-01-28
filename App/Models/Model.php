@@ -11,10 +11,8 @@ require_once __DIR__ . '/../../autoload.php';
 require_once __DIR__ . '/../../Libraries/PHPMailer/PHPMailerAutoload.php';
 
 use \ADACT\Config;
-use \ADACT\App\Constants;
 
-class Model implements Config
-{
+class Model implements Config {
     public $mysqli;
 
     function __construct(){
@@ -33,7 +31,15 @@ class Model implements Config
         @$mysqli->set_charset("utf8");
         return $mysqli;
     }
-    
+
+    /**
+     * // TODO replace w/ Emailer class
+     * @param string $name
+     * @param string $email
+     * @param string $subject
+     * @param string $message
+     * @return bool
+     */
     static function email($name, $email, $subject, $message){
         //Create a new PHPMailer instance
         $mail = new \PHPMailer;
@@ -43,7 +49,7 @@ class Model implements Config
         // 0 = off (for production use)
         // 1 = client messages
         // 2 = client and server messages
-        $mail->SMTPDebug = 0;
+        $mail->SMTPDebug = Config::DEBUG_MODE ? 2 : 0;
         //Ask for HTML-friendly debug output
         //$mail->Debugoutput = 'html';
         //Set the hostname of the mail server

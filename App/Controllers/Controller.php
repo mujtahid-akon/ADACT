@@ -44,13 +44,6 @@ class Controller
     protected $_JSON_contents     = [];
     protected $_HTML_load_view     = true;
 
-    private $_post_process = false;
-    private $_post_process_info = [
-        'object' => null,
-        'method' => null,
-        'arguments' => []
-    ];
-
     /**
      * Controller constructor.
      * @param string $controller
@@ -205,51 +198,8 @@ class Controller
         if(is_array($content)) $this->_JSON_contents = $content;
     }
 
-    function post_process($object, $method, $args = []){
-        $this->_post_process = true;
-        $this->_post_process_info['object'] = $object;
-        $this->_post_process_info['method'] = $method;
-        $this->_post_process_info['arguments'] = $args;
-    }
-
     function __destruct(){
-        if($this->_post_process) $this->__post_process();
-        else $this->__send_response();
-    }
-
-    private function __post_process(){
-        // at php.ini output_buffering = off
-        // Disable gzip compression
-        if(function_exists('apache_setenv')) @apache_setenv('no-gzip', 1);
-        @ini_set('zlib.output_compression', 0);
-        // Disable apache compression
-        //header( 'Content-Encoding: none; ' );
-
-        ignore_user_abort(true);
-        set_time_limit(0);
-
-        ob_end_flush();
-        ob_start();
-        // do initial processing here
-        // send the response: only text response
         $this->__send_response();
-        header('Connection: close');
-        header('Content-Length: '.ob_get_length());
-        ob_end_flush();
-        ob_flush();
-        flush();
-        // Close current session writing to prevent session locking
-        if(session_id()) session_write_close();
-        //error_log("Session Status: " . (session_status() == 1 ? "NONE" : "ACTIVE"));
-
-        // Run post process functions
-        if($this->_post_process_info['method'] != null){
-            if($this->_post_process_info['object'] != null){
-                call_user_func([$this->_post_process_info['object'], $this->_post_process_info['method']], $this->_post_process_info['arguments']);
-            }else{
-                call_user_func($this->_post_process_info['method'], $this->_post_process_info['arguments']);
-            }
-        }
     }
 
     private function __send_response(){

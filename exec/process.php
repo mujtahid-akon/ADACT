@@ -12,16 +12,19 @@
 
 require_once __DIR__ . '/../autoload.php';
 
-// get all the pending projects
+use ADACT\App\Models\Logger;
+
+// Get all the pending projects
 $pending_projects = (new \ADACT\App\Models\PendingProjects())->getAll();
+$logger = new Logger(__DIR__ . "/../logs/process.log");
 
-if($pending_projects !== false) {
+if($pending_projects !== false AND count($pending_projects) > 0) {
+    $logger->log("Running " . count($pending_projects) . " process(es)", Logger::GREEN)->flush();
     foreach ($pending_projects as $project) {
-        (new \ADACT\App\Models\Process($project['id'], $project['user']))->init();
+        (new \ADACT\App\Models\ProjectProcess($project['id'], $project['user']))->init();
     }
-}else{
-    null;
-    //print date("[d M Y H:i:s]") . " No process at this time.\n";
 }
-
+//else{
+//    $logger->log("Nothing to process at this time.", Logger::RED)->flush();
+//}
 exit(0);

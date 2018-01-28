@@ -26,7 +26,7 @@ class Tree extends TreeGenerator{
         $this->_type = $type;
         $this->_fm = new FileManager($project_id);
         $this->_config = new ProjectConfig($this->_fm->get(FileManager::CONFIG_JSON));
-        $this->_fm->cd($this->_fm->getEditMode() === NULL ? $this->_fm->root() : $this->_fm->generated());
+        $this->_fm->cd($this->_fm->getResultType() === Project::RT_SUCCESS ? $this->_fm->root() : $this->_fm->generated()); // FIXME
     }
 
     /**
@@ -44,21 +44,25 @@ class Tree extends TreeGenerator{
      *  [ 0.0088, 0.0476, 0.0910, 0.0751 ]
      * ]
      * </code>
-     *
-     * @return double[][]
+     * @return \double[][]
+     * @throws FileException
      */
-    protected function set_matrix()
-    {
+    protected function set_matrix(){
         $matrix = [];
-        $dm = fopen($this->_fm->get(FileManager::DISTANT_MATRIX), "r");
-        $c_labels = count($this->_labels);
-        for ($i = 0; $i < $c_labels; ++$i){
-            for ($j = 0, $temp = []; $j < $i; ++$j){
-                array_push($temp, (float)trim(fgets($dm)));
+        try{
+            $file = $this->_fm->get(FileManager::DISTANCE_MATRIX);
+            $dm = fopen($file, "r");
+            $c_labels = count($this->_labels);
+            for ($i = 0; $i < $c_labels; ++$i){
+                for ($j = 0, $temp = []; $j < $i; ++$j){
+                    array_push($temp, (float)trim(fgets($dm)));
+                }
+                array_push($matrix, $temp);
             }
-            array_push($matrix, $temp);
+            return $matrix;
+        }catch (FileException $e){
+            throw new FileException("Distance Matrix cannot be found at “{$this->_fm->pwd()}”", FileException::E_FILE_DOES_NOT_EXIST);
         }
-        return $matrix;
     }
 
     /**

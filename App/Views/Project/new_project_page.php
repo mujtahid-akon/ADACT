@@ -78,7 +78,7 @@ if($isForked){
     <div class="col-md-3"></div>
     <div class="col-md-6">
         <div class="h1" id="p_name">New Project</div>
-        <small class="text text-danger">[Fields with * (star) signs are mandatory.]</small>
+        <small class="text text-danger">[Fields with * (star) sign are mandatory.]</small>
         <div class="form form-horizontal">
             <!-- Project Name -->
             <fieldset class="form-wrapper">
@@ -91,7 +91,7 @@ if($isForked){
                 <select id="method" name="method" class="form-control"
                         style="display: inline-block;width: unset;">
                     <option value="" selected disabled>Choose One</option>
-                    <option value="upload_file">Upload a zip file</option>
+                    <option value="upload_file">Upload a file</option>
                     <option value="input_accn_gin">Accession/GI numbers</option>
                 </select>
                 <button class="btn btn-primary" id="change_method"
@@ -105,11 +105,12 @@ if($isForked){
                       enctype="multipart/form-data" onsubmit="return false;" style="display: none;">
                     <input type="hidden" name="MAX_FILE_SIZE"
                            value="<?php print \ADACT\Config::MAX_UPLOAD_SIZE ?>" />
-                    <label for="filef" class="btn btn-primary">Upload a zip file...</label><br />
-                    <small>Zip file consists of a number of FASTA (the extension can be of any type)
-                        files with no directories.</small>
+                    <label for="filef" class="btn btn-primary">Upload a file...</label><br />
+                    <small>The zip file consists of a number of FASTA (the extension can be of any type)
+                        files with no directories. Text file can contain multiple FASTA files separated by the standard header,
+                        ie. text string followed by a ‘>’ sign.</small>
                     <input class="" type="file" id="filef" name="filef"
-                           onchange="InputAnalyzer.init(this.form)" accept="application/zip" />
+                           onchange="InputAnalyzer.init(this.form)" accept="*/*" />
                 </form>
                 <div class="fasta_method" id="filef_status" style="display: none;"></div>
                 <!-- ACCN/GIN -->
@@ -133,12 +134,12 @@ if($isForked){
                     <label>Absent Word Type *: </label>
                     <label>
                         <input type="radio" name="aw_type" value="maw"
-                               onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();" />
+                               onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();$('#dissimilarity_index').val('');" />
                         <abbr title="Minimal Absent Words">MAW</abbr>
                     </label>
                     <label>
                         <input type="radio" name="aw_type" value="raw"
-                               onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();"/>
+                               onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();$('#dissimilarity_index').val('');"/>
                         <abbr title="Relative Absent Words">RAW</abbr>
                     </label>
                 </fieldset>

@@ -201,7 +201,7 @@ EOF;
         $random = '';
         for($i = 0; $i < $max; $i ++) $random .= sha1(microtime(true).mt_rand(10000,90000));
         $random = substr($random, 0, self::ACTIVATION_KEY_LENGTH);
-        if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM users WHERE activation_key=?')){
+        if(@$stmt = $this->mysqli->prepare('SELECT COUNT(*) FROM users WHERE activation_key = ?')){
             $stmt->bind_param('s', $random);
             $stmt->execute();
             $stmt->store_result();
