@@ -6,7 +6,7 @@
 #
 
 if [ "$#" -ne 1 ]; then
-    echo "Version string must be provided as argument!"
+    echo "SQL version string must be provided as argument!"
     exit 1
 fi
 
@@ -54,6 +54,7 @@ DELETE FROM login_attempts;
 DELETE FROM pending_projects;
 DELETE FROM last_projects;
 DELETE FROM projects;
+DELETE FROM uploaded_files
 END
 
 #
@@ -66,5 +67,11 @@ mysqldump --user=${MYSQL_USER} --password=${MYSQL_PASS} ${MYSQL_DB} > "${DIR}/..
 #
 mv -f "${DIR}/../Config.php" "${DIR}/../PrivateConfig.php"
 cp -f "${DIR}/../DefaultConfig.php" "${DIR}/../Config.php"
+
+#
+# Empty log files
+#
+echo -n > "$DIR/../logs/debug.log"
+echo -n > "$DIR/../logs/process.log"
 
 exit 0

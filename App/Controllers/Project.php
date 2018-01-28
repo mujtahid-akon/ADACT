@@ -2,13 +2,13 @@
 
 namespace ADACT\App\Controllers;
 
-use \ADACT\App\Constants;
 use ADACT\App\HttpStatusCode;
+use ADACT\App\Models\FileManager;
 use ADACT\App\Models\FileUploader;
-use ADACT\App\Models\LastProjects;
 use ADACT\App\Models\Notifications;
 use ADACT\App\Models\PendingProjects;
 use ADACT\App\Models\ProjectConfig;
+use ADACT\App\Models\Remover;
 use \ADACT\Config;
 
 class Project extends Controller{
@@ -64,7 +64,7 @@ class Project extends Controller{
         $logged_in = $project->login_check();
         if($logged_in){
             if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)) {
-                $file = $project->export($project_id, Constants::EXPORT_ALL);
+                $file = $project->export($project_id, $project::EXPORT_ALL);
                 if ($file != null) {
                     header('Content-Type: ' . $file['mime']);
                     header('Content-Disposition: attachment; filename="' . $file['name'] . '"');
@@ -174,10 +174,10 @@ class Project extends Controller{
         if($logged_in AND $project->verify($project_id)){
             $file_type = null;
             switch($file_name){
-                case 'SpeciesRelation.txt': $file_type = Constants::EXPORT_SPECIES_RELATION; break;
-                case 'DistantMatrix.txt'  : $file_type = Constants::EXPORT_DISTANT_MATRIX;   break;
-                case 'NeighbourTree.jpg'  : $file_type = Constants::EXPORT_NEIGHBOUR_TREE;   break;
-                case 'UPGMATree.jpg'      : $file_type = Constants::EXPORT_UPGMA_TREE;
+                case FileManager::SPECIES_RELATION: $file_type = $project::EXPORT_SPECIES_RELATION; break;
+                case FileManager::DISTANCE_MATRIX : $file_type = $project::EXPORT_DISTANCE_MATRIX;  break;
+                case FileManager::NEIGHBOUR_TREE  : $file_type = $project::EXPORT_NEIGHBOUR_TREE;   break;
+                case FileManager::UPGMA_TREE      : $file_type = $project::EXPORT_UPGMA_TREE;
             }
             if($file_type == null) goto redirect;
             $file = $project->export($project_id, $file_type);
@@ -208,21 +208,22 @@ class Project extends Controller{
             $this->redirect();
             exit();
         }
-
         /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
         $logged_in = $project->login_check();
-
         if($logged_in){
             if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)){
-                $isPending = (new PendingProjects())->isA($project_id);
+                $project_info = $project->get($project_id);
+                if($project_info['result_type'] === PendingProjects::RT_CANCELLED)
+                    $this->redirect(Config::WEB_DIRECTORY . 'projects');
+                $isPending = $project_info['result_type'] === PendingProjects::RT_PENDING;
                 $this->set('logged_in', $logged_in);
                 $this->set('project_id', $project_id);
-                $this->set(Constants::ACTIVE_TAB, 'projects');
-                $this->set('isTheLastProject', (new LastProjects())->isA($project_id));
+                $this->set('active_tab', 'projects');
+                $this->set('isTheLastProject', $project_info['last']);
                 $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
                 $this->set('isAPendingProject', $isPending);
-                $this->set('project_info', $project->get($project_id));
+                $this->set('project_info', $project_info);
                 if(!$isPending) (new Notifications())->set_seen($project_id);
             }else{
                 $this->redirect(Config::WEB_DIRECTORY . 'projects');
@@ -247,14 +248,14 @@ class Project extends Controller{
         extract($this->get_params());
         $json = [];
         /** @var string $project_id A JSON string containing all configurations */
-        /** @var \ADACT\App\Models\Project $project */
-        $project = $this->set_model();
+        $project = new \ADACT\App\Models\Project($project_id);
         $logged_in = $project->login_check();
         if($logged_in){
             $json = ['status_code' => PendingProjects::PROJECT_FAILURE, "status" => null];
             if($project->verify($project_id)){
+                $result_type = $project->getResultType();
                 $pending_project = new PendingProjects($project_id);
-                if($pending_project->isA()){
+                if($result_type != PendingProjects::RT_SUCCESS){
                     $status = $pending_project->get();
                     $json['status_code'] = $status['status_code'];
                     $json['status']      = $status['status'];
@@ -268,7 +269,7 @@ class Project extends Controller{
 
     function cancel_process(){
         extract($this->get_params());
-        $json = ['status' => \ADACT\App\Models\Project::PROJECT_DELETE_FAILED]; // Failed
+        $json = ['status' => 1]; // Failed
         /** @var string $project_id A JSON string containing all configurations */
         /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
@@ -276,8 +277,9 @@ class Project extends Controller{
         if($logged_in){
             if($project->verify($project_id)){
                 $pending_project = new PendingProjects($project_id);
-                if($pending_project->isA()){
-                    $json['status'] = $project->delete($project_id); // 0 = SUCCESS
+                if($pending_project->isA() AND $pending_project->cancel()){
+//                    (new Remover($project_id, $_SESSION['user_id']))->innocentlyRemove();
+                    $json['status'] = 0; // SUCCESS
                 }
             }
         }

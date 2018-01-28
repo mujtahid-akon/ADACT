@@ -18,8 +18,7 @@ $scheduler = new Scheduler();
 // Run process.php script at every minute
 $scheduler->php(__DIR__ . '/process.php')
     ->onlyOne(Config::WORKING_DIRECTORY)
-    ->everyMinute()
-    ->output(__DIR__ . '/../logs/process.log', true);
+    ->everyMinute();
 // Run delete_uploaded_files.php once daily
 $scheduler->php(__DIR__ . '/delete_uploaded_files.php')
     ->onlyOne(Config::WORKING_DIRECTORY)

@@ -54,11 +54,15 @@ class ProjectConfig extends Model{
      * FIXME: may need additional filtering
      *
      * @param string $config_file
+     * @throws FileException
      */
     function __construct($config_file = null){
         parent::__construct();
         $this->_config_file = $config_file;
-        if(file_exists($config_file)) $this->_load_config(true);
+        if($config_file !== null){
+            if(file_exists($config_file)) $this->_load_config(true);
+            else throw new FileException("Couldn't load the config file: file doesn't exists!", FileException::E_CONFIG_FILE_NOT_FOUND);
+        }
     }
 
     /**
@@ -77,11 +81,17 @@ class ProjectConfig extends Model{
         return $this;
     }
 
+    /**
+     * @return bool
+     * @throws FileException
+     */
     function save(){
-        if(!empty($this->_config_file)){
-            return file_put_contents($this->_config_file, json_encode($this->_config_data, JSON_PRETTY_PRINT));
+        try{
+            file_put_contents($this->_config_file, json_encode($this->_config_data, JSON_PRETTY_PRINT));
+            return true;
+        }catch (\Exception $e){
+            throw new FileException("Could not write to {$this->_config_file}", FileException::E_COULD_NOT_WRITE_TO_FILE);
         }
-        return false;
     }
 
     function setConfig($title, $value){

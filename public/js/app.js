@@ -52,18 +52,9 @@ function ProgressBar(selector, max_value, init_value, text){
     }
 }
 
-/*
-// May need later
-var lock_fasta_method = function(){
-    file_method_on = true;
-    $('#method').attr('disabled', '');
-    var selector = $('#change_method');
-    selector.attr('disabled', '');
-    selector.removeClass('btn-primary');
-    selector.addClass('btn-default');
-};
-*/
-
+/**
+ * Message Object
+ */
 Object.freeze(Messages = {
     ShortName : {
         CHAR_CONSTRAINT     : "Short names must contain a to z (uppercase or lower case) letters, underscores, hyphens or commas.",
@@ -89,15 +80,17 @@ Object.freeze(Messages = {
             UPLOAD_NEW_TEXT : "Upload a new file",
             SUCCESS_TEXT : "Upload success!",
             SUCCESS_MESSAGE : "The file was uploaded successfully.",
-            FAILURE_ALERT : "upload failed!",
+            FAILURE_ALERT : "Upload failed!",
             CONNECTION_PROBLEM : this.CONNECTION_PROBLEM,
             MAKE_SURE : "Make sure,",
             /** @return {Array} */
-            FAILURE_MESSAGE : function () {
+            FAILURE_MESSAGE : function (file_limit) {
                 return [
-                'The zip file is valid and in the right format',
-                'The size of the zip file is less than 100MB',
-                'The size of each sequence is less than 20MB'];
+                'The text/zip file is valid and in the right format',
+                'In case of zip file, the size must be less than 100 MB',
+                'The size of each sequence is less than 20 MB',
+                'There cannot be more than ' + file_limit + ' sequence in a zip/text file'
+                ];
             }
         },
         BuildTable : {
@@ -121,7 +114,18 @@ Object.freeze(Messages = {
         Cancel : {
             /** @return {String} */
             CANCEL_MESSAGE : function (project_name) { return "Are you sure want to cancel " + project_name + "?"; },
-            SUCCESS_MESSAGE : "Project was cancelled successfully!",
+            SUCCESS_MESSAGE : "Project has been cancelled successfully! If you're editing the project, we'll try to keep the previous results if possible.",
+            FAILURE_MESSAGE : "Couldn't cancel the project, it may have already been processed, or it doesn't exists or may have already been cancelled."
+        },
+        Delete : {
+            /** @return {String} */
+            DELETE_MESSAGE : function (project_name) { return "Are you sure want to delete " + project_name + "?"; },
+            FAILURE_MESSAGE : "Couldn't delete the project, it doesn't exists or may have already been deleted."
+        },
+        Notification : {
+            FETCH_TEXT : "Fetching notifications...",
+            NO_NOTIFICATION : "No new notification.",
+            CONNECTION_PROBLEM: "Connection problem!"
         }
     },
     FAILURE_ALERT : "Failed!",
@@ -191,7 +195,7 @@ InputAnalyzer = {
     DB_NUCCORE: "nuccore",
     DB_PROTEIN: "protein",
     // Char limit
-    CHAR_LIMIT: 15,
+    CHAR_LIMIT: 15, // FIXME: Also filter this in PHP file
     /**
      * Store input values from the input fields
      * (only for InputMethod.ACCN_GIN)
@@ -235,13 +239,11 @@ InputAnalyzer = {
         }
     },
     addShortNames: function(){
-        const CHAR_LIMIT          = 15;
-        // FIXME: Also filters these in PHP file
+        // FIXME: Also filter these in PHP file
         const CHAR_LIMIT_EXCEEDED = 1;
         const UNFILLED_FIELDS     = 2;
         const DUPLICATE_ENTRIES   = 3;
         const CHAR_CONSTRAINT     = 4;
-        // const MAX_FILE_EXCEEDED   = 5; //TODO
 
         /**
          * Count total entries
@@ -278,7 +280,7 @@ InputAnalyzer = {
                 status = UNFILLED_FIELDS;
                 break;
             }
-            if(s_name.length > CHAR_LIMIT){
+            if(s_name.length > this.CHAR_LIMIT){
                 status = CHAR_LIMIT_EXCEEDED;
                 break;
             }
@@ -296,7 +298,7 @@ InputAnalyzer = {
                 alert(Messages.ShortName.CHAR_CONSTRAINT);
                 break;
             case CHAR_LIMIT_EXCEEDED:
-                alert(Messages.ShortName.CHAR_LIMIT_EXCEEDED(CHAR_LIMIT));
+                alert(Messages.ShortName.CHAR_LIMIT_EXCEEDED(this.CHAR_LIMIT));
                 break;
             case UNFILLED_FIELDS:
                 alert(Messages.ShortName.UNFILLED_FIELDS);
@@ -539,37 +541,13 @@ InputAnalyzer = {
                         }
                         parent.buildTable();
                         break;
-                    case 1: // FILE_SIZE_EXCEEDED
-                        upload_sel.html('<div class="alert alert-danger">' +
-                            '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
-                            Messages.InputAnalyzer.Upload.MAKE_SURE + '<br />' +
-                            '<ul>' +
-                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE().join('</li><li>') + '</li>' +
-                            '</ul>' +
-                            '</div>');
-                        break;
-                    case 2: // FILE_INVALID_MIME
-                        upload_sel.html('<div class="alert alert-danger">' +
-                            '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
-                            Messages.InputAnalyzer.Upload.MAKE_SURE + '<br />' +
-                            '<ul>' +
-                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE().join('</li><li>') + '</li>' +
-                            '</ul>' +
-                            '</div>');
-                        break;
-                    case 3: // FILE_INVALID_FILE
-                        upload_sel.html('<div class="alert alert-danger">' +
-                            '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
-                            Messages.InputAnalyzer.Upload.MAKE_SURE + '<br />' +
-                            '<ul>' +
-                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE().join('</li><li>') + '</li>' +
-                            '</ul>' +
-                            '</div>');
-                        break;
                     default: // FILE_UPLOAD_FAILED
                         upload_sel.html('<div class="alert alert-danger">' +
                             '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
-                            Messages.InputAnalyzer.Upload.CONNECTION_PROBLEM +
+                            Messages.InputAnalyzer.Upload.MAKE_SURE + '<br />' +
+                            '<ul>' +
+                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE(parent.CHAR_LIMIT).join('</li><li>') + '</li>' +
+                            '</ul>' +
                             '</div>');
                 }
                 $("#filef").val('');
@@ -609,7 +587,7 @@ InputAnalyzer = {
             html += "<tr>"
                 + "<td>" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.results[i].id) + "</td>"
                 + "<td>" + this.results[i].title + "</td>"
-                + "<td>" + "<input id='sn_" + i + "' class='short_name form-control' value='" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.getShortName(this.results[i])) + "'/></td>"
+                + "<td>" + "<input id='sn_" + i + "' class='short_name form-control' value='" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.getShortName(this.results[i])) + "'  style='min-width: 155px;' /></td>"
                 + "</tr>";
         }
         html += "</table>"
@@ -755,8 +733,6 @@ Project.result = {
 /**
  * Do the process
  *
- * FIXME: Move the translations
- *
  * @type {{status: Project.process.status, cancel: Project.process.cancel}}
  */
 Project.process = {
@@ -791,11 +767,11 @@ Project.process = {
                 }
             },
             error: function(){
-                selector.html(Messages.Project.Status.FAILURE_TEXT);
+                selector.html(Messages.CONNECTION_PROBLEM);
             }
         });
     },
-    cancel: function (project_id, project_name) {
+    cancel: function (project_id, project_name) { // FIXME
         $.ajax({
             method: 'post',
             url: 'projects/cancel_process',
@@ -807,19 +783,17 @@ Project.process = {
             },
             success: function(res){
                 switch(res.status){
-                    case 0:
+                    case 0: // SUCCESS
                         alert(Messages.Project.Cancel.SUCCESS_MESSAGE);
                         window.location.assign('/projects');
                         break;
-                    case 2:
-                        alert('Couldn\'t cancel the project, it doesn\'t exists or may have already been cancelled.');
-                        break;
                     default:
-                        alert('Sorry, due an error the project couldn\'t be cancelled. Please, try again.');
+                        alert(Messages.Project.Cancel.FAILURE_MESSAGE);
+                        break;
                 }
             },
             error: function(){
-                alert('Sorry, the project couldn\'t be cancelled. Please, try again.');
+                alert(Messages.CONNECTION_PROBLEM);
             }
         });
     }
@@ -827,8 +801,6 @@ Project.process = {
 
 /**
  * Delete a project
- *
- * FIXME: Move the translations
  *
  * @param {int}    project_id
  * @param {string} project_name
@@ -840,26 +812,26 @@ Project.delete = function (project_id, project_name) {
         cache: false,
         dataType: 'json',
         beforeSend: function(){
-            return confirm("Are you sure want to delete " + project_name + "?");
+            return confirm(Messages.Project.Delete.DELETE_MESSAGE(project_name));
         },
         success: function(res){
             switch(res.status){
                 case 0:
                     $('#p_' + project_id).remove();
                     break;
-                case 2:
-                    alert('Couldn\'t delete the project, it doesn\'t exists or may have already been deleted.');
-                    break;
                 default:
-                    alert('Sorry, due an error the project couldn\'t be deleted. Please, try again.');
+                    alert(Messages.Project.Delete.FAILURE_MESSAGE);
             }
         },
         error: function(){
-            alert('Sorry, the project couldn\'t be deleted. Please, try again.');
+            alert(Messages.CONNECTION_PROBLEM);
         }
     });
 };
 
+/**
+ * Handles notifications
+ */
 Project.notification_handler = function () {
     let selector  = $("#notification_bar");
     let count_sel = $("#notification_count");
@@ -870,7 +842,7 @@ Project.notification_handler = function () {
         cache: false,
         dataType: 'json',
         beforeSend: function(){
-            selector.html("<li style=\"padding: 5px 10px\"><em>Fetching notifications...</em></li>");
+            selector.html("<li style=\"padding: 5px 10px\"><em>" + Messages.Project.Notification.FETCH_TEXT + "</em></li>");
             return true;
         },
         /** @param {object[]} res.projects */
@@ -891,11 +863,11 @@ Project.notification_handler = function () {
             }else{
                 count_sel.html("");
                 count_sel.removeClass('unread-count');
-                selector.html("<li style=\"padding: 5px 10px\"><em>No new notification.</em></li>");
+                selector.html("<li style=\"padding: 5px 10px\"><em>" + Messages.Project.Notification.NO_NOTIFICATION + "</em></li>");
             }
         },
         error: function(){
-            selector.html("<li style=\"padding: 5px 10px\"><em>Connection problem!</em></li>");
+            selector.html("<li style=\"padding: 5px 10px\"><em>" + Messages.Project.Notification.CONNECTION_PROBLEM + "</em></li>");
         }
     });
 };

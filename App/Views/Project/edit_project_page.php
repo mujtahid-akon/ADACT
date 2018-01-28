@@ -24,50 +24,6 @@ $base_url = $_SERVER['PHP_SELF'];
 // Transform Absent Words type to uppercase
 $config->aw_type = strtoupper($config->aw_type);
 
-/**
- * Get a list of species from the species relations
- * @param array $species_relations
- * @return array
- */
-function get_species_from_species_relation($species_relations){
-    $species_list = [];
-    foreach ($species_relations as $species => $relation){
-        array_push($species_list, $species);
-    }
-    return $species_list;
-}
-
-/**
- * Get distance matrix HTML table
- *
- * @param array  $species
- * @param string $project_dir
- * @return array Each member is a table row
- */
-function get_distance_matrix($species, $project_dir){
-    $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
-    $distance_matrix = file($project_dir . '/DistanceMatrix.txt');
-    $dm_i = 0; // Distance matrix pointer
-    $table_rows = [];
-    for($row_i  = 0; $row_i < $total_species; ++$row_i){
-        $table_row = "<tr>";
-        // Header first
-        $table_row .= "<th>{$species[$row_i]}</th>";
-        // Then, blank columns
-        for($col_i = 0; $col_i <= $row_i; ++$col_i){
-            $table_row .= "<td></td>";
-        }
-        // Now, the rest
-        for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
-            $table_row .= "<td>{$distance_matrix[$dm_i++]}</td>";
-        }
-        $table_row .= "</tr>\n";
-        // Print the row
-        array_push($table_rows, $table_row);
-    }
-    return $table_rows;
-}
-
 // Output begin
 ?>
     <h3>Editing: <?php print ucwords($config->project_name); ?></h3>
@@ -169,11 +125,13 @@ function get_distance_matrix($species, $project_dir){
                 <th>Absent Word Type</th>
                 <td>
                     <label>
-                        <input type="radio" name="aw_type" value="maw" onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();" />
+                        <input type="radio" name="aw_type" value="maw"
+                               onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();$('#dissimilarity_index').val('');" />
                         <abbr title="Minimal Absent Words">MAW</abbr>
                     </label>
                     <label>
-                        <input type="radio" name="aw_type" value="raw" onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();"/>
+                        <input type="radio" name="aw_type" value="raw"
+                               onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();$('#dissimilarity_index').val('');"/>
                         <abbr title="Relative Absent Words">RAW</abbr>
                     </label>
                 </td>
@@ -192,7 +150,7 @@ function get_distance_matrix($species, $project_dir){
             <tr>
                 <th><label for="dissimilarity_index">Dissimilarity Index</label></th>
                 <td>
-                    <select id="dissimilarity_index" name="dissimilarity_index" class="form-control" style="display: inline-block;width: unset;">
+                    <select id="dissimilarity_index" name="dissimilarity_index" class="form-control" style="display: inline-block;">
                         <option value="" disabled selected>Select One</option>
                         <?php
                         // MAW Dissimilarity Indexes

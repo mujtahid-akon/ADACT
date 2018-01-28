@@ -58,7 +58,7 @@ class Route
      */
     public static function add($method, $url, $action, $params = array()){
         // Transform url to url pattern
-        $url = preg_replace('/\//', '\/', preg_replace('/\{([A-Za-z0-9\-\_\.\+\!\*\’\(\,\;\:\@\=]+)\}/','(?<$1>[A-Za-z0-9\-\_\.\+\!\*\’\(\,\;\:\@\=]+)', $url));
+        $url = preg_replace('/\//', '\/', preg_replace('/\{([A-Za-z0-9\-\_\.\+\!\*\’\(\,\;\:\@\=]+)\}/','(?<$1>[A-Za-z0-9\-\_\.\+\!\*\’\(\,\;\:\@\=\s]+)', $url));
         if(is_array($method)){
             foreach ($method as $item){
                 $route = [

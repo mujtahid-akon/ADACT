@@ -2,7 +2,11 @@
 
    ***Only use the latest sql file***
 
-- `adact_v4.2.sql` [`current`]
+- `adact_v4.3.sql` [`current`]
+    
+    Some minor changes
+    
+- `adact_v4.2.sql`
     
     - `uploaded_files` : The column `date` is added to handle junk files (uploaded files are deleted after 7 days)
     - `pending_projects` : The column `edit_mode` is added as part of the implementation of editing the projects

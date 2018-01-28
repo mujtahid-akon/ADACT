@@ -5,10 +5,10 @@
  * Date: 6/7/17
  * Time: 6:40 PM
  */
-use \ADACT\App\Models\FileManager;
+use \ADACT\App\Models\FileManager as FM;
 use \ADACT\App\Models\ProjectConfig;
 use \ADACT\App\Models\Project;
-use \ADACT\Config;
+use \ADACT\App\Models\Tree;
 /**
  * @var bool $logged_in
  */
@@ -24,8 +24,20 @@ if(!$logged_in) exit();
  * @var array $project_info        If it's a pending project (that means show status, elapsed time, etc.)
  */
 
+/**
+ * Variables extracted by project_info
+ * @var int $id
+ * @var string $name
+ * @var string $date_created
+ * @var bool $editable
+ * @var bool $last
+ * @var int $result_type
+ */
+extract($project_info);
+// FM
+$fm = new FM($project_id);
 // load config
-$config = new ProjectConfig((new FileManager($project_id))->get(FileManager::CONFIG_JSON));
+$config = new ProjectConfig($fm->get(FM::CONFIG_JSON));
 // Project type
 $isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
 // Base url
@@ -37,10 +49,9 @@ $config->aw_type = strtoupper($config->aw_type);
 if(!$isAPendingProject){
     // Info downloading url
     $download_url = $base_url . '/get';
-    $project_dir = Config::PROJECT_DIRECTORY . '/' . $project_id;
     // Get Species Relation
-    $relation_file = $project_dir . '/SpeciesRelation.json';
-    $species_relations = json_decode(file_get_contents($project_dir . '/SpeciesRelation.json'), true);
+    $relation_file = $fm->get(FM::SPECIES_RELATION_JSON);
+    $species_relations = json_decode(file_get_contents($relation_file), true);
     // Get Species names
     $species = get_species_from_species_relation($species_relations);
 }
@@ -61,13 +72,13 @@ function get_species_from_species_relation($species_relations){
 /**
  * Get distance matrix HTML table
  *
- * @param array  $species
- * @param string $project_dir
+ * @param array $species
+ * @param FM    $fm
  * @return array Each member is a table row
  */
-function get_distance_matrix($species, $project_dir){
+function get_distance_matrix($species, $fm){
     $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
-    $distance_matrix = file($project_dir . '/DistanceMatrix.txt');
+    $distance_matrix = file($fm->get(FM::DISTANCE_MATRIX));
     $dm_i = 0; // Distance matrix pointer
     $table_rows = [];
     for($row_i  = 0; $row_i < $total_species; ++$row_i){
@@ -91,16 +102,16 @@ function get_distance_matrix($species, $project_dir){
 ?>
 <h3>Project: <?php print ucwords($config->project_name); ?></h3>
 <?php
-if($isTheLastProject AND !$isAPendingProject):
+if($editable):
     print "<h4><a href=\"{$base_url}/edit\">Edit</a></h4>";
-endif; // isTheLastProject
+endif; // editable
 
 if($isAPendingProject):
 ?>
     <p class="text text-danger"><em>The project is currently running...</em></p>
     <script>
         $(document).ready(function(){
-            let date_created = new Date("<?php print $project_info['date_created'] ?> UTC").getTime();
+            let date_created = new Date("<?php print $date_created ?> UTC").getTime();
             let selector = $("#elapsed_time");
             // Show elapsed time
             elapsed_time(selector, date_created);
@@ -108,9 +119,9 @@ if($isAPendingProject):
                 elapsed_time(selector, date_created);
             }, 1000);
             // Show status
-            Project.process.status($("#process_status"), <?php print $project_info['id'] ?>);
+            Project.process.status($("#process_status"), <?php print $id ?>);
             setInterval(function(){
-                Project.process.status($("#process_status"), <?php print $project_info['id'] ?>);
+                Project.process.status($("#process_status"), <?php print $id ?>);
             }, 10000);
         });
     </script>
@@ -122,19 +133,22 @@ endif; // isAPendingProject
     <?php
     if($isAPendingProject):
     ?>
-        <!--script src="/js/app.js"></script-->
         <button onclick="Project.process.cancel(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" class="btn btn-default">Cancel Project</button>
     <?php
-    else: // !isAPendingProject
+    elseif($result_type === Project::RT_SUCCESS): // !isAPendingProject
     ?>
         <button onclick="$('#project_info').toggle()" class="btn btn-default">Toggle Project Info</button>
+    <?php
+    else:
+    ?>
+        <button onclick="Project.delete(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" class="btn btn-default">Delete Project</button>
     <?php
     endif; // isAPendingProject
     ?>
     <a class="btn btn-default" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"/projects/{$project_id}/fork\"") ?>>Fork This Project</a>
 </section>
 
-<section id="project_info" <?php print ($isAPendingProject ? '' : 'style="display: none;"') ?>>
+<section id="project_info" <?php print ($result_type !== Project::RT_SUCCESS ? '' : 'style="display: none;"') ?>>
     <table class="table table-bordered table-striped table-hover">
         <caption>Overview</caption>
         <tbody>
@@ -172,8 +186,9 @@ endif; // isAPendingProject
 </section>
 <br />
 <?php
-if(!$isAPendingProject):
-    $tree = new \ADACT\App\Models\Tree($project_id);
+// Generate results if the project was executed successfully
+if($result_type === Project::RT_SUCCESS):
+    $tree = new Tree($project_id);
 ?>
 <script src="Treant.js"></script>
 <script src="vendor/raphael.js"></script>
@@ -272,27 +287,26 @@ if(!$isAPendingProject):
 <section>
     <?php
     /** @var string $download_url */
-    /** @var string $project_dir */
     /** @var array  $species */
     /** @var array  $species_relations */
-    $neighbourTree = '/NeighbourTree.jpg';
-    $UPGMATree     = '/UPGMATree.jpg';
+    $neighbourTree = $download_url . '/' . FM::NEIGHBOUR_TREE;
+    $UPGMATree     = $download_url . '/' . FM::UPGMA_TREE;
     ?>
     <!-- Neighbour Tree -->
     <div id="neighbour_tree" class="output" style="display: none;">
-        <a href="<?php print $download_url . $neighbourTree ?>">Download Neighbour Joining Tree</a><br />
-        <!--img src="<?php print $download_url . $neighbourTree ?>" /-->
+        <a href="<?php print $neighbourTree ?>">Download Neighbour Joining Tree</a><br />
+        <!--img src="<?php print $neighbourTree ?>" /-->
         <div id="nj_tree_view"></div>
     </div>
     <!-- UPGMA Tree -->
     <div id="upgma_tree" class="output" style="display: none;">
-        <a href="<?php print $download_url . $UPGMATree ?>">Download UPGMA Tree</a><br />
-        <!--img src="<?php print $download_url . $UPGMATree ?>" /-->
+        <a href="<?php print $UPGMATree ?>">Download UPGMA Tree</a><br />
+        <!--img src="<?php print $UPGMATree ?>" /-->
         <div id="upgma_tree_view"></div>
     </div>
     <!-- Sorted Species Relation -->
     <div id="sorted_species_relation" style="text-align: left; display: none;" class="output">
-        <a href="<?php print $download_url . '/' . FileManager::SPECIES_RELATION ?>">Download Sorted Species Relation</a><br />
+        <a href="<?php print $download_url . '/' . FM::SPECIES_RELATION ?>">Download Sorted Species Relation</a><br />
         <table class="table table-striped table-hover">
             <thead>
             <tr>
@@ -316,7 +330,7 @@ if(!$isAPendingProject):
     </div>
     <!-- Distance Matrix -->
     <div id="distance_matrix" class="output">
-        <a href="<?php print $download_url . '/' . FileManager::DISTANT_MATRIX ?>">Download Distance Matrix</a><br />
+        <a href="<?php print $download_url . '/' . FM::DISTANCE_MATRIX ?>">Download Distance Matrix</a><br />
         <table class="table table-bordered table-striped table-hover">
             <thead>
             <tr>
@@ -325,7 +339,7 @@ if(!$isAPendingProject):
             </tr>
             </thead>
             <tbody>
-            <?php foreach (get_distance_matrix($species, $project_dir) as $distance_matrix) print $distance_matrix ?>
+            <?php foreach (get_distance_matrix($species, $fm) as $distance_matrix) print $distance_matrix ?>
             </tbody>
         </table>
     </div>
