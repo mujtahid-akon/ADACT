@@ -16,14 +16,14 @@
     text-decoration: none;
     display: inline-block;
     font-size: 18px;
-    margin: 4px 2px;
+    margin: 4px 8px;
 }
 </style>
 </head>
 <body>
     <div class="row">
         <div class="col-md-6 w3-center">
-            <img src="../../../logos/logo.png" 
+            <img src="../../../public/logos/logo.png" 
                 style='height: 70%; width: 70%; object-fit: contain' >
         </div>
         <div class="col-md-6 col-lg-6 col-sm-6" >
@@ -45,7 +45,7 @@
     <div class="row">
         <div class="col-md-4 w3-center">
             <a href="https://www.youtube.com/">
-                <img src="../../../logos/start.png" 
+                <img src="../../../public/logos/start.png" 
                     style='height: 40%; width: 40%; object-fit: contain;' >
             </a>
             <div class="w3-container">
@@ -54,7 +54,7 @@
         </div>
         <div class="col-md-4 w3-center">
             <a href="https://github.com/mujtahid-akon/ADACT/wiki">
-                <img src="../../../logos/api.png" 
+                <img src="../../../public/logos/api.png" 
                     style='height: 40%; width: 40%; object-fit: contain;' >
             </a>
             <div class="w3-container">
@@ -63,7 +63,7 @@
         </div>
         <div class="col-md-4 w3-center">
             <a href="https://github.com/mujtahid-akon/ADACT">
-                <img src="../../../logos/support.png" 
+                <img src="../../../public/logos/support.png" 
                     style='height: 40%; width: 40%; object-fit: contain;' >
             </a>
             <div class="w3-container" >

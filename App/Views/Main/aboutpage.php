@@ -188,17 +188,17 @@
     <center><h1> ADACT Development Team</h1></center>
     <div class="row">
         <div class="col-md-4 w3-center">
-            <img src="../../../profile/avatar.jpg" 
+            <img src="../../../public/profile/mujtahid.jpg" 
                     style='height: 40%; width: 40%; object-fit: contain;'>
             <h5> Mujtahid Akon </h5>
         </div>
         <div class="col-md-4 w3-center">
-            <img src="../../../profile/mahi.jpg" 
+            <img src="../../../public/profile/mahi.jpg" 
                     style='height: 40%; width: 40%; object-fit: contain; border-radius: 20%;' >
             <h5> Mohimenul Kabir </h5>
         </div>
         <div class="col-md-4 w3-center">
-            <img src="../../../profile/muntasir.jpg" 
+            <img src="../../../public/profile/muntasir.jpg" 
                     style='height: 40%; width: 40%; object-fit: contain;' >
                   <h5> Muntashir Akon </h5>
         </div>
@@ -207,11 +207,11 @@
         <div class="col-md-2 w3-center">
         </div>
         <div class="col-md-4 w3-center">
-            <img src="../../../profile/avatar.jpg" 
+            <img src="../../../public/profile/avatar.jpg" 
                     style='height: 40%; width: 40%; object-fit: contain;' >
         </div>
         <div class="col-md-4 w3-center">
-            <img src="../../../profile/avatar.jpg" 
+            <img src="../../../public/profile/avatar.jpg" 
                     style='height: 40%; width: 40%; object-fit: contain; border-radius: 20%;' >
         </div>
         <div class="col-md-2 w3-center">

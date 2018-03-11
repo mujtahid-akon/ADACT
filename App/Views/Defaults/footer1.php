@@ -22,7 +22,7 @@ a:hover {
     <div class="row">
         <center><h3> ADACT is supported by </h3></center>
         <div class="col-md-3 w3-center">
-            <img src="../../../sponsor/buet.jpg" 
+            <img src="../../../public/sponsor/buet.jpg" 
                 style='height: 120px; width: 180px; object-fit: contain' >
         </div>
     </div>
