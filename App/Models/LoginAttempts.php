@@ -103,14 +103,14 @@ class LoginAttempts extends Model{
         $this->_email_unlock_key($this->name, $this->_email, $activation_key);
     }
 
-    private function _email_unlock_key($name, $email, $activation_key){ // TODO: use http://ipinfo.com to get ip related data
-        $subject = self::SITE_TITLE . ': Unlock your account';
-        $verification_address = self::WEB_ADDRESS . '/unlock' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
-        $body = <<< EOF
-<p>Someone tried to access you account in an illegal manner which is why we've locked your account.
-Please, use the link below to unlock your account:</p>
-<p><a href="{$verification_address}" target='_blank'>{$verification_address}</a></p>
-<p>This is just a procedure to secure your account. This doesn't mean that your account is compromised anyhow.</p>
+    private function _email_unlock_key($name, $email, $activation_key){ // TODO: use http://reegeoip.net/json/ to get ip related data
+        $subject   = self::SITE_TITLE . ': Unlock your account';
+        $conf_link = self::WEB_ADDRESS . '/unlock' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
+        $conf_btn  = Emailer::button('Unlock Account', $conf_link);
+        $body      = <<< EOF
+<p>We've locked your account because someone tried to access your account in an illegal manner.</p>
+<div>{$conf_btn}</div>
+<p>This is just a measure to secure your account. This doesn't mean that your account is compromised anyhow.</p>
 EOF;
         return self::formatted_email($name, $email, $subject, $body);
     }

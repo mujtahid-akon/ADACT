@@ -39,6 +39,7 @@ class Model implements Config {
      * @param string $subject
      * @param string $message
      * @return bool
+     * @throws \phpmailerException
      */
     static function email($name, $email, $subject, $message){
         //Create a new PHPMailer instance
@@ -49,7 +50,7 @@ class Model implements Config {
         // 0 = off (for production use)
         // 1 = client messages
         // 2 = client and server messages
-        $mail->SMTPDebug = Config::DEBUG_MODE ? 2 : 0;
+        $mail->SMTPDebug = Config::DEBUG_MODE ? 0 : 0;
         //Ask for HTML-friendly debug output
         //$mail->Debugoutput = 'html';
         //Set the hostname of the mail server
@@ -78,9 +79,6 @@ class Model implements Config {
         //Read an HTML message body from an external file, convert referenced images to embedded,
         //convert HTML into a basic plain-text alternative body
         $mail->msgHTML($message, dirname(__FILE__));
-        //Replace the plain text body with one created manually
-        //TODO Add attachment
-        //$mail->addAttachment('');
         //send the message, check for errors
         if(!$mail->send()){
             error_log("Mailer Error: " . $mail->ErrorInfo);
@@ -90,25 +88,44 @@ class Model implements Config {
         }
     }
 
+    /**
+     * @param $name
+     * @param $email
+     * @param $subject
+     * @param $body
+     * @return bool
+     * @throws \phpmailerException
+     */
     static function formatted_email($name, $email, $subject, $body){
         $site_title = self::SITE_TITLE;
-        $from    = self::MAIL_FROM;
         $address = self::ORG_ADDRESS;
+        $year = date('Y');
+        $date = date('M d, Y');
         $message = <<< EOF
 <!DOCTYPE html>
 <html>
 <head>
   <title>{$subject}</title>
 </head>
-<body>
-  <h1>{$site_title}</h1>
-  <p>Dear {$name},</p>
-  {$body}
-  <p>Regards,</p>
-  <p>{$site_title} Team</p>
-  <hr />
-  <address><a href="mailto:{$from}">{$from}</a></address>
-  <address>{$address}</address>
+<body style="margin: 15px auto;width: 650px;color: #555;">
+  <header>
+    <h1 style="display: inline-block;margin: auto;font-family: monospace;font-weight: normal;color: #777;">{$site_title}</h1>
+    <date style="text-align: right;display: inline-block;float: right;position: relative;top: 11px;">{$date}</date>
+  </header>
+  <section style="padding: 5px 10px;box-shadow: #eee 0 2px 5px 3px;">
+    <p>Dear {$name},</p>
+    {$body}
+    <p>Regards,</p>
+    <p>{$site_title} Team</p>
+  </section>
+  <footer style="color: #aaa;font-family: sans-serif;padding-top: 10px;">
+    <section>
+      <small>You received this mail because you created an account at ADACT.</small>
+    </section>
+    <section>
+      <small>&copy; {$year} {$site_title}, {$address}</small>
+    </section>
+  </footer>
 </body>
 </html>
 EOF;

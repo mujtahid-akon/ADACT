@@ -66,3 +66,7 @@ a, a:hover, a:active, a:visited{
     top: -10px;
     left: -5px;
 }
+
+.center{
+    text-align: center;
+}

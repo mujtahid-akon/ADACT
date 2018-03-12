@@ -330,7 +330,7 @@ class FileManager extends Model{
             'original'  => null,
             'project'   => null
         ];
-        if($this->_project_type != Project::PT_REGULAR){ // FIXME
+        if($this->_project_type != Project::PT_REGULAR){
             $this->_directories['project']   = $this->_directories['root'] . "/Files";
             $this->_directories['generated'] = $this->_directories['project'] . '/generated';
             $this->_directories['original']  = $this->_directories['project'] . '/original';

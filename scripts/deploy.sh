@@ -32,7 +32,7 @@ function current_dir(){
 #
 # Configurations
 #
-MYSQL_DB="awords"
+MYSQL_DB="adact"
 MYSQL_USER="root"
 MYSQL_PASS="root"
 

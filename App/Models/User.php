@@ -104,9 +104,10 @@ class User extends Model{
         $subject = self::SITE_TITLE . ': Password reset request';
         $activation_key = $this->new_activation_key($email);
         $reset_address = self::WEB_ADDRESS . '/reset_pass' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
-        $body    = <<< EOF
-<p>You have requested for resetting your password. If this is really you, please follow the link bellow:</p>
-<p><a href="{$reset_address}" target='_blank'>{$reset_address}</a> (This is a one time link)</p>
+        $reset_btn = Emailer::button('Reset password', $reset_address);
+        $body      = <<< EOF
+<p>You have requested for resetting your password.</p>
+<div>{$reset_btn}</div>
 <p>Please disregard this email if you didn't request for the password reset.</a>
 EOF;
         return self::formatted_email('User', $email, $subject, $body);
@@ -134,13 +135,14 @@ EOF;
     }
     
     function email_new_ac($name, $email, $activation_key){
+        $site_title = self::SITE_TITLE;
         $website = self::WEB_ADDRESS;
-        $subject = 'Welcome to ' . self::SITE_TITLE . '!';
+        $subject = 'Welcome to ' . $site_title . '!';
         $verification_address = self::WEB_ADDRESS . '/unlock' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
+        $conf_btn = Emailer::button('Verify account', $verification_address);
         $body = <<< EOF
-<p>Your email was used to create a new account in <a href="{$website}" target='_blank'>ADACT</a>.
-      If this was really you please verify your account by following the link below:</p>
-<p><a href="{$verification_address}" target='_blank'>{$verification_address}</a></p>
+<p>Your email was used to create a new account in <a href="{$website}" target='_blank'>{$site_title}</a>.</p>
+<div>{$conf_btn}</div>
 <p>Thanks for creating account with us.</p>
 EOF;
         return self::formatted_email($name, $email, $subject, $body);

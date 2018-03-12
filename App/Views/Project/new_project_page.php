@@ -70,9 +70,17 @@ if($isForked){
         // Set reverse complement
         $('#inversion').attr('checked', <?php print ($config->inversion ? 'true' : 'false'); ?>);
         <?php } ?>
-
+        $('[data-toggle="tooltip"]').tooltip({
+            placement : 'right'
+        });
     });
 </script>
+<style>
+    .tooltip-inner {
+        max-width: 350px;
+        width: inherit;
+    }
+</style>
 
 <div class="row">
     <div class="col-md-3"></div>
@@ -105,10 +113,11 @@ if($isForked){
                       enctype="multipart/form-data" onsubmit="return false;" style="display: none;">
                     <input type="hidden" name="MAX_FILE_SIZE"
                            value="<?php print \ADACT\Config::MAX_UPLOAD_SIZE ?>" />
-                    <label for="filef" class="btn btn-primary">Upload a file...</label><br />
-                    <small>The zip file consists of a number of FASTA (the extension can be of any type)
+                    <label for="filef" class="btn btn-primary">Upload a file...</label>
+                    <i data-toggle="tooltip" class="glyphicon glyphicon-info-sign"
+                       title="The zip file consists of a number of FASTA (the extension can be of any type)
                         files with no directories. Text file can contain multiple FASTA files separated by the standard header,
-                        ie. text string followed by a ‘>’ sign.</small>
+                        ie. text string followed by a ‘>’ sign."></i>
                     <input class="" type="file" id="filef" name="filef"
                            onchange="InputAnalyzer.init(this.form)" accept="*/*" />
                 </form>
@@ -116,10 +125,11 @@ if($isForked){
                 <!-- ACCN/GIN -->
                 <div class="fasta_method" id="input_accn_gin" style="display: none;">
                     <label for="accn_gin" style="vertical-align: top;">Accession/GI numbers *</label>
+                    <i data-toggle="tooltip" class="glyphicon glyphicon-info-sign"
+                       title="Accession/GI numbers must be separated by commas
+                        (eg. NM_009417, NM_001003009, 224465210, 50978625, 9507198, A3R4N5)."></i>
                     <textarea class="form-control" id="accn_gin" name="accn_gin" placeholder="Input Accession/GI Numbers"
-                              style="width: 100%; display: block;" ></textarea>
-                    <small>Accession/GI numbers must be separated by commas
-                        (eg. NM_009417, NM_001003009, 224465210, 50978625, 9507198, A3R4N5).</small><br />
+                              style="width: 100%; display: block;" ></textarea><br />
                     <button class="btn btn-primary" id="analyze_accn_gin" onclick="InputAnalyzer.init()"
                             style="vertical-align: top">Analyze</button>
                 </div>
@@ -146,6 +156,8 @@ if($isForked){
                 <!-- K-Mer Size -->
                 <fieldset>
                     <label>K-Mer Size *: </label>
+                    <i data-toggle="tooltip" class="glyphicon glyphicon-info-sign"
+                       title="Be careful when choosing kmer size: they are not checked on the server side!"></i>
                     <input class="form-control" type="number" id="kmer_min" name="kmer_min" min="1"
                            style="width: 100px;display: inline-block;" placeholder="Min" required />
                     <input class="form-control" type="number" id="kmer_max" name="kmer_max" min="1"

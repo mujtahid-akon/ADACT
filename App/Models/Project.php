@@ -39,6 +39,7 @@ class Project extends ProjectPrivilegeHandler {
      *
      * @param array $config
      * @return null|int returns the id number on success, null on failure
+     * @throws FileException
      */
     function add($config){
         $this->config = new ProjectConfig();
@@ -77,6 +78,7 @@ class Project extends ProjectPrivilegeHandler {
      *
      * @param string $config
      * @return array
+     * @throws FileException
      */
     function addMultiple($config){
         $project_info = [];
@@ -101,8 +103,9 @@ class Project extends ProjectPrivilegeHandler {
      * Otherwise, execution begins from self::EM_INIT_FROM_DM.
      *
      * @param array $config
-     * @param int   $project_id
+     * @param int $project_id
      * @return bool
+     * @throws FileException
      */
     function edit($config, $project_id){
         $this->_project_id = $project_id;
@@ -252,6 +255,7 @@ class Project extends ProjectPrivilegeHandler {
      * Get details of a project
      * @param $project_id
      * @return array
+     * @throws FileException
      */
     function getDetails($project_id){
         $this->_project_id = $project_id;
@@ -299,8 +303,9 @@ class Project extends ProjectPrivilegeHandler {
      * based on the user request
      *
      * @param int $project_id The project ID of which content is needed to be shown
-     * @param int $type       Which type of file is requested
+     * @param int $type Which type of file is requested
      * @return null|array     array containing mime, name, path on success, null on failure
+     * @throws FileException
      */
     function export($project_id, $type){
         $file = null;
@@ -351,6 +356,11 @@ class Project extends ProjectPrivilegeHandler {
         return $file;
     }
 
+    /**
+     * @param int[] $project_ids
+     * @return null|string
+     * @throws FileException
+     */
     function exportAll($project_ids){
         $files = [];
         $file_path = Config::WORKING_DIRECTORY . '/projects_'. time() . mt_rand(100, 999) . '.zip';
@@ -426,6 +436,11 @@ class Project extends ProjectPrivilegeHandler {
         return false;
     }
 
+    /**
+     * @param int $project_id
+     * @return bool
+     * @throws FileException
+     */
     function can_fork($project_id){
         if(!$this->verify($project_id)) return false;
         if((new PendingProjects($project_id))->isA()) return false;
@@ -478,8 +493,9 @@ class Project extends ProjectPrivilegeHandler {
      * Get distance matrix HTML table
      *
      * @param array $species
-     * @param FM    $fm
+     * @param FM $fm
      * @return array Each member is a table row
+     * @throws FileException
      */
     private function _get_distance_matrix($species, FM $fm){
         $total_species = count($species); // Number of rows and columns is the same as this + 1 for header

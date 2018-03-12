@@ -52,11 +52,12 @@ Route::add(Route::GET,  '/', 'Main@home');
 Route::add(Route::GET,  '/home', 'Main@home');
 Route::add(Route::GET,  '/about', 'Main@about'); // TODO
 Route::add(Route::GET,  '/feedback', 'Main@feedback_page');
-Route::add(Route::POST, '/feedback', 'Main@feedback', []); // TODO
+Route::add(Route::POST, '/feedback', 'Main@feedback', ['name' => Route::STRING, 'email' => Route::EMAIL, 'subject' => Route::STRING, 'feedback' => Route::STRING]);
 /* === User Login/logout/reg === */
+Route::add(Route::GET, '/reg', 'User@register_page');
 Route::add(Route::POST, '/reg', 'User@register', ['name' => Route::STRING, 'email' => Route::EMAIL, 'pass' => Route::STRING]);
 Route::add(Route::POST, '/login', 'User@login', ['email' => Route::EMAIL, 'pass' => Route::STRING]);
-Route::add(Route::POST, '/logout', 'User@logout', ['all' => Route::BOOLEAN]); // TODO: 'all' is not implemented
+Route::add(Route::POST, '/logout', 'User@logout', ['all' => Route::BOOLEAN]); // FIXME: 'all' is not implemented
 Route::add(Route::POST, '/reset_pass', 'User@reset_password', ['email' => Route::EMAIL, 'pass' => Route::STRING]);
 Route::add(Route::GET,  '/register_success', 'User@register_success');
 Route::add(Route::GET,  '/login', 'User@login_page', ['email' => Route::EMAIL]);

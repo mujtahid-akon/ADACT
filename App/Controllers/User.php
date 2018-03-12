@@ -19,7 +19,7 @@ class User extends Controller
         else $status = $this->{$this->_model}->register($name, $email, $pass);
         switch($status){
             case UserModel::ACCOUNT_EXISTS:
-                $_SESSION['register_error'] = "<strong>Account already exists!</strong> There's already an account associated with this account. If this email is really yours, <a href=\"reset_pass\">reset your password</a>.";
+                $_SESSION['register_error'] = "<strong>Account already exists!</strong> There's already an account associated with this email. If this email is really yours, <a href=\"reset_pass\">reset your password</a>.";
                 break;
             case UserModel::REGISTER_FAILURE:
                 $_SESSION['register_error'] = "<strong>Failed!</strong> Account creation failed due to technical difficulties, please try again.";
@@ -30,7 +30,7 @@ class User extends Controller
         if($status == UserModel::LOGIN_SUCCESS){
             $_SESSION['register_success'] = true;
             $this->redirect(Config::WEB_DIRECTORY . 'register_success');
-        }else $this->redirect();
+        }else $this->redirect(Config::WEB_DIRECTORY . 'reg');
     }
     
     public function register_success(){
@@ -39,6 +39,15 @@ class User extends Controller
         }
         unset($_SESSION['register_success']);
         // else load the GUI
+        /** @var \ADACT\App\Models\User $user */
+        $user = $this->set_model();
+        $logged_in = $user->login_check();
+        // Go home if already logged in
+        if($user->login_check()){
+            $this->redirect();
+            exit();
+        }
+        $this->set('logged_in', $logged_in);
     }
     
     public function login(){
@@ -72,7 +81,19 @@ class User extends Controller
         // Redirect to homepage or login page based on criteria
         $this->redirect(Config::WEB_DIRECTORY . ($status == UserModel::LOGIN_SUCCESS ? '' : 'login'));
     }
-    
+
+    public function register_page(){
+        /** @var \ADACT\App\Models\User $user */
+        $user = $this->set_model();
+        $logged_in = $user->login_check();
+        // Go home if already logged in
+        if($user->login_check()){
+            $this->redirect();
+            exit();
+        }
+        $this->set('logged_in', $logged_in);
+    }
+
     public function login_page(){
         extract($this->get_params());
         /**
@@ -81,13 +102,15 @@ class User extends Controller
          */
         /** @var \ADACT\App\Models\User $user */
         $user = $this->set_model();
+        $logged_in = $user->login_check();
         // Go home if already logged in
-        if($user->login_check()){
+        if($logged_in){
             $this->redirect();
             exit();
         }
 
         $this->set('email', isset($email) ? $email : '');
+        $this->set('logged_in', $logged_in);
     }
     
     public function logout(){
@@ -97,14 +120,16 @@ class User extends Controller
     }
     
     public function unlock(){
-        $this->set_model();
+        /** @var \ADACT\App\Models\User $user */
+        $user = $this->set_model();
         extract($this->get_params());
         /**
          * @var string $email
          * @var string $key
          */
-        $this->set('is_unlocked', $this->{$this->_model}->unlock($email, $key));
+        $this->set('is_unlocked', $user->unlock($email, $key));
         $this->set('email', $email);
+        $this->set('logged_in', $user->login_check());
     }
     
     public function reset_password(){
@@ -122,14 +147,14 @@ class User extends Controller
             $this->set('alert_type', 'request');
         }else{              // If email and password are provided, save password, provide a notification and redirect to the login page.
             if(isset($_SESSION['valid_reset_request'])){
-                if($logged_in) $this->set('logged_in', $logged_in);
                 $user->reset_password($_SESSION['reset_email'], $pass);
                 $this->set('alert_type', 'reset');
             }else $this->redirect(Config::WEB_DIRECTORY . 'reset_pass');
         }
+        $this->set('logged_in', $logged_in);
     }
     
-    public function reset_password_page(){
+    public function reset_password_page(){ // FIXME: Check if the email really exists
         extract($this->get_params());
         /**
          * Parameters
@@ -145,7 +170,6 @@ class User extends Controller
             if($user->valid_reset_request($email, $key) OR $logged_in){
                 if($logged_in){
                     $email = $user->get_email();
-                    $this->set('logged_in', $logged_in);
                 }
                 $_SESSION['valid_reset_request'] = true;
                 $_SESSION['reset_email'] = $email;
@@ -156,5 +180,6 @@ class User extends Controller
         }
         $this->set('form_type', $form_type);
         $this->set('email', $email);
+        $this->set('logged_in', $logged_in);
     }
 }
