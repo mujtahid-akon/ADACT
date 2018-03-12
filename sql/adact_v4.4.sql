@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: adact
 -- ------------------------------------------------------
--- Server version	5.7.20
+-- Server version	5.7.21
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -137,7 +137,7 @@ CREATE TABLE `projects` (
   PRIMARY KEY (`project_id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `projects_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -163,7 +163,7 @@ CREATE TABLE `uploaded_files` (
   `date` datetime DEFAULT NULL,
   PRIMARY KEY (`serial_no`),
   UNIQUE KEY `uploaded_files_serial_no_uindex` (`serial_no`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1 COMMENT='Store uploaded file data';
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='Store uploaded file data';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -192,7 +192,7 @@ CREATE TABLE `users` (
   `activation_key` varchar(50) NOT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -201,7 +201,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Muntashir Al-Islam','muntashir.islam96@gmail.com','$2y$10$wn6B76XYRXaLvbAeFsWjCOKpUABtkkLikESvEOF3YEZdSgtV7D982','2017-05-28 18:21:26',0,'563890cdbd2b5e8d'),(4,'Mujtahid Akon','mujtahid.akon@gmail.com','9752ad5886739703b40702a2a4315104','2017-05-29 03:23:14',0,''),(7,'Mahi','mahibuet045@gmail.com','$2y$10$cMsV/F8QTQPENw7J7yj.ve/oFioe88gme7xX3eFJAwZFn0j1ASb7G','2017-07-08 11:56:22',0,'');
+INSERT INTO `users` VALUES (1,'Muntashir Al-Islam','muntashir.islam96@gmail.com','$2y$10$wn6B76XYRXaLvbAeFsWjCOKpUABtkkLikESvEOF3YEZdSgtV7D982','2017-05-28 18:21:26',0,'f43ef78644f8d4ce'),(4,'Mujtahid Akon','mujtahid.akon@gmail.com','$2y$10$dXtGzDtzyfwRQ7uP1YE1z.5GIdCoEaVB3/x0GMFvoLfGjUoKYf51i','2017-05-29 03:23:14',0,''),(7,'Mahi','mahibuet045@gmail.com','$2y$10$cMsV/F8QTQPENw7J7yj.ve/oFioe88gme7xX3eFJAwZFn0j1ASb7G','2017-07-08 11:56:22',0,''),(8,'alan silvestri','alan@gmail.com','$2y$10$7AKyyDN494VjWUPubUvd9.9tmZUyAkY29lWIx6.xiuexrMYnPzvU6','2018-01-29 15:04:42',0,'');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -214,4 +214,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-28 20:29:38
+-- Dump completed on 2018-03-12 14:55:59

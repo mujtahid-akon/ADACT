@@ -4,9 +4,14 @@
  *
  * @var string $title
  * @var string $active_tab
+ * @var bool   $logged_in
  */
 $active = "class=\"active\"";
+if(!isset($logged_in)) $logged_in = false;
+
+if($logged_in):
 ?>
+
 <script>
     // Checks for notifications in every 10 seconds.
     $(document).ready(function(){
@@ -36,7 +41,7 @@ $active = "class=\"active\"";
                 </li>
                 <li <?php if($active_tab == 'home') print $active ?>><a href="/home">Home</a></li>
                 <li class="<?php if($active_tab == 'projects') print "active " ?>dropdown">
-                    <a href="/projects" style="display: inline-block; padding-right: 0;">Project&nbsp;</a><a data-toggle="dropdown" class="dropdown-toggle" href="#"  style="display: inline-block;padding-left: 0"><b class="caret"></b></a>
+                    <a href="/projects" style="display: inline-block; padding-right: 0;">Projects&nbsp;</a><a data-toggle="dropdown" class="dropdown-toggle" href="#"  style="display: inline-block;padding-left: 0"><b class="caret"></b></a>
                     <ul role="menu" class="dropdown-menu">
                         <li><a href="/projects/new" style="color: #a94442;">New Project</a></li>
                         <li class="divider"></li>
@@ -58,3 +63,20 @@ $active = "class=\"active\"";
         </div>
     </div>
 </nav>
+
+<?php else: ?>
+
+<nav role="navigation" class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <a href="/home" class="navbar-brand"><?php print $title; ?></a>
+        </div>
+        <div id="navbar_collapse" class="collapse navbar-collapse nav navbar-nav navbar-right">
+            <ul class="nav navbar-nav">
+                <li><a href="/login">Login</a></li>
+                <li><a href="/reg">Register</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<?php endif; ?>

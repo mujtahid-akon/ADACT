@@ -46,7 +46,7 @@ $base_url = $_SERVER['PHP_SELF'];
 $config->aw_type = strtoupper($config->aw_type);
 
 // Preparing the outputs if the project isn't a pending one
-if(!$isAPendingProject){
+if($result_type === Project::RT_SUCCESS){
     // Info downloading url
     $download_url = $base_url . '/get';
     // Get Species Relation
@@ -141,7 +141,7 @@ endif; // isAPendingProject
     <?php
     else:
     ?>
-        <button onclick="Project.delete(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" class="btn btn-default">Delete Project</button>
+        <button onclick="Project.delete(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>, true)" class="btn btn-default">Delete Project</button>
     <?php
     endif; // isAPendingProject
     ?>

@@ -214,10 +214,11 @@ class ProjectProcess extends PendingProjects { // is_a
     /**
      * Move things where they belong
      *
+     * @param bool $moveOnly
      * @return bool
      * @noinspection PhpUnusedPrivateMethodInspection
      */
-    private function takeCare(){
+    private function takeCare($moveOnly = false){
         $fm  = new FM($this->_project_id, Project::PT_NEW);
         // Secondary fm
         $this->_tc_fm = $fm;
@@ -234,6 +235,11 @@ class ProjectProcess extends PendingProjects { // is_a
             // Reset logger since debug.log is also moved
             $this->_log_file = $this->_tc_fm->get(FM::DEBUG_LOG);
             $this->_logger = new Logger($this->_log_file, false);
+        }
+
+        if($moveOnly){ // Move only is requested
+            $fm->store(FM::CONFIG_JSON, $this->_config->getConfigJSON(), FM::STORE_STRING);
+            return true;
         }
         // CD to root directory
         $fm->cd($fm->root());
@@ -260,41 +266,35 @@ class ProjectProcess extends PendingProjects { // is_a
      * @return bool
      */
     private function send_mail($isSuccess = true, $error_constant = null){
-        $user_info = (new User())->get_info($this->_user_id);
+        $user_info    = (new User())->get_info($this->_user_id);
         $project_link = self::WEB_ADDRESS . '/projects/' . $this->_project_id;
-        $subject = $isSuccess ? 'Project has been executed successfully' : 'Project is failed to execute';
-        $body    = $isSuccess ?
+        $subject  = $isSuccess ? 'Project has been executed successfully' : 'Project is failed to execute';
+        $view_btn = $isSuccess ? Emailer::button("View Results", $project_link) : Emailer::button("View Configurations", $project_link);
+        $table_th = 'style="background: burlywood;padding: 5px 10px;"';
+        $table_td = 'style="background: lavender;padding: 5px 10px;"';
+        $body     = $isSuccess ?
             <<< EOF
 <p>Congratulations!</p>
-<p>
-    The project named &ldquo;{$this->_config->project_name}&rdquo; has been executed successfully.
-    Please check the notifications or go to the link below to view the results.<br />
-    <a href="{$project_link}">{$project_link}</a>
-</p>
-
+<p>The project <strong>{$this->_config->project_name}</strong> has been executed successfully.</p>
+<div>{$view_btn}</div>
 EOF
             : <<< EOF
-<p>
-    The project named &ldquo;{$this->_config->project_name}&rdquo; is failed to execute.
-    The project configurations can still be visible in the following link:<br />
-    <a href="{$project_link}">{$project_link}</a>
-</p>
-<p>
-    If you need further help, contact us with the following information:
-</p>
-<table>
+<p>The project <strong>{$this->_config->project_name}</strong> is failed to execute.</p>
+<div>{$view_btn}</div>
+<p>If you need further help, contact us with the following information:</p>
+<table style="text-align: left;">
 <tbody>
 <tr>
-    <th>Project Name</th>
-    <td>{$this->_config->project_name}</td>
+    <th {$table_th}>Project Name</th>
+    <td {$table_td}>{$this->_config->project_name}</td>
 </tr>
 <tr>
-    <th>Project ID</th>
-    <td>{$this->_project_id}</td>
+    <th {$table_th}>Project ID</th>
+    <td {$table_td}>{$this->_project_id}</td>
 </tr>
 <tr>
-    <th>Error Code</th>
-    <td>{$error_constant}</td>
+    <th {$table_th}>Error Code</th>
+    <td {$table_td}>{$error_constant}</td>
 </tr>
 </tbody>
 </table>
@@ -621,13 +621,14 @@ EOF;
         }else{
             // project has failed but not cancelled
             // Store everything including the debug log
+            $this->takeCare(true);
             // Send email
             $this->send_mail(false, $error_constant);
             // Project is also failed
             $this->_status = self::PROJECT_FAILURE;
             $this->setStatus($this->_status);
         }
-        exit(); // TODO: Should I try and catch error? This may not a good idea.
+        exit(); // TODO: Should I try and catch error? This may not be a good idea.
     }
 
     /**

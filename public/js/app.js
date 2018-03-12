@@ -804,8 +804,9 @@ Project.process = {
  *
  * @param {int}    project_id
  * @param {string} project_name
+ * @param {bool}   reload Whether to reload the page
  */
-Project.delete = function (project_id, project_name) {
+Project.delete = function (project_id, project_name, reload) {
     $.ajax({
         method: 'post',
         url: 'projects/' + project_id + '/delete',
@@ -817,6 +818,7 @@ Project.delete = function (project_id, project_name) {
         success: function(res){
             switch(res.status){
                 case 0:
+                    if(reload) window.location.assign('/projects');
                     $('#p_' + project_id).remove();
                     break;
                 default:

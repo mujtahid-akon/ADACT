@@ -87,7 +87,7 @@ class Controller
                     case Route::HTML:
                         $value = isset($parameters[$param]) ? filter_input($input_method, $param, $filter_type) : null; break;
                     default:
-                        // FIXME: needed to be implemented upon required
+                        // There isn't any default behaviour
                 }
             }
         }

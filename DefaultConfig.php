@@ -18,7 +18,7 @@ interface Config{
     const MYSQL_PORT = '3306';
     const MYSQL_USER = 'root';
     const MYSQL_PASS = 'root';
-    const MYSQL_DB   = 'awords';
+    const MYSQL_DB   = 'adact';
 
     /* MAIL Config (SMTP) */
     /** SMTP server address */
@@ -78,9 +78,4 @@ interface Config{
     const PROJECT_DIRECTORY = PROJECT_DIRECTORY;
     /** Working directory */
     const WORKING_DIRECTORY = self::ROOT_DIRECTORY . '/tmp';
-
-    static function mysqli();
-    static function email($name, $email, $subject, $message);
-    static function formatted_email($name, $email, $subject, $body);
-    function login_check();
 }

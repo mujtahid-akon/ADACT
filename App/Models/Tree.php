@@ -22,6 +22,12 @@ class Tree extends TreeGenerator{
     /** @var int For whom the tree is generated */
     private $_type;
 
+    /**
+     * Tree constructor.
+     * @param $project_id
+     * @param int $type
+     * @throws FileException
+     */
     function __construct($project_id, $type = self::TREANT_JS){
         $this->_type = $type;
         $this->_fm = new FileManager($project_id);
