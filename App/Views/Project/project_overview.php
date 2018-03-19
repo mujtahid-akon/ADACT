@@ -289,8 +289,8 @@ if($result_type === Project::RT_SUCCESS):
     /** @var string $download_url */
     /** @var array  $species */
     /** @var array  $species_relations */
-    $neighbourTree = $download_url . '/' . FM::NEIGHBOUR_TREE;
-    $UPGMATree     = $download_url . '/' . FM::UPGMA_TREE;
+    $neighbourTree = $download_url . '/' . str_replace(' ', '+', FM::NEIGHBOUR_TREE);
+    $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
     ?>
     <!-- Neighbour Tree -->
     <div id="neighbour_tree" class="output" style="display: none;">
