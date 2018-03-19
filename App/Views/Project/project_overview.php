@@ -41,7 +41,7 @@ $config = new ProjectConfig($fm->get(FM::CONFIG_JSON));
 // Project type
 $isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
 // Base url
-$base_url = $_SERVER['PHP_SELF'];
+$base_url = './projects/'.$project_id;
 // Transform Absent Words type to uppercase
 $config->aw_type = strtoupper($config->aw_type);
 
