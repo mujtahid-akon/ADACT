@@ -206,7 +206,7 @@ class Controller
 
     private function __send_response(){
         http_response_code($this->response_code);
-        if($this->_redirect) header("Location: \"".Config::WEB_DIRECTORY."{$this->_redirect_location}\"");
+        if($this->_redirect) header("Location: ".Config::WEB_DIRECTORY."{$this->_redirect_location}");
         elseif($this->_JSON){
             header('Content-Type: application/json; charset=UTF-8');
             print json_encode($this->_JSON_contents, JSON_PRETTY_PRINT);

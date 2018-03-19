@@ -14,8 +14,7 @@ if(isset($logged_in) && $logged_in){ ?>
 <?php }else{ ?>
     <div class="row" style="margin: 0 auto 20px auto;">
         <div class="col-md-6 col-sm-12">
-            <img src="./logos/logo.png"
-                 style='vertical-align: middle'>
+            <img class="img-responsive" src="./logos/logo.png">
         </div>
         <div class="col-md-6 col-sm-12">
                 <p>

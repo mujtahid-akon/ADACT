@@ -65,13 +65,19 @@ if($logged_in):
 </nav>
 
 <?php else: ?>
-
+<style>
+    .small{
+        font-size: 85% !important;
+    }
+</style>
 <nav role="navigation" class="navbar navbar-default">
     <div class="container">
         <div class="navbar-header">
             <a href="./home" class="navbar-brand"><?php print $title; ?></a>
+            <a class="navbar-brand hidden-sm hidden-md hidden-lg small" href="./login">Login</a>
+            <a class="navbar-brand hidden-sm hidden-md hidden-lg small" href="./reg">Register</a>
         </div>
-        <div id="navbar_collapse" class="collapse navbar-collapse nav navbar-nav navbar-right">
+        <div class="collapse navbar-collapse nav navbar-nav navbar-right">
             <ul class="nav navbar-nav">
                 <li><a href="./login">Login</a></li>
                 <li><a href="./reg">Register</a></li>
