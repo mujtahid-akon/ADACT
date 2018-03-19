@@ -35,6 +35,9 @@ class LoginAttempts extends Model{
         }else $this->_user_id = $unique_id;
     }
 
+    /**
+     * @throws \phpmailerException
+     */
     public function add(){
         switch ($this->_check_attempts()){
             case self::LOCK_ACCOUNT:
@@ -92,6 +95,9 @@ class LoginAttempts extends Model{
         return false;
     }
 
+    /**
+     * @throws \phpmailerException
+     */
     private function _lock(){
         $activation_key = (new User())->activation_key();
         if($stmt = $this->mysqli->prepare('UPDATE users SET locked = TRUE, activation_key = ? WHERE user_id = ?')){
@@ -103,7 +109,15 @@ class LoginAttempts extends Model{
         $this->_email_unlock_key($this->name, $this->_email, $activation_key);
     }
 
-    private function _email_unlock_key($name, $email, $activation_key){ // TODO: use http://reegeoip.net/json/ to get ip related data
+    /**
+     * @TODO: Use http://reegeoip.net/json/ to get ip related data
+     * @param $name
+     * @param $email
+     * @param $activation_key
+     * @return bool
+     * @throws \phpmailerException
+     */
+    private function _email_unlock_key($name, $email, $activation_key){
         $subject   = self::SITE_TITLE . ': Unlock your account';
         $conf_link = self::WEB_ADDRESS . '/unlock' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
         $conf_btn  = Emailer::button('Unlock Account', $conf_link);

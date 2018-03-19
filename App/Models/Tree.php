@@ -32,7 +32,7 @@ class Tree extends TreeGenerator{
         $this->_type = $type;
         $this->_fm = new FileManager($project_id);
         $this->_config = new ProjectConfig($this->_fm->get(FileManager::CONFIG_JSON));
-        $this->_fm->cd($this->_fm->getResultType() === Project::RT_SUCCESS ? $this->_fm->root() : $this->_fm->generated()); // FIXME
+        $this->_fm->cd($this->_fm->getResultType() === Project::RT_SUCCESS ? $this->_fm->root() : $this->_fm->generated());
     }
 
     /**
