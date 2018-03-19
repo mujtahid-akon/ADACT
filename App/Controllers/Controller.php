@@ -9,6 +9,7 @@
 namespace ADACT\App\Controllers;
 
 use ADACT\App\HttpStatusCode;
+use ADACT\App\Models\Model;
 use ADACT\App\Views\Template;
 use ADACT\App\Route;
 use ADACT\Config;
@@ -120,6 +121,7 @@ class Controller
      * Call a particular model class
      *
      * @param null|string $model
+     * @return Model
      */
     function set_model($model = null){
         if($model == null) $model = $this->_controller;

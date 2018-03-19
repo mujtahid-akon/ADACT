@@ -51,8 +51,6 @@ class ProjectConfig extends Model{
     /**
      * ProjectConfig constructor.
      *
-     * FIXME: may need additional filtering
-     *
      * @param string $config_file
      * @throws FileException
      */
@@ -69,8 +67,6 @@ class ProjectConfig extends Model{
      * load_config method.
      *
      * Load configuration file as an array instead of file
-     *
-     * FIXME: may need additional filtering
      *
      * @param array $config_data
      * @return $this

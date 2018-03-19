@@ -50,7 +50,7 @@ if(Config::DEBUG_MODE){
 // Main pages
 Route::add(Route::GET,  '/', 'Main@home');
 Route::add(Route::GET,  '/home', 'Main@home');
-Route::add(Route::GET,  '/about', 'Main@about'); // TODO
+Route::add(Route::GET,  '/about', 'Main@about');
 Route::add(Route::GET,  '/feedback', 'Main@feedback_page');
 Route::add(Route::POST, '/feedback', 'Main@feedback', ['name' => Route::STRING, 'email' => Route::EMAIL, 'subject' => Route::STRING, 'feedback' => Route::STRING]);
 /* === User Login/logout/reg === */
@@ -64,7 +64,7 @@ Route::add(Route::GET,  '/login', 'User@login_page', ['email' => Route::EMAIL]);
 Route::add(Route::GET,  '/unlock', 'User@unlock', ['email' => Route::EMAIL, 'key' => Route::STRING]);
 Route::add(Route::GET,  '/reset_pass', 'User@reset_password_page', ['email' => Route::EMAIL, 'key' => Route::STRING]);
 Route::add(Route::GET,  '/logout', 'User@logout');
-Route::add(Route::GET,  '/delete_ac', 'User@delete'); // TODO
+Route::add(Route::GET,  '/delete_ac', 'User@delete');
 /* === Project: Serial must be maintained! === */
 Route::add(Route::GET,  '/projects', 'Project@all_projects');
 Route::add(Route::GET,  '/projects/pending', 'Project@pending_projects');
@@ -93,7 +93,6 @@ Route::add(Route::GET,  '/projects/{project_id}/get/{file_name}', 'Project@get_f
 Route::add(Route::POST,   '/api/login',  'API\\User@login', ['email' => Route::EMAIL, 'pass' => Route::STRING]);
 Route::add(Route::DELETE, '/api/logout', 'API\\User@logout');
 // Project details
-//Route::add(Route::GET,    '/api/projects/details/last', 'API\\Project@get_details'); // TODO
 Route::add(Route::GET,    '/api/projects/details/{project_id}', 'API\\Project@get_details');
 // Project status
 Route::add(Route::GET,    '/api/projects/status', 'API\\Project@get_status');

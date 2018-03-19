@@ -195,7 +195,7 @@ InputAnalyzer = {
     DB_NUCCORE: "nuccore",
     DB_PROTEIN: "protein",
     // Char limit
-    CHAR_LIMIT: 15, // FIXME: Also filter this in PHP file
+    CHAR_LIMIT: 15,
     /**
      * Store input values from the input fields
      * (only for InputMethod.ACCN_GIN)
@@ -771,7 +771,7 @@ Project.process = {
             }
         });
     },
-    cancel: function (project_id, project_name) { // FIXME
+    cancel: function (project_id, project_name) {
         $.ajax({
             method: 'post',
             url: 'projects/cancel_process',
