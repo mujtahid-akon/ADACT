@@ -21,7 +21,13 @@ $logger = new Logger(__DIR__ . "/../logs/process.log");
 if($pending_projects !== false AND count($pending_projects) > 0) {
     $logger->log("Running " . count($pending_projects) . " process(es)", Logger::GREEN)->flush();
     foreach ($pending_projects as $project) {
-        (new \ADACT\App\Models\ProjectProcess($project['id'], $project['user']))->init();
+        try {
+            (new \ADACT\App\Models\ProjectProcess($project['id'], $project['user']))->init();
+        } catch (\ADACT\App\Models\FileException $e) {
+            $logger->log($e->getMessage(), Logger::RED)->flush();
+        } catch (phpmailerException $e) {
+            $logger->log($e->getMessage(), Logger::RED)->flush();
+        }
     }
 }
 //else{

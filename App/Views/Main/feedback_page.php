@@ -21,7 +21,7 @@
         }
         ?>
         <small class="text-danger"><em>Please fill out all the fields.</em></small>
-        <form class="form-vertical" id="feedback_form" method="post" action="/feedback">
+        <form class="form-vertical" id="feedback_form" method="post" action="./feedback">
             <input class="form-control" name="name" placeholder="Full name with title" value="<?php print (!isset($_SESSION['feedback_info']) ? '' : $_SESSION['feedback_info']['name']) ?>"  /><br />
             <input class="form-control" name="email" placeholder="E-mail address" value="<?php print (!isset($_SESSION['feedback_info']) ? '' : $_SESSION['feedback_info']['email']) ?>"  /><br />
             <input class="form-control" name="subject" placeholder="Subject" value="<?php print (!isset($_SESSION['feedback_info']) ? '' : $_SESSION['feedback_info']['subject']) ?>"  /><br />

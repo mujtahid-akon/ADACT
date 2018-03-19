@@ -69,8 +69,8 @@ class Project extends Controller{
                     header('Content-Type: ' . $file['mime']);
                     header('Content-Disposition: attachment; filename="' . $file['name'] . '"');
                     readfile($file['path']);
-                } else $this->redirect(Config::WEB_DIRECTORY . 'projects');
-            }else $this->redirect(Config::WEB_DIRECTORY . 'projects');
+                } else $this->redirect('projects');
+            }else $this->redirect('projects');
         }else $this->redirect();
     }
 
@@ -88,7 +88,7 @@ class Project extends Controller{
         if($logged_in){
             $last_project_id = $lastProject->get();
             if($last_project_id != null){
-                $this->redirect(Config::WEB_DIRECTORY . 'projects/' . $last_project_id);
+                $this->redirect('projects/' . $last_project_id);
             }else{ // 404 Error
                 $this->response(HttpStatusCode::NOT_FOUND);
                 $this->set('status', HttpStatusCode::NOT_FOUND);
@@ -183,9 +183,7 @@ class Project extends Controller{
             $file = $project->export($project_id, $file_type);
             if($file == null){
                 redirect:
-                $this->redirect(isset($_SERVER['HTTP_REFERER']) ?
-                    $_SERVER['HTTP_REFERER'] :
-                    Config::WEB_DIRECTORY . 'projects');
+                $this->redirect('projects');
                 exit();
             }
             header('Content-Type: ' . $file['mime']);
@@ -215,7 +213,7 @@ class Project extends Controller{
             if((string) ((int) $project_id) == $project_id AND $project->verify($project_id)){
                 $project_info = $project->get($project_id);
                 if($project_info['result_type'] === PendingProjects::RT_CANCELLED)
-                    $this->redirect(Config::WEB_DIRECTORY . 'projects');
+                    $this->redirect('projects');
                 $isPending = $project_info['result_type'] === PendingProjects::RT_PENDING;
                 $this->set('logged_in', $logged_in);
                 $this->set('project_id', $project_id);
@@ -226,7 +224,7 @@ class Project extends Controller{
                 $this->set('project_info', $project_info);
                 if(!$isPending) (new Notifications())->set_seen($project_id);
             }else{
-                $this->redirect(Config::WEB_DIRECTORY . 'projects');
+                $this->redirect('projects');
             }
         }else{
             $this->redirect();
@@ -295,10 +293,10 @@ class Project extends Controller{
         if($logged_in){
             if($project->can_fork($project_id)){
                 $_SESSION['forked_id'] = $project_id;
-                $this->redirect('/projects/new');
+                $this->redirect('projects/new');
                 exit();
             }
-            $this->redirect('/projects/'. $project_id);
+            $this->redirect('projects/'. $project_id);
             exit();
         }
         $this->redirect();
@@ -316,7 +314,7 @@ class Project extends Controller{
                 $this->set('project_id', $project_id);
                 $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
             }else{
-                $this->redirect('/projects/'. $project_id);
+                $this->redirect('projects/'. $project_id);
             }
         }else $this->redirect();
     }

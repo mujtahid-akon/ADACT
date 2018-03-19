@@ -90,7 +90,7 @@ class Project extends API{
         if($logged_in){
             $last_project_id = $lastProject->get();
             if($last_project_id != null){
-                $this->redirect(Config::WEB_DIRECTORY . 'projects/' . $last_project_id);
+                $this->redirect('projects/' . $last_project_id);
             }else{ // 404 Error
                 $this->response(HttpStatusCode::NOT_FOUND);
                 $this->set('status', HttpStatusCode::NOT_FOUND);
@@ -177,9 +177,7 @@ class Project extends API{
             $file = $project->export($project_id, $file_type);
             if($file == null){
                 redirect:
-                $this->redirect(isset($_SERVER['HTTP_REFERER']) ?
-                    $_SERVER['HTTP_REFERER'] :
-                    Config::WEB_DIRECTORY . 'projects');
+                $this->redirect('projects');
                 exit();
             }
             header('Content-Type: ' . $file['mime']);

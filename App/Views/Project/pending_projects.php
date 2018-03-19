@@ -42,7 +42,7 @@ $project_count = count($projects);
 <div class="row">
     <div class="col-md-12">
         <h1>Pending projects</h1>
-        <h4><a href='projects/new'>Create a new project</a></h4>
+        <h4><a href='./projects/new'>Create a new project</a></h4>
         <?php
         if($project_count == 0):
             ?>
@@ -57,10 +57,10 @@ $project_count = count($projects);
                     $delete_text = "<a href=\"javascript:Project.process.cancel({$project['id']}, '{$project['name']}')\" class=\"project-icon glyphicon glyphicon-remove text-danger\" title=\"Cancel Project\"></a>";
                     print <<< EOF
                 <tr class="projects" id="p_{$project['id']}" data-id="{$project['id']}">
-                    <td>#<a href="projects/{$project['id']}">{$project['id']}</a></td>
+                    <td>#<a href="./projects/{$project['id']}">{$project['id']}</a></td>
                     <td>
                     <div>
-                        <a href="projects/{$project['id']}" class="h4">{$project['name']}</a>
+                        <a href="./projects/{$project['id']}" class="h4">{$project['name']}</a>
                     </div>
                     <div><em>Date: <span class="datetime">{$project['date_created']}</span></em></div>
                     <div><em>Elapsed time: <span class="elapsed_time"></span></em></div>

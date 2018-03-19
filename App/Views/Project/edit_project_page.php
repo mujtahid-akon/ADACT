@@ -19,8 +19,6 @@ use \ADACT\App\Models\Project;
 $config = new ProjectConfig((new FileManager($project_id))->get(FileManager::CONFIG_JSON));
 // Project type
 $isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
-// Base url
-$base_url = $_SERVER['PHP_SELF'];
 // Transform Absent Words type to uppercase
 $config->aw_type = strtoupper($config->aw_type);
 
@@ -72,7 +70,7 @@ $config->aw_type = strtoupper($config->aw_type);
                 const parent = this;
                 $.ajax({
                     method: 'post',
-                    url: 'projects/' + p_id + '/edit',
+                    url: './projects/' + p_id + '/edit',
                     data: {config: JSON.stringify(this.info)},
                     cache: false,
                     dataType: 'json',
@@ -81,12 +79,12 @@ $config->aw_type = strtoupper($config->aw_type);
                         btn.removeClass('btn-primary');
                         btn.addClass('btn-default disabled');
                         btn.attr('onclick', null);
-                        btn.html("<img width='11' src='css/images/spinner.gif'>&nbsp;" + Messages.Project.LOADING_TEXT);
+                        btn.html("<img width='11' src='./css/images/spinner.gif'>&nbsp;" + Messages.Project.LOADING_TEXT);
                     },
                     success: function(res){
                         if(res && res.status === 0){
                             parent.project_id = res.id;
-                            const url = '/projects/' + p_id;
+                            const url = './projects/' + p_id;
                             const form = $('<form action="' + url + '" method="get"></form>');
                             $('body').append(form);
                             form.submit();
@@ -111,7 +109,7 @@ $config->aw_type = strtoupper($config->aw_type);
     </script>
     <div>
         <button onclick="Project.edit.send(<?php print $project_id ?>)" id="submit_btn" class="btn btn-primary">Run & Show Result</button>
-        <a class="btn btn-default" href="/projects/<?php print $project_id; ?>">Go back</a>
+        <a class="btn btn-default" href="./projects/<?php print $project_id; ?>">Go back</a>
     </div>
     <div id="project_info">
         <table class="table table-bordered table-striped table-hover">

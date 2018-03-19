@@ -101,17 +101,18 @@ class Template
 	<meta name="Description" content="ADACT" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<!--link href="https://www.fontify.me/wf/7d6c4da9e6ebf1836a1c32879c63dbfc" rel="stylesheet" type="text/css" /-->
-	<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
+	<link rel="stylesheet" href="./css/bootstrap.min.css" type="text/css" />
 	<!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous" /-->
-	<link rel="stylesheet" href="css/main.css" type="text/css" />
-	<script src="js/jquery.min.js"></script>
+	<link rel="stylesheet" href="./css/main.css" type="text/css" />
+	<script src="./js/jquery.min.js"></script>
 	<!--script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script-->
-	<script src="js/bootstrap.min.js"></script>
-	<script src="js/app.js"></script>
+	<script src="./js/bootstrap.min.js"></script>
+	<script src="./js/app.js"></script>
 	<!--script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script-->
 EOF;
 
-        if(file_exists($extra)) require_once $extra; // Extra things to be added in the header section
+        if(file_exists($extra)) /** @noinspection PhpIncludeInspection */
+            require_once $extra; // Extra things to be added in the header section
 
         print <<< EOF
 </head>
@@ -121,8 +122,10 @@ EOF;
 
         // Show header if wanted
         if(!$this->_hide_header){
-            if(file_exists($header)) require_once $header;              // Header view
-            else if(file_exists($default_view_dir)) require_once $default_header;
+            if(file_exists($header)) /** @noinspection PhpIncludeInspection */
+                require_once $header;              // Header view
+            else if(file_exists($default_view_dir)) /** @noinspection PhpIncludeInspection */
+                require_once $default_header;
         }
 
         // Container begin
@@ -134,11 +137,12 @@ EOF;
                 print <<< EOF
     <div class="container-table">
         <div class="vertical-center-row text-center">
-            <h1 class="title"><a href="/home">{$title}</a></h1>
+            <h1 class="title"><a href="./home">{$title}</a></h1>
             <div class="row">
                 <div class="col-md-4"></div>
                 <div class="col-md-4">
 EOF;
+                /** @noinspection PhpIncludeInspection */
                 require_once $action;
                 print <<< EOF
                 </div>
@@ -148,14 +152,17 @@ EOF;
     </div>
 EOF;
             }else{
+                /** @noinspection PhpIncludeInspection */
                 require_once $action;
             }
         }
 
         // Show header if wanted
 		if(!$this->_hide_footer){
-        	if(file_exists($footer)) require_once $footer;              // Footer view
-        	else if(file_exists($default_view_dir)) require_once $default_footer;
+        	if(file_exists($footer)) /** @noinspection PhpIncludeInspection */
+                require_once $footer;              // Footer view
+        	else if(file_exists($default_view_dir)) /** @noinspection PhpIncludeInspection */
+                require_once $default_footer;
 		}
 
         // Container end

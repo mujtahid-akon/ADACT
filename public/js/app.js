@@ -492,7 +492,7 @@ InputAnalyzer = {
         const parent = this;
 
         $.ajax({
-            url: "projects/file_upload",
+            url: "./projects/file_upload",
             type: "POST",
             data: new FormData(form),
             contentType: false,
@@ -690,7 +690,7 @@ Project.result = {
         const parent = this;
         $.ajax({
             method: 'post',
-            url: 'projects/new',
+            url: './projects/new',
             data: {config: JSON.stringify(this.config)},
             cache: false,
             dataType: 'json',
@@ -699,12 +699,12 @@ Project.result = {
                 btn.removeClass('btn-primary');
                 btn.addClass('btn-default disabled');
                 btn.attr('onclick', null);
-                btn.html("<img width='11' src='css/images/spinner.gif'>&nbsp;" + Messages.Project.LOADING_TEXT);
+                btn.html("<img width='11' src='./css/images/spinner.gif'>&nbsp;" + Messages.Project.LOADING_TEXT);
             },
             success: function(res){
                 if(res && res.id){
                     parent.project_id = res.id;
-                    const url = '/projects/' + res.id;
+                    const url = './projects/' + res.id;
                     const form = $('<form action="' + url + '" method="get"></form>');
                     $('body').append(form);
                     form.submit();
@@ -744,7 +744,7 @@ Project.process = {
     status: function (selector, project_id) {
         $.ajax({
             method: 'post',
-            url: 'projects/get_status',
+            url: './projects/get_status',
             data: {project_id: project_id},
             cache: false,
             dataType: 'json',
@@ -762,7 +762,7 @@ Project.process = {
                         break;
                     case 1: // FAILED
                         alert(Messages.Project.Status.FAILURE_ALERT);
-                        window.location.assign('/projects');
+                        window.location.assign('./projects');
                         break;
                 }
             },
@@ -774,7 +774,7 @@ Project.process = {
     cancel: function (project_id, project_name) {
         $.ajax({
             method: 'post',
-            url: 'projects/cancel_process',
+            url: './projects/cancel_process',
             data: {project_id: project_id},
             cache: false,
             dataType: 'json',
@@ -785,7 +785,7 @@ Project.process = {
                 switch(res.status){
                     case 0: // SUCCESS
                         alert(Messages.Project.Cancel.SUCCESS_MESSAGE);
-                        window.location.assign('/projects');
+                        window.location.assign('./projects');
                         break;
                     default:
                         alert(Messages.Project.Cancel.FAILURE_MESSAGE);
@@ -809,7 +809,7 @@ Project.process = {
 Project.delete = function (project_id, project_name, reload) {
     $.ajax({
         method: 'post',
-        url: 'projects/' + project_id + '/delete',
+        url: './projects/' + project_id + '/delete',
         cache: false,
         dataType: 'json',
         beforeSend: function(){
@@ -818,7 +818,7 @@ Project.delete = function (project_id, project_name, reload) {
         success: function(res){
             switch(res.status){
                 case 0:
-                    if(reload) window.location.assign('/projects');
+                    if(reload) window.location.assign('./projects');
                     $('#p_' + project_id).remove();
                     break;
                 default:
@@ -840,7 +840,7 @@ Project.notification_handler = function () {
     // Get unseen
     $.ajax({
         method: 'post',
-        url: 'projects/get_unseen',
+        url: './projects/get_unseen',
         cache: false,
         dataType: 'json',
         beforeSend: function(){
@@ -859,7 +859,7 @@ Project.notification_handler = function () {
                  * @var {string} project.date_created
                  */
                 for(let project of res.projects){
-                    rows.push("<li><a href='/projects/" + project.id + "'>#" + project.id + " " + project.name + "</a></li>");
+                    rows.push("<li><a href='./projects/" + project.id + "'>#" + project.id + " " + project.name + "</a></li>");
                 }
                 selector.html(rows.join("<li class='divider'></li>"));
             }else{

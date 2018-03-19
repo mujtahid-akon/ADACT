@@ -68,7 +68,7 @@ class Main extends Controller
                 $_SESSION['feedback_info']  = $this->get_params();
             }
         }
-        $this->redirect('/feedback');
+        $this->redirect('feedback');
     }
 
     /**
