@@ -107,7 +107,9 @@ class ProjectProcess extends PendingProjects { // is_a
     /**
      * Process constructor.
      * @param int $project_id Current project id
-     * @param int $user_id    Current user id
+     * @param int $user_id Current user id
+     * @throws FileException
+     * @throws \phpmailerException
      */
     function __construct($project_id, $user_id){
         parent::__construct($project_id, $user_id);
@@ -138,6 +140,8 @@ class ProjectProcess extends PendingProjects { // is_a
      * 4. Generate phylogenetic trees
      * 5. Copy/Move all the items to their respective directories
      * 6. Send an email to the user on success
+     * @throws FileException
+     * @throws \phpmailerException
      */
     function init(){
         $this->_log("Project: {$this->_config->project_name} ({$this->_project_id})", Logger::BG_RED.Logger::BOLD.Logger::WHITE);
@@ -156,7 +160,7 @@ class ProjectProcess extends PendingProjects { // is_a
                 $this->_status = self::PROJECT_FINDING_AW;
                 $this->_action('generateAW', self::E_FAILED_GENERATING_AW);
             case self::EM_INIT_FROM_DM:
-                $this->_log("@ProjectProcess::PROJECT_INIT_FROM_AW", Logger::BOLD);
+                $this->_log("@ProjectProcess::PROJECT_INIT_FROM_DM", Logger::BOLD);
                 // 3. Generate distance matrix (by creating SpeciesFull.txt)
                 $this->_status = self::PROJECT_GENERATE_DM;
                 $this->_action('generate_distance_matrix', self::E_FAILED_GENERATING_DM);
@@ -191,9 +195,11 @@ class ProjectProcess extends PendingProjects { // is_a
     /**
      * Done all the actions
      *
-     * @param string $callback       Callback function to be called
+     * @param string $callback Callback function to be called
      * @param string $failureMessage Failure message
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function _action($callback, $failureMessage){
         // Halt execution if project is cancelled
@@ -216,6 +222,8 @@ class ProjectProcess extends PendingProjects { // is_a
      *
      * @param bool $moveOnly
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      * @noinspection PhpUnusedPrivateMethodInspection
      */
     private function takeCare($moveOnly = false){
@@ -262,8 +270,9 @@ class ProjectProcess extends PendingProjects { // is_a
 
     /**
      * @param bool $isSuccess Which message to show up
-     * @param int  $error_constant
+     * @param int $error_constant
      * @return bool
+     * @throws \phpmailerException
      */
     private function send_mail($isSuccess = true, $error_constant = null){
         $user_info    = (new User())->get_info($this->_user_id);
@@ -311,6 +320,8 @@ EOF;
      * Copy/Download necessary files
      *
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function fetchFiles(){
         if($this->_config->type == Project::INPUT_TYPE_FILE){
@@ -325,6 +336,8 @@ EOF;
     /** @noinspection PhpUnusedPrivateMethodInspection */
     /**
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function generateAW(){
         if($this->_config->aw_type == 'maw'){
@@ -338,6 +351,8 @@ EOF;
     /** @noinspection PhpUnusedPrivateMethodInspection */
     /**
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function generate_phylogenetic_trees(){
         $char_len = self::MAX_CHAR_ALLOWED * self::FONT_SIZE;
@@ -419,6 +434,8 @@ EOF;
 
     /**
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function generate_maw(){
         $sequence_type = ($this->_config->sequence_type == 'nucleotide') ? 'DNA' : 'PROT';
@@ -447,12 +464,15 @@ EOF;
     private $_ref_index = 0;
     private $_files;
     private $_fasta_count = 0;
+
     /**
      * generate_raw method
      *
      * generates {species_name}.raw.txt by compare it to all the other ones
      *
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      */
      private function generate_raw(){
          // Initial tasks
@@ -507,6 +527,8 @@ EOF;
 
     /**
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function move_uploaded_files(){
         $uploader = new FileUploader();
@@ -552,6 +574,8 @@ EOF;
      *
      * @param string $sequence_type Which type of DB should be used (protein|nucleotide)
      * @return bool
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function download_fasta($sequence_type){
         $data        = $this->_config->data;
@@ -611,6 +635,8 @@ EOF;
      * contact with the institution for further information.
      *
      * @param string|null $error_constant Processing-related error constants of the same class
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function halt($error_constant = null){
         if($error_constant !== null) $this->_log("ERROR: {$error_constant}", Logger::BOLD.Logger::BG_RED.Logger::WHITE);
@@ -646,6 +672,8 @@ EOF;
     /**
      * @param $dir
      * @return array
+     * @throws FileException
+     * @throws \phpmailerException
      */
     private function get_files($dir){
         if(!$this->_fm->cd($dir, true)){
@@ -672,6 +700,7 @@ EOF;
      *
      * @param string $filename Only the filename, use FileManager constants
      * @return bool
+     * @throws FileException
      */
     private function _move($filename){
         return $this->_tc_fm->store($filename, $this->_tc_fm->generated() . '/' . $filename, FM::STORE_MOVE);

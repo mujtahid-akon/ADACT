@@ -145,7 +145,7 @@ endif; // isAPendingProject
     <?php
     endif; // isAPendingProject
     ?>
-    <a class="btn btn-default" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"/projects/{$project_id}/fork\"") ?>>Fork This Project</a>
+    <a class="btn btn-default" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"./projects/{$project_id}/fork\"") ?>>Fork This Project</a>
 </section>
 
 <section id="project_info" <?php print ($result_type !== Project::RT_SUCCESS ? '' : 'style="display: none;"') ?>>
@@ -190,14 +190,14 @@ endif; // isAPendingProject
 if($result_type === Project::RT_SUCCESS):
     $tree = new Tree($project_id);
 ?>
-<script src="Treant.js"></script>
-<script src="vendor/raphael.js"></script>
-<script src="vendor/jquery.easing.js"></script>
+<script src="./Treant.js"></script>
+<script src="./vendor/raphael.js"></script>
+<script src="./vendor/jquery.easing.js"></script>
 <script>
     let file = document.createElement("link");
     file.setAttribute("rel", "stylesheet");
     file.setAttribute("type", "text/css");
-    file.setAttribute("href", "Treant.css");
+    file.setAttribute("href", "./Treant.css");
     document.head.appendChild(file);
 
     const upgma = '<?php print json_encode(($tree->generate_tree($tree::UPGMA))->getFormattedLabels()); ?>';
@@ -279,10 +279,10 @@ if($result_type === Project::RT_SUCCESS):
     });
 </script>
 <section id="tab_toc" style="padding-bottom: 10px;">
-    <a href="/projects/<?php print $project_id ?>#distance_matrix" onclick="show_result_tab()" class="views btn btn-default active">Distance Matrix</a>
-    <a href="/projects/<?php print $project_id ?>#sorted_species_relation" onclick="show_result_tab('sorted_species_relation')" class="views btn btn-default">Sorted Species Relation</a>
-    <a href="/projects/<?php print $project_id ?>#neighbour_tree" onclick="show_result_tab('neighbour_tree')" class="views btn btn-default">Neighbour Joining Tree</a>
-    <a href="/projects/<?php print $project_id ?>#upgma_tree" onclick="show_result_tab('upgma_tree')" class="views btn btn-default">UPGMA Tree</a>
+    <a href="./projects/<?php print $project_id ?>#distance_matrix" onclick="show_result_tab()" class="views btn btn-default active">Distance Matrix</a>
+    <a href="./projects/<?php print $project_id ?>#sorted_species_relation" onclick="show_result_tab('sorted_species_relation')" class="views btn btn-default">Sorted Species Relation</a>
+    <a href="./projects/<?php print $project_id ?>#neighbour_tree" onclick="show_result_tab('neighbour_tree')" class="views btn btn-default">Neighbour Joining Tree</a>
+    <a href="./projects/<?php print $project_id ?>#upgma_tree" onclick="show_result_tab('upgma_tree')" class="views btn btn-default">UPGMA Tree</a>
 </section>
 <section>
     <?php

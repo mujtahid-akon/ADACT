@@ -4,6 +4,7 @@
 # Add user manually to the /etc/cron.allow (Linux)
 # or /usr/lib/cron/cron.allow (Mac)
 #
+file="/tmp/scheduler_list"
 
 if [ $# -eq 1 ]; then
     user=$1
@@ -21,13 +22,13 @@ fi
 #
 # Get cron tab lists
 #
-sudo -u ${USER} crontab -l 1>/tmp/scheduler_list 2>/dev/null
-lists=$(cat /tmp/scheduler_list)
+sudo -u ${user} crontab -l 1>"${file}" 2>/dev/null
+lists=$(cat "${file}")
 
 #
 # Add scheduler to it
 #
-scheduler="* * * * * php ${PWD}/exec/scheduler.php"
+scheduler="* * * * * php \"${PWD}\"/exec/scheduler.php"
 
 #
 # Check if scheduler already exists
@@ -45,14 +46,8 @@ sudo -u ${user} crontab -r 2>/dev/null
 #
 # Append to the current list
 #
-lists="${scheduler}\n${lists}"
 
-#
-# Save to temporary file
-#
-file="/tmp/tmp_scheduler.txt"
-
-echo -e "${lists}" > ${file}
+echo "${scheduler}" >> ${file}
 
 sudo -u ${user} crontab ${file}
 

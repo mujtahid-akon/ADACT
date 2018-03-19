@@ -19,7 +19,7 @@ class User extends Controller
         else $status = $this->{$this->_model}->register($name, $email, $pass);
         switch($status){
             case UserModel::ACCOUNT_EXISTS:
-                $_SESSION['register_error'] = "<strong>Account already exists!</strong> There's already an account associated with this email. If this email is really yours, <a href=\"reset_pass\">reset your password</a>.";
+                $_SESSION['register_error'] = "<strong>Account already exists!</strong> There's already an account associated with this email. If this email is really yours, <a href=\"./reset_pass\">reset your password</a>.";
                 break;
             case UserModel::REGISTER_FAILURE:
                 $_SESSION['register_error'] = "<strong>Failed!</strong> Account creation failed due to technical difficulties, please try again.";
@@ -29,8 +29,8 @@ class User extends Controller
         }
         if($status == UserModel::LOGIN_SUCCESS){
             $_SESSION['register_success'] = true;
-            $this->redirect(Config::WEB_DIRECTORY . 'register_success');
-        }else $this->redirect(Config::WEB_DIRECTORY . 'reg');
+            $this->redirect('register_success');
+        }else $this->redirect('reg');
     }
     
     public function register_success(){
@@ -79,7 +79,7 @@ class User extends Controller
                 $_SESSION['login_error'] = "<strong>Login failed!</strong> You need to provide both email and password to login.";
         }
         // Redirect to homepage or login page based on criteria
-        $this->redirect(Config::WEB_DIRECTORY . ($status == UserModel::LOGIN_SUCCESS ? '' : 'login'));
+        $this->redirect(($status == UserModel::LOGIN_SUCCESS ? '' : 'login'));
     }
 
     public function register_page(){
@@ -149,7 +149,7 @@ class User extends Controller
             if(isset($_SESSION['valid_reset_request'])){
                 $user->reset_password($_SESSION['reset_email'], $pass);
                 $this->set('alert_type', 'reset');
-            }else $this->redirect(Config::WEB_DIRECTORY . 'reset_pass');
+            }else $this->redirect('reset_pass');
         }
         $this->set('logged_in', $logged_in);
     }

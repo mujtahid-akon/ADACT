@@ -17,7 +17,7 @@
         }
         ?>
         <small class="text-danger"><em>Please fill out all the boxes.</em></small>
-        <form class="form-vertical" id="reg_form" method="post" action="/reg">
+        <form class="form-vertical" id="reg_form" method="post" action="./reg">
             <input class="form-control" name="name" placeholder="Full name with title" required /><br />
             <input class="form-control" name="email" placeholder="E-mail address" required /><br />
             <input class="form-control" type="password" name="pass" placeholder="Password" required /><br />

@@ -11,23 +11,23 @@
         <div class="">
             <h3>Contents</h3>
             <ul class="nav">
-                <li><a href="/about#About-ADACT">1 <span>About ADACT</span></a></li>
-                <li><a href="/about#How-to-Start">2 How to Start</a></li>
-                <li><a href="/about#Creating-a-Project">3 Creating a Project</a>
+                <li><a href="./about#About-ADACT">1 <span>About ADACT</span></a></li>
+                <li><a href="./about#How-to-Start">2 How to Start</a></li>
+                <li><a href="./about#Creating-a-Project">3 Creating a Project</a>
                     <ul class="nav">
-                        <li><a href="/about#Accepted-Input-Formats">3.1 Accepted Input Formats</a></li>
-                        <li><a href="/about#FASTA-File-Source">3.2 FASTA File Source</a></li>
-                        <li><a href="/about#Using-Short-Names">3.3 Using Short Names</a></li>
-                        <li><a href="/about#Absent-Word-Type">3.4 Absent Word Type</a></li>
-                        <li><a href="/about#K-mer-Size">3.5 K-mer Size</a></li>
-                        <li><a href="/about#Sequence-Type">3.6 Sequence Type</a></li>
-                        <li><a href="/about#Reverse-Complement">3.7 Reverse Complement</a></li>
-                        <li><a href="/about#Dissimilarity-Index">3.8 Dissimilarity Index</a></li>
-                        <li><a href="/about#Outputs">3.9 Outputs</a></li>
+                        <li><a href="./about#Accepted-Input-Formats">3.1 Accepted Input Formats</a></li>
+                        <li><a href="./about#FASTA-File-Source">3.2 FASTA File Source</a></li>
+                        <li><a href="./about#Using-Short-Names">3.3 Using Short Names</a></li>
+                        <li><a href="./about#Absent-Word-Type">3.4 Absent Word Type</a></li>
+                        <li><a href="./about#K-mer-Size">3.5 K-mer Size</a></li>
+                        <li><a href="./about#Sequence-Type">3.6 Sequence Type</a></li>
+                        <li><a href="./about#Reverse-Complement">3.7 Reverse Complement</a></li>
+                        <li><a href="./about#Dissimilarity-Index">3.8 Dissimilarity Index</a></li>
+                        <li><a href="./about#Outputs">3.9 Outputs</a></li>
                     </ul>
                 </li>
-                <li><a href="/about#Terminologies">4 <span>Terminologies</span></a></li>
-                <li><a href="/about#ADACT-Development-Team">5 <span>ADACT Development Team</span></a></li>
+                <li><a href="./about#Terminologies">4 <span>Terminologies</span></a></li>
+                <li><a href="./about#ADACT-Development-Team">5 <span>ADACT Development Team</span></a></li>
             </ul>
         </div>
     </div>
@@ -140,7 +140,7 @@
                     <li>Total Variation Distance (only on MAW)</li>
                     <li>GC content (both on MAW and RAW)</li>
                 </ul>
-                More about this can be found <a href="https://bmcresnotes.biomedcentral.com/articles/10.1186/s13104-016-1972-z">here</a>.
+                More about this can be found <a href="//bmcresnotes.biomedcentral.com/articles/10.1186/s13104-016-1972-z">here</a>.
                 </div>
             </article>
             <article id="Outputs">
@@ -244,15 +244,15 @@
             <h3>5 ADACT Development Team</h3>
             <div class="row">
                 <div class="col-md-4 center">
-                    <img src="/profile/mujtahid.jpg" class="profile-img">
+                    <img src="./profile/mujtahid.jpg" class="profile-img">
                     <div><a href="//github.com/mujtahid-akon">Mujtahid Akon</a></div>
                 </div>
                 <div class="col-md-4 center">
-                    <img src="/profile/mahi.jpg" class="profile-img">
+                    <img src="./profile/mahi.jpg" class="profile-img">
                     <div><a href="//github.com/mahi045">Mohimenul Kabir</a></div>
                 </div>
                 <div class="col-md-4 center">
-                    <img src="/profile/muntasir.jpg" class="profile-img">
+                    <img src="./profile/muntasir.jpg" class="profile-img">
                     <div><a href="//github.com/MuntashirAkon">Muntashir Al-Islam</a></div>
                 </div>
             </div>
@@ -260,11 +260,11 @@
                 <div class="col-md-2 center">
                 </div>
                 <div class="col-md-4 center">
-                    <img src="/profile/avatar.jpg"
+                    <img src="./profile/avatar.jpg"
                          style='height: 40%; width: 40%; object-fit: contain;' >
                 </div>
                 <div class="col-md-4 center">
-                    <img src="/profile/avatar.jpg"
+                    <img src="./profile/avatar.jpg"
                          style='height: 40%; width: 40%; object-fit: contain;' >
                 </div>
                 <div class="col-md-2 center">
