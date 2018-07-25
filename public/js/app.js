@@ -836,7 +836,10 @@ Project.delete = function (project_id, project_name, reload) {
  */
 Project.notification_handler = function () {
     let selector  = $("#notification_bar");
-    let count_sel = $("#notification_count");
+    let count_sel = $(".notification_count");
+    let count_sel_xs1 = count_sel.eq(0);
+    let count_sel_xs2 = count_sel.eq(1);
+    let count_sel_sm = count_sel.eq(2);
     // Get unseen
     $.ajax({
         method: 'post',
@@ -851,8 +854,9 @@ Project.notification_handler = function () {
         success: function(res){
             if(res.projects && res.projects.length > 0){
                 let rows = [];
-                count_sel.text(res.projects.length); // class='unread-count'
-                count_sel.addClass('unread-count');
+                count_sel_xs1.text(res.projects.length);
+                count_sel_xs2.text(res.projects.length);
+                count_sel_sm.text(res.projects.length).addClass('unread-count');
                 /**
                  * @var {int}    project.id
                  * @var {string} project.name
@@ -863,8 +867,9 @@ Project.notification_handler = function () {
                 }
                 selector.html(rows.join("<li class='divider'></li>"));
             }else{
-                count_sel.html("");
-                count_sel.removeClass('unread-count');
+                count_sel_xs1.text('');
+                count_sel_xs2.text(0);
+                count_sel_sm.text('').removeClass('unread-count');
                 selector.html("<li style=\"padding: 5px 10px\"><em>" + Messages.Project.Notification.NO_NOTIFICATION + "</em></li>");
             }
         },

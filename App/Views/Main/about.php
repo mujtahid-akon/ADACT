@@ -252,7 +252,7 @@
                     <div><a href="//github.com/mahi045">Mohimenul Kabir</a></div>
                 </div>
                 <div class="col-md-4 center">
-                    <img src="./profile/muntasir.jpg" class="profile-img">
+                    <img src="./public/profile/muntashir.jpg" class="profile-img">
                     <div><a href="//github.com/MuntashirAkon">Muntashir Al-Islam</a></div>
                 </div>
             </div>

@@ -60,10 +60,10 @@ interface Config{
     /* Various Limits */
     /** Maximum file upload limit: default is 100 MB */
     const MAX_UPLOAD_SIZE  = 100000000;
-    /** Maximum FASTA file size: default is 20 MB */
-    const MAX_FILE_SIZE    = 20000000;
+    /** Maximum FASTA file size: default is 10 MB */
+    const MAX_FILE_SIZE    = 10000000;
     /** Maximum number of FASTA files allowed TODO */
-    const MAX_FILE_ALLOWED = 30;
+    const MAX_FILE_ALLOWED = 120;
     /**
      * Maximum number of characters
      *

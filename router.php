@@ -2,7 +2,7 @@
 if(preg_match('/^\/(logos|profile|sponsor|Treant|vendor|css|ico|fonts|js|test\.php)/', $_SERVER['REQUEST_URI'], $matches)){
     // Local directories
     $file = __DIR__ . '/public' . $_SERVER['REQUEST_URI'];
-    if(file_exists($file)){
+    if(file_exists($file) AND !is_dir($file)){
         $mime = null;
         switch(get_mime($file)){
             case 'css': $mime = 'text/css'; break;
@@ -11,11 +11,15 @@ if(preg_match('/^\/(logos|profile|sponsor|Treant|vendor|css|ico|fonts|js|test\.p
                 $mime = mime_content_type($file);
         }
         header('Content-Type: ' . $mime);
-        include $file;
+        header('Cache-Control: Public, max-age: 3600');
+        /** @noinspection PhpIncludeInspection */
+        require_once $file;
+        exit();
     }
-}else{ // Handle via index.php
-    include __DIR__ . '/public/index.php';
 }
+// Otherwise, handle page via index.php
+include __DIR__ . '/public/index.php';
+
 
 function get_mime($file){
     preg_match('/\.(\w+)$/', basename($file), $matches);

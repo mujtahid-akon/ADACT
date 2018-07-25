@@ -109,7 +109,7 @@ Route::add(Route::DELETE, '/api/projects/delete/{project_ids}', 'API\\Project@de
 Route::add(Route::GET,    '/api/projects', 'API\\Project@all_projects');
 Route::add(Route::GET,    '/api/projects/{project_ids}', 'API\\Project@get_projects');
 // The route bellow must always be at the end of the API routes
-Route::add(Route::ALL,    '/api.*',  'API\\API@handle_default');
+Route::add(Route::ALL,    '/api.*',  'API\\APIController@handle_default');
 
 /** Load views or do other specific tasks described in the respective controller */
 Route::load(Route::verify(strtoupper($_SERVER['REQUEST_METHOD']),$location));

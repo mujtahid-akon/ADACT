@@ -8,7 +8,7 @@ use ADACT\App\Models\Notifications;
 use ADACT\App\Models\PendingProjects;
 use \ADACT\Config;
 
-class Project extends API{
+class Project extends APIController{
     /**
      * all_projects method.
      */

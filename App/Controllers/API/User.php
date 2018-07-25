@@ -3,7 +3,7 @@ namespace ADACT\App\Controllers\API;
 
 use ADACT\App\HttpStatusCode;
 
-class User extends API{
+class User extends APIController{
 
     public function login(){
         extract($this->get_params());

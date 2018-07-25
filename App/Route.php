@@ -8,6 +8,9 @@
 
 namespace ADACT\App;
 
+use ADACT\App\Controllers\Controller;
+use ADACT\Config;
+
 require_once __DIR__ . '/../autoload.php';
 
 
@@ -105,19 +108,17 @@ class Route
             if(class_exists($controller_class)){
                 if(method_exists($controller_class, $action)){
                     (new $controller_class($controller, $action, self::$last_route['method'], self::$last_route['params'], self::$matches))->$action();
+                    return;
                 }else{
-                    http_response_code(HttpStatusCode::NOT_FOUND);
-                    die("Error: Missing $controller::$action method.");
+                    error_log("Error: Missing $controller::$action method.");
                 }
             }else{
-                http_response_code(HttpStatusCode::NOT_FOUND);
-                die("Error: Missing $controller Controller.");
+                error_log("Error: Missing $controller Controller.");
             }
-            return;
-        }else{
-            http_response_code(HttpStatusCode::NOT_FOUND);
-            // TODO: 404 Error page
         }
+        $controller = new Controller('Controller', null, null, [], []);
+        $controller->set('status', HttpStatusCode::NOT_FOUND);
+        $controller->response(HttpStatusCode::NOT_FOUND);
         return;
     }
 }
