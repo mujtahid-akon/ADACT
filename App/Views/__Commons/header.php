@@ -30,13 +30,14 @@ if($logged_in):
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
+            <sup class="notification_count visible-xs" style="color: orangered;border-radius: 2px;padding: 1px;position: absolute;right: 15px;top: 10px;"></sup>
             <a href="./home" class="navbar-brand"><?php print $title ?></a>
-            <a class="btn btn-default navbar-left <?php if($active_tab == 'new') print "active" ?>" href="./projects/new" style="margin-top: 8px;color: crimson;">New Project</a>
+            <a class="btn btn-default navbar-left <?php if($active_tab == 'new') print "active" ?>" href="./projects/new" style="margin-top: 8px;color: crimson !important;">New Project</a>
         </div>
         <div id="navbar_collapse" class="collapse navbar-collapse nav navbar-nav navbar-right">
             <ul class="nav navbar-nav">
                 <li>
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="glyphicon glyphicon-bell"></b><sup id='notification_count'></sup></a>
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="hidden-xs glyphicon glyphicon-bell"></b><span class="visible-xs"><span class="notification_count">0</span> Notifications</span><sup class='notification_count'></sup></a>
                     <ul id="notification_bar" role="menu" class="dropdown-menu" style="width: max-content;"></ul>
                 </li>
                 <li <?php if($active_tab == 'home') print $active ?>><a href="./home">Home</a></li>

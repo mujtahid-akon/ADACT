@@ -35,6 +35,7 @@ class User extends Model{
      * @param string $email
      * @param string $pass
      * @return int
+     * @throws \phpmailerException
      */
     function login($email, $pass){
         if(@$stmt = $this->mysqli->prepare('SELECT `user_id`, `password`, `locked` FROM users WHERE email=?')){
@@ -81,7 +82,10 @@ class User extends Model{
         if(@$stmt = $this->mysqli->prepare('INSERT INTO `users`(`name`, `email`, `password`, `joined_date`, `locked`, `activation_key`) VALUE(?,?,?, NOW(), 1, ?)')){
             $stmt->bind_param('ssss', $name, $email, $hash, $activation_key);
             $stmt->execute();
-            if($stmt->affected_rows == 1) $this->email_new_ac($name, $email, $activation_key);
+            if($stmt->affected_rows == 1){
+                $this->email_new_ac($name, $email, $activation_key);
+                return self::REGISTER_SUCCESS;
+            }
         }
         return self::REGISTER_FAILURE;
     }
@@ -99,7 +103,12 @@ class User extends Model{
     function valid_reset_request($email, $key){
         return $this->unlock($email, $key);
     }
-    
+
+    /**
+     * @param String $email
+     * @return bool
+     * @throws \phpmailerException
+     */
     function email_reset_request($email){
         $subject = self::SITE_TITLE . ': Password reset request';
         $activation_key = $this->new_activation_key($email);

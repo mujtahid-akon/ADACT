@@ -26,12 +26,12 @@ if(!$logged_in) exit();
 
 /**
  * Variables extracted by project_info
- * @var int $id
- * @var string $name
- * @var string $date_created
- * @var bool $editable
- * @var bool $last
- * @var int $result_type
+ * @var int     $id
+ * @var string  $name
+ * @var string  $date_created
+ * @var bool    $editable
+ * @var bool    $last
+ * @var int     $result_type
  */
 extract($project_info);
 // FM
@@ -73,8 +73,9 @@ function get_species_from_species_relation($species_relations){
  * Get distance matrix HTML table
  *
  * @param array $species
- * @param FM    $fm
+ * @param FM $fm
  * @return array Each member is a table row
+ * @throws \ADACT\App\Models\FileException
  */
 function get_distance_matrix($species, $fm){
     $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
@@ -103,8 +104,11 @@ function get_distance_matrix($species, $fm){
 <h3>Project: <?php print ucwords($config->project_name); ?></h3>
 <?php
 if($editable):
-    print "<h4><a href=\"{$base_url}/edit\">Edit</a></h4>";
+    print "<a class='h4' href=\"{$base_url}/edit\"><i class='glyphicon glyphicon-edit'></i> Edit</a>";
+    print "&nbsp;&dot;&nbsp;";
 endif; // editable
+// Print download: maybe $result_type === Project::RT_SUCCESS ?
+if(!$isAPendingProject) print "<a class='h4' href=\"{$base_url}/download\"><i class='glyphicon glyphicon-download-alt'></i> Download</a>";
 
 if($isAPendingProject):
 ?>
@@ -190,64 +194,13 @@ endif; // isAPendingProject
 if($result_type === Project::RT_SUCCESS):
     $tree = new Tree($project_id);
 ?>
-<script src="./Treant.js"></script>
-<script src="./vendor/raphael.js"></script>
-<script src="./vendor/jquery.easing.js"></script>
 <script>
-    let file = document.createElement("link");
-    file.setAttribute("rel", "stylesheet");
-    file.setAttribute("type", "text/css");
-    file.setAttribute("href", "./Treant.css");
-    document.head.appendChild(file);
-
-    const upgma = '<?php print json_encode(($tree->generate_tree($tree::UPGMA))->getFormattedLabels()); ?>';
-    const nj    = '<?php print json_encode(($tree->generate_tree($tree::NJ))->getFormattedLabels()); ?>';
-    const upgma_config = {
-        chart: {
-            container: "#upgma_tree_view",
-            nodeAlign: "BOTTOM",
-            levelSeparation: 30,
-            siblingSeparation: InputAnalyzer.CHAR_LIMIT * 10,
-            subTeeSeparation: InputAnalyzer.CHAR_LIMIT * 10,
-            connectors: {
-                type: "step",
-                style: {
-                    "stroke-width": 1,
-                    "stroke": "#ccc"
-                }
-            }
-        },
-        nodeStructure: {
-            children: JSON.parse(upgma)
-        }
-    };
-
-    const nj_config = {
-        chart: {
-            container: "#nj_tree_view",
-            nodeAlign: "TOP",
-            levelSeparation: 30,
-            siblingSeparation: InputAnalyzer.CHAR_LIMIT * 10,
-            subTeeSeparation: InputAnalyzer.CHAR_LIMIT * 10,
-            connectors: {
-                type: "step",
-                style: {
-                    "stroke-width": 1,
-                    "stroke": "#ccc"
-                }
-            }
-        },
-        nodeStructure: {
-            children: JSON.parse(nj)
-        }
-    };
-
     /**
      * Show the requested tab
      * @param {String} [tab]
      */
     function show_result_tab(tab){
-        $('.output').hide();
+        $('.output').hide().addClass('visible-xs');
         let tab_id, toc_id; // toc = table of content
         switch(tab){
             default:
@@ -261,14 +214,12 @@ if($result_type === Project::RT_SUCCESS):
             case 'neighbour_tree':
                 tab_id = '#neighbour_tree';
                 toc_id = 2;
-                new Treant(nj_config);
                 break;
             case 'upgma_tree':
                 tab_id = '#upgma_tree';
                 toc_id = 3;
-                new Treant(upgma_config);
         }
-        $(tab_id).show();
+        $(tab_id).removeClass('visible-xs').show();
         $('.views').removeClass('active');
         $('#tab_toc').children().eq(toc_id).addClass('active');
     }
@@ -278,7 +229,7 @@ if($result_type === Project::RT_SUCCESS):
         show_result_tab(url);
     });
 </script>
-<section id="tab_toc" style="padding-bottom: 10px;">
+<section class="hidden-xs" id="tab_toc" style="padding-bottom: 10px;">
     <a href="./projects/<?php print $project_id ?>#distance_matrix" onclick="show_result_tab()" class="views btn btn-default active">Distance Matrix</a>
     <a href="./projects/<?php print $project_id ?>#sorted_species_relation" onclick="show_result_tab('sorted_species_relation')" class="views btn btn-default">Sorted Species Relation</a>
     <a href="./projects/<?php print $project_id ?>#neighbour_tree" onclick="show_result_tab('neighbour_tree')" class="views btn btn-default">Neighbour Joining Tree</a>
@@ -292,21 +243,9 @@ if($result_type === Project::RT_SUCCESS):
     $neighbourTree = $download_url . '/' . str_replace(' ', '+', FM::NEIGHBOUR_TREE);
     $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
     ?>
-    <!-- Neighbour Tree -->
-    <div id="neighbour_tree" class="output" style="display: none;">
-        <a href="<?php print $neighbourTree ?>">Download Neighbour Joining Tree</a><br />
-        <!--img src="<?php print $neighbourTree ?>" /-->
-        <div id="nj_tree_view"></div>
-    </div>
-    <!-- UPGMA Tree -->
-    <div id="upgma_tree" class="output" style="display: none;">
-        <a href="<?php print $UPGMATree ?>">Download UPGMA Tree</a><br />
-        <!--img src="<?php print $UPGMATree ?>" /-->
-        <div id="upgma_tree_view"></div>
-    </div>
     <!-- Sorted Species Relation -->
-    <div id="sorted_species_relation" style="text-align: left; display: none;" class="output">
-        <a href="<?php print $download_url . '/' . FM::SPECIES_RELATION ?>">Download Sorted Species Relation</a><br />
+    <div id="sorted_species_relation" class="output visible-xs" style="text-align: left; display: none;">
+        <div><a href="<?php print $download_url . '/' . FM::SPECIES_RELATION ?>"><i class="glyphicon glyphicon-download-alt"></i></a> Sorted Species Relation</div>
         <table class="table table-striped table-hover">
             <thead>
             <tr>
@@ -330,7 +269,7 @@ if($result_type === Project::RT_SUCCESS):
     </div>
     <!-- Distance Matrix -->
     <div id="distance_matrix" class="output">
-        <a href="<?php print $download_url . '/' . FM::DISTANCE_MATRIX ?>">Download Distance Matrix</a><br />
+        <div><a href="<?php print $download_url . '/' . FM::DISTANCE_MATRIX ?>"><i class="glyphicon glyphicon-download-alt"></i></a> Distance Matrix</div>
         <table class="table table-bordered table-striped table-hover">
             <thead>
             <tr>
@@ -342,6 +281,18 @@ if($result_type === Project::RT_SUCCESS):
             <?php foreach (get_distance_matrix($species, $fm) as $distance_matrix) print $distance_matrix ?>
             </tbody>
         </table>
+    </div>
+    <!-- Neighbour Tree -->
+    <div id="neighbour_tree" class="output visible-xs" style="display: none;">
+        <div><a href="<?php print $neighbourTree ?>"><i class="glyphicon glyphicon-download-alt"></i></a> Neighbour Joining Tree</div>
+        <img src="<?php print $neighbourTree ?>" />
+        <!--div id="nj_tree_view"></div-->
+    </div>
+    <!-- UPGMA Tree -->
+    <div id="upgma_tree" class="output visible-xs" style="display: none;">
+        <div><a href="<?php print $UPGMATree ?>"><i class="glyphicon glyphicon-download-alt"></i></a> UPGMA Tree</div>
+        <img src="<?php print $UPGMATree ?>" />
+        <!--div id="upgma_tree_view"></div-->
     </div>
 </section>
 <?php

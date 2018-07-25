@@ -27,7 +27,7 @@ thead>tr:first-child{
 html, body, .container-table {
     height: 100%;
     width: 100%;
-    font-family: monospace, Cambria, sans-serif;
+    font-family: Georgia, serif;
     color: #777;
     cursor: default;
 }
@@ -54,7 +54,23 @@ th{
 }
 
 a, a:hover, a:active, a:visited{
-    color: #333;
+    color: #111 !important;
+}
+
+.navbar-brand {
+    font-family: monospace;
+}
+
+.navbar-toggle {
+    background-color: lightgoldenrodyellow;
+}
+
+.navbar-toggle:hover {
+    background-color: darkkhaki !important;
+}
+
+.icon-bar {
+    width: 15px !important;
 }
 
 .unread-count{
@@ -69,4 +85,8 @@ a, a:hover, a:active, a:visited{
 
 .center{
     text-align: center;
+}
+
+#accn_gin {
+    font-family: monospace;
 }

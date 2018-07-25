@@ -8,11 +8,18 @@
 
 namespace ADACT\App\Controllers\API;
 
-
 use ADACT\App\Controllers\Controller;
 use ADACT\App\HttpStatusCode;
 
-class API extends Controller{
+/**
+ * Class APIController
+ *
+ * Implementation of Restful API
+ *
+ * @see \ADACT\App\Controllers\Controller - Parent class of this class
+ * @package ADACT\App\Controllers\API
+ */
+class APIController extends Controller{
     private $_status = [
         'code' => null,
         'message' => null

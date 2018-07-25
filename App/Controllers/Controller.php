@@ -14,8 +14,21 @@ use ADACT\App\Views\Template;
 use ADACT\App\Route;
 use ADACT\Config;
 
-class Controller
-{
+/**
+ * Class Controller
+ *
+ * Controller handles data in three ways:
+ * - Send response as HTML (default)
+ * - Send response as JSON data
+ * - Send a redirection request
+ *
+ * These three functionality can be enhanced to
+ * do almost anything.
+ *
+ * @see \ADACT\App\Controllers\API\APIController - Implementation of API controller using the Controller class
+ * @package ADACT\App\Controllers
+ */
+class Controller{
     /**
      * @var int $response_code Any constant form HttpStatusCode
      */
@@ -43,7 +56,7 @@ class Controller
 
     protected $_redirect_location = Config::WEB_DIRECTORY;
     protected $_JSON_contents     = [];
-    protected $_HTML_load_view     = true;
+    protected $_HTML_load_view    = true;
 
     /**
      * Controller constructor.
@@ -134,7 +147,7 @@ class Controller
     /**
      * Set a value for a variable
      *
-     * This variable is accessible in various ways depends on user actions
+     * This variable is accessible in various ways depending on user actions
      * - For a redirection, it does nothing and isn't accessible
      * - For an HTML request, it is accessible in the Template class
      * - For a JSON request, it's not accessible but sent as part of JSON output
@@ -200,10 +213,22 @@ class Controller
         if(is_array($content)) $this->_JSON_contents = $content;
     }
 
+    /**
+     * Send response to the client on destruct
+     */
     function __destruct(){
-        $this->__send_response();
+        try{
+            $this->__send_response();
+        } catch (\Exception $e) {
+            error_log($e->getCode() . ": " . $e->getMessage());
+            error_log(implode("\n", $e->getTrace()));
+        }
     }
 
+    /**
+     * Send response to the client
+     * @throws \Exception
+     */
     private function __send_response(){
         http_response_code($this->response_code);
         if($this->_redirect) header("Location: ".Config::WEB_DIRECTORY."{$this->_redirect_location}");
@@ -212,6 +237,8 @@ class Controller
             print json_encode($this->_JSON_contents, JSON_PRETTY_PRINT);
         }elseif($this->_HTML){
             if($this->_HTML_load_view) $this->_template->render();
+        } /** @noinspection PhpStatementHasEmptyBodyInspection */ else{
+            // Do nothing
         }
     }
 }
