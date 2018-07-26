@@ -599,9 +599,9 @@ InputAnalyzer = {
                 + "<td>" + "<input id='sn_" + i + "' class='short_name form-control' value='" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.getShortName(this.results[i])) + "'  style='min-width: 155px;' /></td>"
                 + "</tr>";
         }
-        html += "</table>"
-            + "<button class=\"btn btn-primary\" id=\"fasta_check_out\" "
-            + "onclick=\"InputAnalyzer.addShortNames()\" style=\"vertical-align: top\">Done</button>";
+        html += "</table>";
+            // + "<button class=\"btn btn-primary\" id=\"fasta_check_out\" "
+            // + "onclick=\"InputAnalyzer.addShortNames()\" style=\"vertical-align: top\">Done</button>";
         this.selector.html(html);
     },
     getShortName: function (seq_info) {
@@ -662,7 +662,7 @@ Project.result = {
             inversion: $('#inversion').is(":checked"), // #4
             dissimilarity_index: $('#dissimilarity_index').val(), // #5
             sequence_type: $("input[name='seq_type'][value='protein']").is(':checked') ? InputAnalyzer.PROTEIN : InputAnalyzer.NUCLEOTIDE, // #6
-            data: InputAnalyzer.results, // #7
+            data: [], // #7
             type: InputMethod.getCurrent() // #8
         };
 
@@ -674,8 +674,7 @@ Project.result = {
 
         return ( this.config.project_name
             && (0 <= this.config.kmer.min <= this.config.kmer.max)
-            && this.config.dissimilarity_index
-            && InputAnalyzer.done);
+            && this.config.dissimilarity_index );
     },
     /**
      * Verify inputs before sending
@@ -686,6 +685,14 @@ Project.result = {
         if(!this.prepare()){
             alert(Messages.Project.UNFILLED_FIELDS);
             return false;
+        }else{
+            // First add short names
+            InputAnalyzer.addShortNames();
+            if(!InputAnalyzer.done){
+                alert(Messages.Project.UNFILLED_FIELDS);
+                return false;
+            }
+            this.config.data = InputAnalyzer.results;
         }
         return true;
     },
