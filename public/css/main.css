@@ -42,7 +42,7 @@ html, body, .container-table {
 
 .title a{
     color: unset;
-    text-decoration: none;
+    text-decoration: none !important;
 }
 
 td, th{
@@ -51,6 +51,10 @@ td, th{
 
 th{
     width: max-content;
+}
+
+a.link{
+    text-decoration: underline;
 }
 
 a, a:hover, a:active, a:visited{

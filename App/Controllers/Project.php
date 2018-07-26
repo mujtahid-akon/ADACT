@@ -155,6 +155,28 @@ class Project extends Controller{
 
     }
 
+    function text_upload(){
+        extract($this->get_params());
+        /**
+         * @var string $seq_text Sequence in FASTA format
+         */
+        $json = ['status' => FileUploader::FILE_UPLOAD_FAILED];
+        /**
+         * @var \ADACT\App\Models\FileUploader $project
+         */
+        $project = $this->set_model('FileUploader');
+        $logged_in = $project->login_check();
+        if($logged_in && isset($seq_text)){
+            $json = $project->text($seq_text);
+            if(is_array($json)){ // File uploaded successfully
+                $json['status'] = FileUploader::FILE_UPLOAD_SUCCESS;
+            }else{
+                $json = ['status' => $json];
+            }
+        }
+        $this->json($json);
+    }
+
     /**
      * get_file method
      *
