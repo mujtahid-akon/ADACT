@@ -93,10 +93,22 @@ Object.freeze(Messages = {
                 ];
             }
         },
+        Upload_text: {
+            FAILURE_ALERT : "Analyzing failed! Please try again.",
+            CONNECTION_PROBLEM : this.CONNECTION_PROBLEM,
+            MAKE_SURE : "Make sure,",
+            FAILURE_MESSAGE : function (file_limit) {
+                return [
+                    'The size of each sequence is less than 20 MB',
+                    'There cannot be more than ' + file_limit + ' sequence'
+                ];
+            }
+        },
         BuildTable : {
             /** @return {String} */
             SEQ_FOUND : function (seq_count) { return "Found: " + seq_count + " FASTA Sequences"; },
             SHORT_NAME_MESSAGE : "Add short names using the table below: (A short name can only contain a to z (uppercase or lower case) letters, underscores, hyphens or commas)",
+            SHORT_NAME_MESSAGE2 : 'Double click on each title/header to copy them to the Short Name field, or <a class="link" href="javascript:InputAnalyzer.copyAllShortNames();">copy them all</a>. Remember that a short name cannot be longer than 15 characters.',
             ID_TEXT : "ID",
             HEADER_TEXT : "Title/Header",
             SHORT_NAME_TEXT : "Short Name"
@@ -142,6 +154,7 @@ Object.freeze(Messages = {
 InputMethod = {
     // Constants
     FILE     : "file",
+    SEQ_TEXT : "seq_text",
     ACCN_GIN : "accn_gin",
     /**
      * Current InputMethod
@@ -166,6 +179,9 @@ InputMethod = {
                 break;
             case "input_accn_gin":
                 this.current = this.ACCN_GIN;
+                break;
+            case "input_seq":
+                this.current = this.SEQ_TEXT;
         }
     },
     /**
@@ -196,6 +212,8 @@ InputAnalyzer = {
     DB_PROTEIN: "protein",
     // Char limit
     CHAR_LIMIT: 15,
+    // Fasta Limit
+    FASTA_LIMIT: 120,
     /**
      * Store input values from the input fields
      * (only for InputMethod.ACCN_GIN)
@@ -236,6 +254,9 @@ InputAnalyzer = {
         }else if(InputMethod.getCurrent() === InputMethod.FILE){
             // Upload file
             this.upload(form);
+        }else if(InputMethod.getCurrent() === InputMethod.SEQ_TEXT){
+            // Upload text
+            this.upload_text();
         }
     },
     addShortNames: function(){
@@ -318,6 +339,9 @@ InputAnalyzer = {
                         break;
                     case InputMethod.ACCN_GIN:
                         chk = $('#analyze_accn_gin');
+                        break;
+                    case InputMethod.SEQ_TEXT:
+                        chk = $('#analyze_seq_text');
                 }
                 chk.attr('disabled', '');
                 chk.removeClass('btn-primary');
@@ -555,7 +579,7 @@ InputAnalyzer = {
                             '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
                             Messages.InputAnalyzer.Upload.MAKE_SURE + '<br />' +
                             '<ul>' +
-                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE(parent.CHAR_LIMIT).join('</li><li>') + '</li>' +
+                            '<li>' + Messages.InputAnalyzer.Upload.FAILURE_MESSAGE(parent.FASTA_LIMIT).join('</li><li>') + '</li>' +
                             '</ul>' +
                             '</div>');
                 }
@@ -565,6 +589,79 @@ InputAnalyzer = {
                 upload_sel.html('<div class="alert alert-danger">' +
                     '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
                     Messages.InputAnalyzer.Upload.CONNECTION_PROBLEM +
+                    '</div>');
+            }
+        });
+    },
+    upload_text: function () {
+        const upload_sel = $('#fasta_status');
+        upload_sel.show();
+        const parent = this;
+
+        $.ajax({
+            url: "./projects/text_upload",
+            type: "POST",
+            data: {
+                seq_text: $('#seq_text').val()
+            },
+            cache: false,
+            dataType: 'JSON',
+            beforeSend: function(){
+                new ProgressBar(upload_sel, undefined, undefined, Messages.InputAnalyzer.ANALYZING_TEXT);
+            },
+            /**
+             * Do this on success
+             * @param {{status: int, [data]: Array, [id]: string, seq_type: string}} res Data return only if the status is FILE_UPLOAD_SUCCESS
+             */
+            success: function(res){
+                switch(res.status){
+                    case 0: // FILE_UPLOAD_SUCCESS
+                        /**
+                         * @var {{id: int, header: string}[]} res.data
+                         */
+                        /**
+                         * Result as status is FILE_UPLOAD_SUCCESS
+                         * @type {{id: int, header: string}[]}
+                         */
+                        const results    = res.data;
+                        parent.file_id = res.id;
+                        parent.results = [];
+                        for(let i = 0; i < results.length; ++i){
+                            let result = {
+                                id: results[i].id,
+                                id_type: 'file',
+                                title: results[i].header,
+                                short_name: null,
+                                type: InputMethod.FILE,
+                                gin: null
+                            };
+                            parent.results.push(result);
+                        }
+
+                        // Set sequence type
+                        // UI Changes
+                        if(res.seq_type === parent.PROTEIN) {
+                            $(".seq_type[value=protein]").prop("checked", true);
+                        }else if(res.seq_type === parent.NUCLEOTIDE){
+                            $(".seq_type[value=nucleotide]").prop("checked", true);
+                        }
+
+                        parent.buildTable();
+                        break;
+                    default: // FILE_UPLOAD_FAILED
+                        upload_sel.html('<div class="alert alert-danger">' +
+                            '<strong>' + Messages.InputAnalyzer.Upload_text.FAILURE_ALERT + '</strong> ' +
+                            Messages.InputAnalyzer.Upload_text.MAKE_SURE + '<br />' +
+                            '<ul>' +
+                            '<li>' + Messages.InputAnalyzer.Upload_text.FAILURE_MESSAGE(parent.FASTA_LIMIT).join('</li><li>') + '</li>' +
+                            '</ul>' +
+                            '</div>');
+                }
+            },
+            error: function(){
+                upload_sel.html('<div class="alert alert-danger">' +
+                    '<strong>' + Messages.InputAnalyzer.Upload_text.FAILURE_ALERT + '</strong> ' +
+                    Messages.InputAnalyzer.Upload_text.CONNECTION_PROBLEM +
                     '</div>');
             }
         });
@@ -584,7 +681,8 @@ InputAnalyzer = {
          */
         let html = "<p class='text-success'>" + Messages.InputAnalyzer.BuildTable.SEQ_FOUND(c_species) + "</p>"
             + "<p>" + Messages.InputAnalyzer.BuildTable.SHORT_NAME_MESSAGE + "</p>"
-            + "<table class='table table-bordered table-striped table-hover'>"
+            + "<p>" + Messages.InputAnalyzer.BuildTable.SHORT_NAME_MESSAGE2 + "</p>"
+            + "<table id='table_short_names' class='table table-bordered table-striped table-hover'>"
             + "<thead>"
             + "<tr>"
             + "<th>" + Messages.InputAnalyzer.BuildTable.ID_TEXT + "</th>"
@@ -594,14 +692,14 @@ InputAnalyzer = {
             + "</thead>";
         for(let i = 0; i < c_species; ++i){
             html += "<tr>"
-                + "<td>" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.results[i].id) + "</td>"
-                + "<td>" + this.results[i].title + "</td>"
-                + "<td>" + "<input id='sn_" + i + "' class='short_name form-control' value='" + (InputMethod.getCurrent() === InputMethod.FILE ? i + 1 : this.getShortName(this.results[i])) + "'  style='min-width: 155px;' /></td>"
+                + "<td>" + (InputMethod.getCurrent() === InputMethod.ACCN_GIN ? this.results[i].id : i+1) + "</td>"
+                + "<td ondblclick='InputAnalyzer.copyToShortNameField($(this))'>" + this.results[i].title + "</td>"
+                + "<td>"
+                + " <input id='sn_" + i + "' class='short_name form-control' value='" + (InputMethod.getCurrent() === InputMethod.ACCN_GIN ? this.getShortName(this.results[i]) : i+1) + "'  style='min-width: 155px;' />"
+                + "</td>"
                 + "</tr>";
         }
         html += "</table>";
-            // + "<button class=\"btn btn-primary\" id=\"fasta_check_out\" "
-            // + "onclick=\"InputAnalyzer.addShortNames()\" style=\"vertical-align: top\">Done</button>";
         this.selector.html(html);
     },
     getShortName: function (seq_info) {
@@ -623,6 +721,15 @@ InputAnalyzer = {
             }
         }else{
             return name.replace(/\s/g, '_');
+        }
+    },
+    copyToShortNameField: function(selector){
+        selector.parents().get(0).children[2].children[0].value = selector.text().replace(/\s/g, '_');
+    },
+    copyAllShortNames: function(){
+        const rows = $('#table_short_names').children().get(1).children;
+        for(let i = 0; i<rows.length; ++i){
+            rows[i].children[2].children[0].value = rows[i].children[1].textContent.replace(/\s/g, '_');
         }
     }
 };
@@ -663,11 +770,11 @@ Project.result = {
             dissimilarity_index: $('#dissimilarity_index').val(), // #5
             sequence_type: $("input[name='seq_type'][value='protein']").is(':checked') ? InputAnalyzer.PROTEIN : InputAnalyzer.NUCLEOTIDE, // #6
             data: [], // #7
-            type: InputMethod.getCurrent() // #8
+            type: InputMethod.getCurrent() === InputMethod.ACCN_GIN ? InputMethod.ACCN_GIN : InputMethod.FILE // #8
         };
 
         // Special for InputMethod.FILE
-        if(InputMethod.getCurrent() === InputMethod.FILE){
+        if(InputMethod.getCurrent() !== InputMethod.ACCN_GIN){
             this.config.file_id = InputAnalyzer.file_id; // #9
             if(this.config.file_id === null) return false;
         }

@@ -75,6 +75,7 @@ Route::add(Route::POST, '/projects/get_unseen', 'Project@get_unseen');
 Route::add(Route::GET,  '/projects/new', 'Project@new_project_page');
 Route::add(Route::POST, '/projects/new', 'Project@new_project', ['config' => Route::STRING]);
 Route::add(Route::POST, '/projects/file_upload', 'Project@file_upload');
+Route::add(Route::POST, '/projects/text_upload', 'Project@text_upload', ['seq_text' => Route::STRING]);
 // Regular project
 Route::add(Route::GET,  '/projects/last', 'Project@last_project');
 Route::add(Route::GET,  '/projects/{project_id}', 'Project@project_overview');

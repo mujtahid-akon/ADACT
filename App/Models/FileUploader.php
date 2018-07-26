@@ -54,8 +54,7 @@ class FileUploader extends Model{
         // 2. MIME
         if(!($up_file['type'] == 'application/zip' || $up_file['type'] == 'application/octet-stream' || $up_file['type'] == 'text/plain')) return self::INVALID_MIME_TYPE;
         // 3. See if it can be moved
-        $tmp_dir = Config::WORKING_DIRECTORY . '/' . (time() + mt_rand());
-        mkdir($tmp_dir, 0777, true);
+        $tmp_dir = $this->_create_tmp_dir();
         $tmp_file = $tmp_dir . '/' . basename($up_file['name']);
         if(!move_uploaded_file($up_file['tmp_name'], $tmp_file)){
             unlink($up_file['tmp_name']);
@@ -70,6 +69,26 @@ class FileUploader extends Model{
             // Delete the $tmp_file
             unlink($tmp_file);
         }
+        // Run further common checks and return result
+        return $this->_upload_helper($tmp_dir);
+    }
+
+    /**
+     * Upload a text
+     *
+     * @param string $sequence
+     * @return array|int
+     */
+    public function text($sequence){
+        // Create tmp directory
+        $tmp_dir = $this->_create_tmp_dir();
+        // Save the sequence in a file
+        file_put_contents($tmp_dir . '/' . (time() + mt_rand()), $sequence);
+        // Run further common check on them and return result
+        return $this->_upload_helper($tmp_dir);
+    }
+
+    private function _upload_helper($tmp_dir){
         // 5. Is everything in order?
         $files = $this->_dir_list($tmp_dir, true);
         // Each file size limit & quantity check + extract FASTA from multi FASTA.
@@ -215,7 +234,7 @@ class FileUploader extends Model{
      * @param string $seq
      * @return string protein | nucleotide
      */
-    function _check_sequence($seq){
+    private function _check_sequence($seq){
         $seq = str_replace("\n", '', $seq);
         preg_match_all('/A|T|C|G/', $seq, $matches);
 
@@ -223,6 +242,16 @@ class FileUploader extends Model{
             return 'nucleotide';
         else
             return 'protein';
+    }
+
+    /**
+     * Create temporary upload directory in Working directory
+     * @return string The temporary directory
+     */
+    private function _create_tmp_dir(){
+        $tmp_dir = Config::WORKING_DIRECTORY . '/' . (time() + mt_rand());
+        mkdir($tmp_dir, 0777, true);
+        return $tmp_dir;
     }
 
     /**
