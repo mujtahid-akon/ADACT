@@ -76,6 +76,7 @@ class FileUploader extends Model{
         // Some checks are done multiple times intentionally in order to
         // increase execution time.
         $data = [];
+        $_file = '';
         foreach($files as $file){
             $tmp_data = $this->_extract_FASTA($file, $tmp_dir);
             // 5.1 Max files allowed exceeded
@@ -101,13 +102,14 @@ class FileUploader extends Model{
                 }
             }
         }
-
+        // Check for sequence type: nucleotide or protein for only the last file
+        $seq_type = $this->_check_sequence(file_get_contents($_file));
         // Everything's in order
         // Generate sha512 value
         $id = hash('sha512', $tmp_dir);
         $this->_store($tmp_dir, $id);
         // Return success
-        return ['data' => $data, 'id' => $id];
+        return ['data' => $data, 'id' => $id, 'seq_type' => $seq_type];
     }
 
     /**
@@ -200,10 +202,27 @@ class FileUploader extends Model{
                 $info = ["header" => $header, "id" => $id];
                 array_push($data, $info);
             }
-            if(isset($target_fp)) fwrite($target_fp, trim($line) . "\n");
+            $line = trim($line);
+            if(!empty($line))
+                if(isset($target_fp)) fwrite($target_fp, $line . "\n");
         }
         unlink($filename);
         return $data;
+    }
+
+    /**
+     * Check whether a sequence is a DNA (nucleotide) or Protein
+     * @param string $seq
+     * @return string protein | nucleotide
+     */
+    function _check_sequence($seq){
+        $seq = str_replace("\n", '', $seq);
+        preg_match_all('/A|T|C|G/', $seq, $matches);
+
+        if (count($matches[0]) / strlen($seq) >= 0.75)
+            return 'nucleotide';
+        else
+            return 'protein';
     }
 
     /**

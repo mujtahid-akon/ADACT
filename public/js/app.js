@@ -504,7 +504,7 @@ InputAnalyzer = {
             },
             /**
              * Do this on success
-             * @param {{status: int, [data]: Array, [id]: string}} res Data return only if the status is FILE_UPLOAD_SUCCESS
+             * @param {{status: int, [data]: Array, [id]: string, seq_type: string}} res Data return only if the status is FILE_UPLOAD_SUCCESS
              */
             success: function(res){
                 switch(res.status){
@@ -539,6 +539,15 @@ InputAnalyzer = {
                             };
                             parent.results.push(result);
                         }
+
+                        // Set sequence type
+                        // UI Changes
+                        if(res.seq_type === parent.PROTEIN) {
+                            $(".seq_type[value=protein]").prop("checked", true);
+                        }else if(res.seq_type === parent.NUCLEOTIDE){
+                            $(".seq_type[value=nucleotide]").prop("checked", true);
+                        }
+
                         parent.buildTable();
                         break;
                     default: // FILE_UPLOAD_FAILED

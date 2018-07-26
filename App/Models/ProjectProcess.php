@@ -360,10 +360,10 @@ EOF;
             $tree = new Tree($this->_project_id, Tree::GENERAL);
             $nj = $tree->generate_tree(Tree::NJ)->getFormattedLabels();
             $upgma = $tree->generate_tree(Tree::UPGMA)->getFormattedLabels();
-            $objTree1 = new \GDRenderer(30, $char_len, $char_len, $char_len, 0);
             $objTree2 = new \GDRenderer(30, $char_len, $char_len, $char_len, 0);
-            return $this->saveTree($objTree1, $upgma, $this->_fm->generated() . '/' . FM::UPGMA_TREE)
-                AND $this->saveTree($objTree2, $nj, $this->_fm->generated() . '/' . FM::NEIGHBOUR_TREE);
+            $objTree1 = new \GDRenderer(30, $char_len, $char_len, $char_len, 0);
+            return $this->saveTree($objTree2, $nj, $this->_fm->generated() . '/' . FM::NEIGHBOUR_TREE)
+                AND $this->saveTree($objTree1, $upgma, $this->_fm->generated() . '/' . FM::UPGMA_TREE);
         }catch (FileException $e){
             $this->_log($e->getMessage(), Logger::RED);
             $this->halt(self::E_FAILED_GENERATING_PT);
