@@ -5,3 +5,4 @@
 public/test.php
 # Remove private project files
 PrivateConfig.php
+test.php

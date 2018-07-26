@@ -87,10 +87,10 @@ function get_distance_matrix($species, $fm){
         // Header first
         $table_row .= "<th>{$species[$row_i]}</th>";
         // Blank columns
-        for($col_i = 0; $col_i <= $row_i; ++$col_i) $table_row .= "<td></td>";
+        for($col_i = 0; $col_i <= $row_i; ++$col_i) $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'></td>";
         // Now, the rest
         for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
-            $table_row .= "<td>{$distance_matrix[$dm_i++]}</td>";
+            $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'>{$distance_matrix[$dm_i++]}</td>";
         }
         $table_row .= "</tr>\n";
         // Print the row
@@ -244,55 +244,61 @@ if($result_type === Project::RT_SUCCESS):
     $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
     ?>
     <!-- Sorted Species Relation -->
-    <div id="sorted_species_relation" class="output visible-xs" style="text-align: left; display: none;">
+    <div id="sorted_species_relation" class="output visible-xs" style="text-align: left; display: none;width: 100%">
         <div><a href="<?php print $download_url . '/' . FM::SPECIES_RELATION ?>"><i class="glyphicon glyphicon-download-alt"></i></a> Sorted Species Relation</div>
-        <table class="table table-striped table-hover">
-            <thead>
-            <tr>
-                <th style="border-right: 1px solid #ddd">Species</th>
-                <th colspan="<?php print 2 * count($species) - 1 ?>">Relation</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php
-            foreach($species_relations as $_species => $_relation){
-                // Print head of the row
-                print "<tr>";
-                print "<th style=\"border-right: 1px solid #ddd\">{$_species}</th>";
-                // Print the relations
-                print "<td>" . implode('</td><td>&xrarr;</td><td>', $_relation) . "</td>";
-                print "</tr>\n";
-            }
-            ?>
-            </tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th style="border-right: 1px solid #ddd">Species</th>
+                    <th colspan="<?php print 2 * count($species) - 1 ?>">Relation</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php
+                foreach($species_relations as $_species => $_relation){
+                    // Print head of the row
+                    print "<tr>";
+                    print "<th title='{$_species}' style='border-right: 1px solid #ddd'>{$_species}</th>";
+                    // Print the relations
+                    print "<td title='{$_species}'>" . implode('</td><td title=\'' . $_species .'\'>&xrarr;</td><td title=\'' . $_species .'\'>', $_relation) . "</td>";
+                    print "</tr>\n";
+                }
+                ?>
+                </tbody>
+            </table>
+        </div>
     </div>
     <!-- Distance Matrix -->
-    <div id="distance_matrix" class="output">
+    <div id="distance_matrix" class="output" style="width: 100%">
         <div><a href="<?php print $download_url . '/' . FM::DISTANCE_MATRIX ?>"><i class="glyphicon glyphicon-download-alt"></i></a> Distance Matrix</div>
-        <table class="table table-bordered table-striped table-hover">
-            <thead>
-            <tr>
-                <th></th>
-                <?php foreach($species as $col) print '<th>' . $col . '</th>' ?>
-            </tr>
-            </thead>
-            <tbody>
-            <?php foreach (get_distance_matrix($species, $fm) as $distance_matrix) print $distance_matrix ?>
-            </tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table class="table table-bordered table-striped table-hover">
+                <thead>
+                <tr>
+                    <th></th>
+                    <?php foreach($species as $col) print '<th>' . $col . '</th>' ?>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach (get_distance_matrix($species, $fm) as $distance_matrix) print $distance_matrix ?>
+                </tbody>
+            </table>
+        </div>
     </div>
     <!-- Neighbour Tree -->
-    <div id="neighbour_tree" class="output visible-xs" style="display: none;">
+    <div id="neighbour_tree" class="output visible-xs" style="display: none;width: 100%">
         <div><a href="<?php print $neighbourTree ?>"><i class="glyphicon glyphicon-download-alt"></i></a> Neighbour Joining Tree</div>
-        <img src="<?php print $neighbourTree ?>" />
-        <!--div id="nj_tree_view"></div-->
+        <div style="overflow-x: auto">
+            <img src="<?php print $neighbourTree ?>" />
+        </div>
     </div>
     <!-- UPGMA Tree -->
-    <div id="upgma_tree" class="output visible-xs" style="display: none;">
+    <div id="upgma_tree" class="output visible-xs" style="display: none;width: 100%">
         <div><a href="<?php print $UPGMATree ?>"><i class="glyphicon glyphicon-download-alt"></i></a> UPGMA Tree</div>
-        <img src="<?php print $UPGMATree ?>" />
-        <!--div id="upgma_tree_view"></div-->
+        <div style="overflow-x: auto">
+            <img src="<?php print $UPGMATree ?>" />
+        </div>
     </div>
 </section>
 <?php
