@@ -13,11 +13,11 @@
 </div>
 <div class="row">
     <div class="col-sm-6 center">
-        <a class="wc wc-img" href="./projects/new"><i class="glyphicon glyphicon-file" ></i></a><br />
+        <a class="wc wc-img" href="./projects/new"><i class="fa fa-file" ></i></a><br />
         <a class="wc wc-btn h2" href="./projects/new">New project</a>
     </div>
     <div class="col-sm-6 center">
-        <a class="wc wc-img" href="./projects"><i class="glyphicon glyphicon-list" ></i></a><br />
+        <a class="wc wc-img" href="./projects"><i class="fa fa-list" ></i></a><br />
         <a class="wc wc-btn h2" href="./projects">All projects</a>
     </div>
 </div>

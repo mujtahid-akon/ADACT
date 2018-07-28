@@ -8,8 +8,6 @@
 
 namespace ADACT\App\Models;
 
-require_once __DIR__ . "/../../Libraries/phptreegraph/GDRenderer.php";
-
 use ADACT\App\Models\FileManager as FM;
 /**
  * Class Process
@@ -113,6 +111,7 @@ class ProjectProcess extends PendingProjects { // is_a
      */
     function __construct($project_id, $user_id){
         parent::__construct($project_id, $user_id);
+        $this->_project_id   = $project_id;
         $this->_fm           = new FM($project_id);
         $this->_log_file     = $this->_fm->root().'/'.FM::DEBUG_LOG;
         $this->_logger       = new Logger($this->_log_file, false);
@@ -144,6 +143,9 @@ class ProjectProcess extends PendingProjects { // is_a
      * @throws \phpmailerException
      */
     function init(){
+        // Start process time
+        $this->_set_start();
+        // Log project info
         $this->_log("Project: {$this->_config->project_name} ({$this->_project_id})", Logger::BG_RED.Logger::BOLD.Logger::WHITE);
         if($this->_edit_mode === null) return;  // Since PHP doesn't distinguish between null and 0 in a switch statement
         switch ($this->_edit_mode){             // Deliberate fallthrough: DON'T add any break statement after the cases
@@ -177,6 +179,8 @@ class ProjectProcess extends PendingProjects { // is_a
         $this->_log('The project was processed successfully.', Logger::BG_RED.Logger::BOLD.Logger::WHITE);
         // Send mail
         $this->send_mail();
+        // Store terminate process time
+        $this->_set_end();
     }
 
     public function __destruct(){
@@ -309,9 +313,6 @@ EOF
 </table>
 
 EOF;
-
-
-
         return self::formatted_email($user_info['name'], $user_info['email'], $subject, $body);
     }
 
@@ -355,15 +356,12 @@ EOF;
      * @throws \phpmailerException
      */
     private function generate_phylogenetic_trees(){
-        $char_len = self::MAX_CHAR_ALLOWED * self::FONT_SIZE;
         try{
-            $tree = new Tree($this->_project_id, Tree::GENERAL);
-            $nj = $tree->generate_tree(Tree::NJ)->getFormattedLabels();
-            $upgma = $tree->generate_tree(Tree::UPGMA)->getFormattedLabels();
-            $objTree2 = new \GDRenderer(30, $char_len, $char_len, $char_len, 0);
-            $objTree1 = new \GDRenderer(30, $char_len, $char_len, $char_len, 0);
-            return $this->saveTree($objTree2, $nj, $this->_fm->generated() . '/' . FM::NEIGHBOUR_TREE)
-                AND $this->saveTree($objTree1, $upgma, $this->_fm->generated() . '/' . FM::UPGMA_TREE);
+            $tree  = new Tree($this->_project_id, Tree::GENERAL);
+            $nj    = $tree->getNewickFormat(Tree::NJ);
+            $upgma = $tree->getNewickFormat(Tree::UPGMA);
+            return $this->saveTree($nj, $this->_fm->generated() . '/' . FM::NEIGHBOUR_TREE)
+                AND $this->saveTree($upgma, $this->_fm->generated() . '/' . FM::UPGMA_TREE);
         }catch (FileException $e){
             $this->_log($e->getMessage(), Logger::RED);
             $this->halt(self::E_FAILED_GENERATING_PT);
@@ -371,45 +369,13 @@ EOF;
         }
     }
 
-    private static $current_id = 1;
     /**
-     * @param \GDRenderer $tree
-     * @param array $graph
-     * @param int $parent_id
-     */
-    private function addToTree(\GDRenderer $tree, $graph, $parent_id){
-        foreach ($graph as $node){
-            if(is_array($node)){
-                $tree->add(++self::$current_id, $parent_id);
-                $this->addToTree($tree, $node, self::$current_id);
-            }else{
-                $tree->add(++self::$current_id, $parent_id, $node, strlen($node) * self::FONT_SIZE);
-            }
-        }
-    }
-
-    /**
-     * @param \GDRenderer $objTree
-     * @param array  $tree
-     * @param string $file
+     * @param string $tree Tree in newick format
+     * @param string $file Filename to save
      * @return bool
      */
-    private function saveTree(\GDRenderer $objTree, $tree, $file){
-        // Set root
-        $objTree->add(1,0);
-        // Current ID = Parent ID
-        self::$current_id = 1;
-        // Add to species names to the tree
-        $this->addToTree($objTree, $tree, self::$current_id);
-        // Do some colouring
-        $objTree->setBGColor([255, 255, 224]);
-        $objTree->setNodeColor([255, 255, 255]);
-//        $objTree->setLinkColor([119, 119, 119]);
-        $objTree->setLinkColor([204, 204, 204]);
-        $objTree->setTextColor([119, 119, 119]);
-        // Save files
-        $objTree->save($file);
-        return file_exists($file) AND !is_dir($file); // Since there are no native way to find out
+    private function saveTree($tree, $file){
+        return file_put_contents($file, $tree) !== false;
     }
 
     /** @noinspection PhpUnusedPrivateMethodInspection */
@@ -480,7 +446,6 @@ EOF;
              $this->_files = $this->get_files($this->_fm->original());
              $this->_fasta_count = count($this->_files);
          }
-
          // 1. Copy $this->files to $modified_files to prevent any data loss
          $modified_files = $this->_files;
          // 2. Set a reference file ($ref_file)
@@ -546,9 +511,7 @@ EOF;
             $this->halt(self::E_EMPTY_UPLOAD_DIRECTORY);
             return false;
         }
-
         $f_names = $this->full_name_to_short_name($this->_config->data);
-
         // cd to the original directory
         if(!$this->_fm->cd($this->_fm->original())) $this->_fm->create();
         // Move file to the pwd
@@ -704,6 +667,34 @@ EOF;
      */
     private function _move($filename){
         return $this->_tc_fm->store($filename, $this->_tc_fm->generated() . '/' . $filename, FM::STORE_MOVE);
+    }
+
+    /**
+     * Set project start time
+     * @return bool
+     */
+    private function _set_start(){
+        if($stmt = $this->mysqli->prepare('UPDATE projects SET project_started = NOW() WHERE project_id = ?')){
+            $stmt->bind_param('i', $this->_project_id);
+            $stmt->execute();
+            $stmt->store_result();
+            if($stmt->affected_rows == 1) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Set project end time
+     * @return bool
+     */
+    private function _set_end(){
+        if($stmt = $this->mysqli->prepare('UPDATE projects SET project_finished = NOW() WHERE project_id = ?')){
+            $stmt->bind_param('i', $this->_project_id);
+            $stmt->execute();
+            $stmt->store_result();
+            if($stmt->affected_rows == 1) return true;
+        }
+        return false;
     }
 
     /**

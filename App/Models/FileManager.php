@@ -56,8 +56,8 @@ class FileManager extends Model{
     const SPECIES_RELATION_JSON    = 'SpeciesRelation.json';
     const DISTANCE_MATRIX          = 'DistanceMatrix.txt';
     const DISTANT_MATRIX_FORMATTED = 'Output.txt';
-    const NEIGHBOUR_TREE           = 'Neighbour tree.png';
-    const UPGMA_TREE               = 'UPGMA tree.png';
+    const NEIGHBOUR_TREE           = 'Neighbour tree.newick.txt';
+    const UPGMA_TREE               = 'UPGMA tree.newick.txt';
     const CONFIG_JSON              = 'config.json';
     const DEBUG_LOG                = 'debug.log';
 

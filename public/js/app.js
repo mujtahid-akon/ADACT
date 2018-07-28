@@ -108,7 +108,7 @@ Object.freeze(Messages = {
             /** @return {String} */
             SEQ_FOUND : function (seq_count) { return "Found: " + seq_count + " FASTA Sequences"; },
             SHORT_NAME_MESSAGE : "Add short names using the table below: (A short name can only contain a to z (uppercase or lower case) letters, underscores, hyphens or commas)",
-            SHORT_NAME_MESSAGE2 : 'Double click on each title/header to copy them to the Short Name field, or <a class="link" href="javascript:InputAnalyzer.copyAllShortNames();">copy them all</a>. Remember that a short name cannot be longer than 15 characters.',
+            SHORT_NAME_MESSAGE2 : 'Double click on each title/header to copy them to the Short Name field, or <a class="link" href="javascript:InputAnalyzer.copyAllShortNames();">copy them all</a>. Note that a short name cannot be longer than 15 characters.',
             ID_TEXT : "ID",
             HEADER_TEXT : "Title/Header",
             SHORT_NAME_TEXT : "Short Name"
@@ -116,7 +116,7 @@ Object.freeze(Messages = {
     },
     Project: {
         UNFILLED_FIELDS : "It seems, you've left out some mandatory fields. Please fill them in.",
-        LOADING_TEXT : "Loading...",
+        LOADING_TEXT : "Loading",
         FAILURE_ALERT : "An error occurred, try again",
         Status : {
             FETCH_TEXT : "Fetching last status...",
@@ -822,7 +822,7 @@ Project.result = {
                 btn.removeClass('btn-primary');
                 btn.addClass('btn-default disabled');
                 btn.attr('onclick', null);
-                btn.html("<img width='11' src='./css/images/spinner.gif'>&nbsp;" + Messages.Project.LOADING_TEXT);
+                btn.html("<i class=\"fa fa-spinner fa-pulse\" aria-hidden=\"true\"></i> " + Messages.Project.LOADING_TEXT);
             },
             success: function(res){
                 if(res && res.id){
@@ -872,7 +872,7 @@ Project.process = {
             cache: false,
             dataType: 'json',
             beforeSend: function(){
-                selector.html(Messages.Project.Status.FETCH_TEXT);
+                // selector.html(Messages.Project.Status.FETCH_TEXT);
             },
             /**
              * @param {{status: string, status_code: int}} res

@@ -34,7 +34,7 @@ $project_count = count($projects);
             (function (selector, project_id) {
                 setInterval(function(){
                     Project.process.status(selector, project_id);
-                }, 10000);
+                }, 5000);
             })(selector, project_id);
         });
     });
@@ -43,35 +43,29 @@ $project_count = count($projects);
     <div class="col-md-12">
         <h1>Pending projects</h1>
         <h4><a href='./projects/new'>Create a new project</a></h4>
-        <?php
-        if($project_count == 0):
-            ?>
-            <div>You don't have any pending projects.</div>
-            <?php
-        else:
-            ?>
-            <table class="table table-responsive table-hover">
-                <tbody>
-                <?php
-                foreach($projects as $index => $project):
-                    $delete_text = "<a href=\"javascript:Project.process.cancel({$project['id']}, '{$project['name']}')\" class=\"project-icon glyphicon glyphicon-remove text-danger\" title=\"Cancel Project\"></a>";
-                    print <<< EOF
-                <tr class="projects" id="p_{$project['id']}" data-id="{$project['id']}">
-                    <td>#<a href="./projects/{$project['id']}">{$project['id']}</a></td>
-                    <td>
-                    <div>
-                        <a href="./projects/{$project['id']}" class="h4">{$project['name']}</a>
-                    </div>
-                    <div><em>Date: <span class="datetime">{$project['date_created']}</span></em></div>
-                    <div><em>Elapsed time: <span class="elapsed_time"></span></em></div>
-                    <div><em>Status: <span class="process_status"></span></em></div></td>
-                    <td><a href="javascript:Project.process.cancel({$project['id']}, '{$project['name']}')" class="project-icon glyphicon glyphicon-remove text-danger" title="Cancel Project"></a></td>
-                </tr>
+        <?php if($project_count == 0): ?>
+        <div>You don't have any pending projects.</div>
+        <?php else: ?>
+        <table class="table table-responsive table-hover">
+            <tbody>
+            <?php foreach($projects as $index => $project):
+                $delete_text = "<a href=\"javascript:Project.process.cancel({$project['id']}, '{$project['name']}')\" class=\"project-icon fa fa-remove text-danger\" title=\"Cancel Project\"></a>";
+                print <<< EOF
+            <tr class="projects" id="p_{$project['id']}" data-id="{$project['id']}">
+                <td>#<a href="./projects/{$project['id']}">{$project['id']}</a></td>
+                <td>
+                <div>
+                    <a href="./projects/{$project['id']}" class="h4">{$project['name']}</a>
+                </div>
+                <div><em>Date: <span class="datetime">{$project['date_created']}</span></em></div>
+                <div><em>Elapsed time: <span class="elapsed_time"></span></em></div>
+                <div><em>Status: <span class="process_status"></span></em></div></td>
+                <td><a href="javascript:Project.process.cancel({$project['id']}, '{$project['name']}')" class="project-icon fa fa-remove text-danger" title="Cancel Project"></a></td>
+            </tr>
 EOF;
-                endforeach;
-                ?>
-                </tbody>
-            </table>
+                endforeach; ?>
+            </tbody>
+        </table>
         <?php endif; // Project count ?>
     </div>
 </div>

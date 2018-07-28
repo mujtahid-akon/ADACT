@@ -79,7 +79,7 @@ $config->aw_type = strtoupper($config->aw_type);
                         btn.removeClass('btn-primary');
                         btn.addClass('btn-default disabled');
                         btn.attr('onclick', null);
-                        btn.html("<img width='11' src='./css/images/spinner.gif'>&nbsp;" + Messages.Project.LOADING_TEXT);
+                        btn.html("<i class=\"fa fa-spinner fa-pulse\" aria-hidden=\"true\"></i> "+ Messages.Project.LOADING_TEXT);
                     },
                     success: function(res){
                         if(res && res.status === 0){
@@ -107,13 +107,17 @@ $config->aw_type = strtoupper($config->aw_type);
             }
         };
     </script>
-    <div>
-        <button onclick="Project.edit.send(<?php print $project_id ?>)" id="submit_btn" class="btn btn-primary">Run & Show Result</button>
-        <a class="btn btn-default" href="./projects/<?php print $project_id; ?>">Go back</a>
+    <div class="btn-group">
+        <button id="submit_btn" class="btn btn-primary btn-sm" title="Run project and show result"
+                onclick="Project.edit.send(<?php print $project_id ?>)">
+            <i class="fa fa-paper-plane" aria-hidden="true"></i> Run
+        </button>
+        <a class="btn btn-default btn-sm" href="./projects/<?php print $project_id; ?>" title="Go back">
+            <i class="fa fa-chevron-left" aria-hidden="true"></i> Back
+        </a>
     </div>
-    <div id="project_info">
+    <div id="project_info" style="margin-top: 5px;">
         <table class="table table-bordered table-striped table-hover">
-            <caption>Overview</caption>
             <tbody>
             <?php
             print "<tr><th>Project Name</th><td>".ucwords($config->project_name)."</td></tr>";
@@ -122,33 +126,38 @@ $config->aw_type = strtoupper($config->aw_type);
             <tr>
                 <th>Absent Word Type</th>
                 <td>
-                    <label>
-                        <input type="radio" name="aw_type" value="maw"
+                    <div class="radio radio-info" style="display: inline-block;">
+                        <input id="aw_type_maw" type="radio" name="aw_type" value="maw"
                                onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();$('#dissimilarity_index').val('');" />
-                        <abbr title="Minimal Absent Words">MAW</abbr>
-                    </label>
-                    <label>
-                        <input type="radio" name="aw_type" value="raw"
+                        <label for="aw_type_maw"><abbr title="Minimal Absent Words">MAW</abbr></label>
+                    </div>
+                    <div class="radio radio-info" style="display: inline-block;">
+                        <input id="aw_type_raw" type="radio" name="aw_type" value="raw"
                                onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();$('#dissimilarity_index').val('');"/>
-                        <abbr title="Relative Absent Words">RAW</abbr>
-                    </label>
+                        <label for="aw_type_raw"><abbr title="Relative Absent Words">RAW</abbr></label>
+                    </div>
                 </td>
             </tr>
             <tr>
-                <th>K-Mer</th>
+                <th>K-Mer Size</th>
                 <td>
-                    <input class="form-control" type="number" id="kmer_min" name="kmer_min" min="1" style="width: 100px;display: inline-block;" placeholder="Min" required />
-                    <input class="form-control" type="number" id="kmer_max" name="kmer_max" min="1" style="width: 100px;display: inline-block" placeholder="Max" required />
+                    <input class="form-control input-sm" type="number" id="kmer_min" name="kmer_min" min="1" style="width: 100px;display: inline-block;" placeholder="Min" required />
+                    <input class="form-control input-sm" type="number" id="kmer_max" name="kmer_max" min="1" style="width: 100px;display: inline-block" placeholder="Max" required />
                 </td>
             </tr>
             <tr>
                 <th><label for="inversion">Reverse Complement</label></th>
-                <td><input type="checkbox" id="inversion" name="inversion" /></td>
+                <td>
+                    <div class="material-switch pull-left">
+                        <input id="inversion" name="inversion" type="checkbox"/>
+                        <label for="inversion" class="label-success"></label>
+                    </div>
+                </td>
             </tr>
             <tr>
                 <th><label for="dissimilarity_index">Dissimilarity Index</label></th>
                 <td>
-                    <select id="dissimilarity_index" name="dissimilarity_index" class="form-control" style="display: inline-block;">
+                    <select id="dissimilarity_index" name="dissimilarity_index" class="form-control input-sm" style="display: inline-block;">
                         <option value="" disabled selected>Select One</option>
                         <?php
                         // MAW Dissimilarity Indexes
@@ -161,22 +170,6 @@ $config->aw_type = strtoupper($config->aw_type);
                     </select>
                 </td>
             </tr>
-            </tbody>
-        </table>
-        <table id="project_info" class="table table-bordered table-striped table-hover">
-            <caption>Species Info</caption>
-            <thead>
-            <tr><th><?php print ($isAFileIOProject ? "#" : "ID"); ?></th><th>Title/Header</th><th>Short Name</th></tr>
-            </thead>
-            <tbody>
-            <?php
-            if($isAFileIOProject) $id = 0;
-            foreach ($config->data as $data) {
-                /** @var int $id */
-                $id = ($isAFileIOProject) ? ($id + 1) : $data['id'];
-                print "<tr><th>{$id}</th><td>".ucwords($data['title'])."</td><td>{$data['short_name']}</td></tr>";
-            }
-            ?>
             </tbody>
         </table>
     </div>

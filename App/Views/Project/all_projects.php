@@ -31,10 +31,10 @@ $project_count = count($projects);
 <?php
 foreach($projects as $project):
     // Show text based on whether the project is editable or not.
-    $edit_text = $project['editable'] ? '<a href="./projects/' . $project['id'] . '/edit" class="project-icon glyphicon glyphicon-edit" title="Edit Project"></a>' : '';
+    $edit_text = $project['editable'] ? '<a href="./projects/' . $project['id'] . '/edit" class="project-icon fa fa-edit" title="Edit Project"></a>' : '';
     // Cancel or Delete
     $delete_text = $project['result_type'] != Project::RT_PENDING ?
-        "<a href=\"javascript:Project.delete({$project['id']}, '{$project['name']}')\" class=\"project-icon glyphicon glyphicon-trash text-danger\" title=\"Delete Project\"></a>" :
+        "<a href=\"javascript:Project.delete({$project['id']}, '{$project['name']}')\" class=\"project-icon fa fa-trash text-danger\" title=\"Delete Project\"></a>" :
         "<a href=\"javascript:Project.process.cancel({$project['id']}, '{$project['name']}')\" class=\"project-icon glyphicon glyphicon-remove text-danger\" title=\"Cancel Project\"></a>";
     // Set status text on the basis of result type
     switch ($project['result_type']){
@@ -56,7 +56,7 @@ foreach($projects as $project):
     }
     // Download
     $download_text = $project['result_type'] == Project::RT_SUCCESS ?
-        "<a href=\"./projects/{$project['id']}/download\" class=\"project-icon glyphicon glyphicon-download-alt text-info\" title=\"Download Project\"></a>":
+        "<a href=\"./projects/{$project['id']}/download\" class=\"project-icon fa fa-download text-info\" title=\"Download Project\"></a>":
         '';
 
     // Formatted project id and names
