@@ -21,7 +21,7 @@ if($logged_in):
         }, 60000);
     });
 </script>
-<nav role="navigation" class="navbar navbar-default">
+<nav id="top_nav" role="navigation" class="navbar navbar-default">
     <div class="container">
         <div class="navbar-header">
             <button type="button" data-target="#navbar_collapse" data-toggle="collapse" class="navbar-toggle">
@@ -37,7 +37,7 @@ if($logged_in):
         <div id="navbar_collapse" class="collapse navbar-collapse nav navbar-nav navbar-right">
             <ul class="nav navbar-nav">
                 <li>
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="hidden-xs glyphicon glyphicon-bell"></b><span class="visible-xs"><span class="notification_count">0</span> Notifications</span><sup class='notification_count'></sup></a>
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="hidden-xs fa fa-bell"></b><span class="visible-xs"><span class="notification_count">0</span> Notifications</span><sup class='notification_count'></sup></a>
                     <ul id="notification_bar" role="menu" class="dropdown-menu" style="width: max-content;"></ul>
                 </li>
                 <li <?php if($active_tab == 'home') print $active ?>><a href="./home">Home</a></li>
@@ -54,9 +54,6 @@ if($logged_in):
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">Settings <b class="caret"></b></a>
                     <ul role="menu" class="dropdown-menu">
                         <li><a href="./reset_pass">Change Password</a></li>
-                        <!--li><a href="#">Change Info</a></li-->
-                        <li class="divider"></li>
-                        <li><a href="#" style="color: #a94442;">Delete Account</a></li>
                     </ul>
                 </li>
                 <li><a href="./logout">Logout</a></li>
@@ -71,7 +68,7 @@ if($logged_in):
         font-size: 85% !important;
     }
 </style>
-<nav role="navigation" class="navbar navbar-default">
+<nav id="top_nav" role="navigation" class="navbar navbar-default">
     <div class="container">
         <div class="navbar-header">
             <a href="./home" class="navbar-brand"><?php print $title; ?></a>

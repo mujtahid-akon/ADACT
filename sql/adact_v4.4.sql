@@ -134,10 +134,12 @@ CREATE TABLE `projects` (
   `project_name` varchar(50) NOT NULL,
   `date_created` datetime NOT NULL,
   `seen` tinyint(1) DEFAULT '0',
+  `project_started` datetime DEFAULT NULL,
+  `project_finished` datetime DEFAULT NULL,
   PRIMARY KEY (`project_id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `projects_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -192,7 +194,7 @@ CREATE TABLE `users` (
   `activation_key` varchar(50) NOT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -214,4 +216,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-03-12 14:55:59
+-- Dump completed on 2018-07-29  2:01:32
