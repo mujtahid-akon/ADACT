@@ -1,5 +1,6 @@
 <?php
-if(preg_match('/^\/(logos|profile|sponsor|Treant|vendor|css|ico|fonts|js|test\.php)/', $_SERVER['REQUEST_URI'], $matches)){
+// Load resources
+if(preg_match('/^\/(logos|profile|sponsor|Treant|vendor|css|ico|fonts|js)/', $_SERVER['REQUEST_URI'], $matches)){
     // Local directories
     $file = __DIR__ . '/public' . $_SERVER['REQUEST_URI'];
     if(file_exists($file) AND !is_dir($file)){
@@ -12,8 +13,17 @@ if(preg_match('/^\/(logos|profile|sponsor|Treant|vendor|css|ico|fonts|js|test\.p
         }
         header('Content-Type: ' . $mime);
         header('Cache-Control: Public, max-age: 3600');
+        readfile($file);
+        exit();
+    }
+}
+// Load tests
+elseif(preg_match('/^\/(test\.php)/', $_SERVER['REQUEST_URI'], $matches)){
+    // Local directories
+    $file = __DIR__ . '/public' . $_SERVER['REQUEST_URI'];
+    if(file_exists($file) AND !is_dir($file)){
         /** @noinspection PhpIncludeInspection */
-        require_once $file;
+        include $file;
         exit();
     }
 }

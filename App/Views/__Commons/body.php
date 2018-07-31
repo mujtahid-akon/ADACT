@@ -44,6 +44,10 @@ switch ($status){
         /** @noinspection PhpIncludeInspection */
         require_once __DIR__ . '/../__ErrorDocuments/404Error.php';
         break;
+    case HttpStatusCode::INTERNAL_SERVER_ERROR:
+        /** @noinspection PhpIncludeInspection */
+        require_once __DIR__ . '/../__ErrorDocuments/500Error.php';
+        break;
     default:
         if(file_exists($__actionView)){
             /** @noinspection PhpIncludeInspection */
@@ -57,7 +61,4 @@ else if(file_exists($__commonsDir)) /** @noinspection PhpIncludeInspection */
     require_once $__defaultFooter;
 
 // Container end
-print <<< EOF
-</div>
-
-EOF;
+print "</div>\n";

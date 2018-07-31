@@ -6,7 +6,12 @@ use \ADACT\App\Route;
 use \ADACT\Config;
 use \ADACT\App\Session;
 
-Session::start();
+try{
+    Session::start();
+} catch (\Exception $e) {
+    Route::$status_code = \ADACT\App\HttpStatusCode::INTERNAL_SERVER_ERROR;
+    if(Config::DEBUG_MODE) error_log($e->getMessage());
+}
 
 if(Config::DEBUG_MODE){
     error_reporting(E_ALL|E_DEPRECATED|E_ERROR|E_NOTICE);

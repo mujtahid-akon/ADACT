@@ -24,7 +24,7 @@ $config->aw_type = strtoupper($config->aw_type);
 
 // Output begin
 ?>
-    <h3>Editing: <?php print ucwords($config->project_name); ?></h3>
+    <h3 class="title">Editing: <?php print ucwords($config->project_name); ?></h3>
     <script>
         // Initialize values
         $(document).ready(function () {
@@ -108,11 +108,11 @@ $config->aw_type = strtoupper($config->aw_type);
         };
     </script>
     <div class="btn-group">
-        <button id="submit_btn" class="btn btn-primary btn-sm" title="Run project and show result"
+        <button class="btn btn-4 button small gray" id="submit_btn" title="Run project and show result"
                 onclick="Project.edit.send(<?php print $project_id ?>)">
             <i class="fa fa-paper-plane" aria-hidden="true"></i> Run
         </button>
-        <a class="btn btn-default btn-sm" href="./projects/<?php print $project_id; ?>" title="Go back">
+        <a class="btn btn-4 button small whitish" href="./projects/<?php print $project_id; ?>" title="Go back">
             <i class="fa fa-chevron-left" aria-hidden="true"></i> Back
         </a>
     </div>
@@ -126,12 +126,12 @@ $config->aw_type = strtoupper($config->aw_type);
             <tr>
                 <th>Absent Word Type</th>
                 <td>
-                    <div class="radio radio-info" style="display: inline-block;">
+                    <div class="radio radio-adact" style="display: inline-block;">
                         <input id="aw_type_maw" type="radio" name="aw_type" value="maw"
                                onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();$('#dissimilarity_index').val('');" />
                         <label for="aw_type_maw"><abbr title="Minimal Absent Words">MAW</abbr></label>
                     </div>
-                    <div class="radio radio-info" style="display: inline-block;">
+                    <div class="radio radio-adact" style="display: inline-block;">
                         <input id="aw_type_raw" type="radio" name="aw_type" value="raw"
                                onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();$('#dissimilarity_index').val('');"/>
                         <label for="aw_type_raw"><abbr title="Relative Absent Words">RAW</abbr></label>
@@ -150,7 +150,7 @@ $config->aw_type = strtoupper($config->aw_type);
                 <td>
                     <div class="material-switch pull-left">
                         <input id="inversion" name="inversion" type="checkbox"/>
-                        <label for="inversion" class="label-success"></label>
+                        <label for="inversion" class="label-adact"></label>
                     </div>
                 </td>
             </tr>

@@ -115,7 +115,7 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
 // Output begin
 ?>
 <!-- Project output begin -->
-<h3>Project: <?php print ucwords($config->project_name); ?></h3>
+<h3 class="title">Project: <?php print ucwords($config->project_name); ?></h3>
 <!-- Include Scripts and styles -->
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="./js/phylotree.js"></script>
@@ -196,23 +196,23 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
 <div class="btn-toolbar" role="toolbar" style="margin-bottom: 5px">
     <div class="btn-group">
         <?php if($editable): ?>
-        <a class="btn btn-default btn-sm" href="<?php echo $base_url ?>/edit" title="Edit project">
+        <a class="btn button small blue" href="<?php echo $base_url ?>/edit" title="Edit project">
             <i class='fa fa-edit'></i> Edit
         </a>
         <?php endif; // editable ?>
         <?php if($isAPendingProject): ?>
-        <button class="btn btn-warning btn-sm" onclick="Project.process.cancel(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" title="Cancel project">
+        <button type="button" class="btn button small orange" onclick="Project.process.cancel(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" title="Cancel project">
             <i class="fa fa-remove" aria-hidden="true"></i> Cancel
         </button>
         <?php else: ?>
-        <a class="btn btn-primary btn-sm" href="<?php echo $base_url ?>/download" title="Download entire project">
+        <a class="btn button small gray" href="<?php echo $base_url ?>/download" title="Download entire project">
             <i class='fa fa-download'></i> Download
         </a>
-        <button type="button" class="btn btn-danger btn-sm" onclick="Project.delete(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>, true)" title="Delete project">
+        <button type="button" class="btn button small deeporange" onclick="Project.delete(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>, true)" title="Delete project">
             <i class="fa fa-trash" aria-hidden="true"></i> Delete
         </button>
         <?php endif; // isAPendingProject ?>
-        <button type="button" class="btn btn-default btn-sm" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"./projects/{$project_id}/fork\"") ?> title="Fork this project">
+        <button type="button" class="btn button small whitish" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"./projects/{$project_id}/fork\"") ?> title="Fork this project">
             <i class="fa fa-code-fork" aria-hidden="true"></i> Fork
         </button>
     </div>
@@ -408,7 +408,7 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
                         </ul>
                     </div>
                     <!-- Selection Tools -->
-                    <div class="navbar-form" style="margin: 0 0 5px 5px;float: left;padding: 0;">
+                    <div class="navbar-form hidden-xs" style="margin: 0 0 5px 5px;float: left;padding: 0;">
                         <div class="input-group">
                             <span class="input-group-btn">
                                 <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
@@ -447,7 +447,7 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
                         </div>
                     </div>
                     <!-- Filter branches -->
-                    <div class="btn-group">
+                    <div class="btn-group hidden-xs">
                         <input type="text" id='branch_filter' class="form-control input-sm" placeholder="Filter branches">
                     </div>
                 </div>

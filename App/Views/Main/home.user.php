@@ -8,15 +8,15 @@
 ?>
 <div class="row">
     <div class="col-md-12">
-        <h1>Welcome!</h1>
+        <h3 class="title">Welcome to <span style="font-family: monospace;">ADACT</span>!</h3>
     </div>
 </div>
 <div class="row">
-    <div class="col-sm-6 center">
+    <div class="col-sm-6 center-text">
         <a class="wc wc-img" href="./projects/new"><i class="fa fa-file" ></i></a><br />
         <a class="wc wc-btn h2" href="./projects/new">New project</a>
     </div>
-    <div class="col-sm-6 center">
+    <div class="col-sm-6 center-text">
         <a class="wc wc-img" href="./projects"><i class="fa fa-list" ></i></a><br />
         <a class="wc wc-btn h2" href="./projects">All projects</a>
     </div>

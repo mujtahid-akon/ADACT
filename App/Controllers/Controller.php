@@ -14,6 +14,14 @@ use ADACT\App\Views\Template;
 use ADACT\App\Route;
 use ADACT\Config;
 
+/*
+ * Common Constants used in controllers
+ */
+define('ACTIVE_TAB', 'active_tab'); // Currently active tab
+define('PAGE_TITLE', 'title');      // Page title
+define('LOGGED_IN', 'logged_in');   // Is logged in
+define('STANDALONE', 'standalone'); // Whether standalone html page is provided as view
+
 /**
  * Class Controller
  *

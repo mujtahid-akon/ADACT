@@ -8,37 +8,38 @@
  */
 $active = "class=\"active\"";
 if(!isset($logged_in)) $logged_in = false;
-
+?>
+<!-- Loader -->
+<div class="pre-loader" style="color: #4b4e53"><i class="fa fa-spinner fa-pulse middle"></i></div>
+<?php
 if($logged_in):
 ?>
-
 <script>
-    // Checks for notifications in every 10 seconds.
     $(document).ready(function(){
+        // Add notification counter for small devices
+        $('#nav-side-header').prepend('<sup class="notification-count dev-sm"></sup>');
+        // Checks for notifications in every 1 minute.
         Project.notification_handler();
         setInterval(function(){
             Project.notification_handler();
         }, 60000);
     });
 </script>
-<nav id="top_nav" role="navigation" class="navbar navbar-default">
+<nav id="top_nav" role="navigation" class="navbar nav-side nav-side-touch">
     <div class="container">
+        <div class="btn-close">&times;</div>
         <div class="navbar-header">
-            <button type="button" data-target="#navbar_collapse" data-toggle="collapse" class="navbar-toggle">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <sup class="notification_count visible-xs" style="color: orangered;border-radius: 2px;padding: 1px;position: absolute;right: 15px;top: 10px;"></sup>
-            <a href="./home" class="navbar-brand"><?php print $title ?></a>
-            <a class="btn btn-default navbar-left <?php if($active_tab == 'new') print "active" ?>" href="./projects/new" style="margin-top: 8px;color: crimson !important;">New Project</a>
+            <a href="./home" class="navbar-brand adact-title">
+                <img class="logo" src="./logos/ADACT_Logo_black_32x32.png" aria-hidden="true" />
+                <?php print $title ?>
+            </a>
+            <a class="btn button small orange navbar-left <?php if($active_tab == 'new') print "active" ?>" href="./projects/new" style="margin-top: 8px;">New Project</a>
         </div>
-        <div id="navbar_collapse" class="collapse navbar-collapse nav navbar-nav navbar-right">
+        <div class="nav navbar-nav navbar-right">
             <ul class="nav navbar-nav">
                 <li>
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="hidden-xs fa fa-bell"></b><span class="visible-xs"><span class="notification_count">0</span> Notifications</span><sup class='notification_count'></sup></a>
-                    <ul id="notification_bar" role="menu" class="dropdown-menu" style="width: max-content;"></ul>
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="hidden-xs fa fa-bell"></b><span class="visible-xs"><span class="notification-count">0</span> Notifications</span><sup class='notification-count'></sup></a>
+                    <ul id="notification_bar" role="menu" class="dropdown-menu"></ul>
                 </li>
                 <li <?php if($active_tab == 'home') print $active ?>><a href="./home">Home</a></li>
                 <li class="<?php if($active_tab == 'projects') print "active " ?>dropdown">
@@ -71,7 +72,10 @@ if($logged_in):
 <nav id="top_nav" role="navigation" class="navbar navbar-default">
     <div class="container">
         <div class="navbar-header">
-            <a href="./home" class="navbar-brand"><?php print $title; ?></a>
+            <a href="./home" class="navbar-brand adact-title">
+                <img class="logo" src="./logos/ADACT_Logo_black_32x32.png" aria-hidden="true" />
+                <?php print $title; ?>
+            </a>
             <a class="navbar-brand hidden-sm hidden-md hidden-lg small" href="./login">Login</a>
             <a class="navbar-brand hidden-sm hidden-md hidden-lg small" href="./reg">Register</a>
         </div>
@@ -84,3 +88,14 @@ if($logged_in):
     </div>
 </nav>
 <?php endif; ?>
+<!-- Javascript Warning -->
+<noscript class="container" style="display: block; text-align: center;">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-danger">
+                Javascript is required to carry out certain operations.
+                Please enable Javascript.
+            </div>
+        </div>
+    </div>
+</noscript>
