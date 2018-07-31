@@ -1,81 +1,118 @@
 /** Background colors & other enhancements */
 body{
-    background-color: lightyellow;
-}
-
-/** Top navigation */
-#top_nav{
-    background-color: palegoldenrod !important;
-    border: 0 !important;
-    border-radius: unset !important;
-    box-shadow: 0 0 30px 30px palegoldenrod;
-    background-image: unset;
-}
-
-#top_nav .active>a, #top_nav .open>a{
-    background-color: darkkhaki !important;
-}
-@media (max-width: 479px) {
-    #top_nav .active, #top_nav .open{
-        background-color: darkkhaki !important;
-    }
-    #top_nav .open > .dropdown-menu{
-        background-color: palegoldenrod !important;
-    }
-    #notification_bar{
-        width: unset !important;
-    }
-}
-
-/** Table colors */
-.table-striped>tbody>tr:nth-child(odd) {
-    background-color: lemonchiffon !important;
-}
-
-thead>tr:first-child{
-    background-color: lavender;
-}
-
-/** Others */
-html, body, .container-table {
-    height: 100%;
     width: 100%;
-    font-family: 'Open Sans', Arial, Helvetica, sans-serif;
-    color: #777;
+    height: 100%;
+    background-color: lightyellow;
+    margin: 0;
+    outline: 0;
+    padding: 0;
+    vertical-align: baseline;
+    font-size: 14px;
+    line-height: 25px;
     cursor: default;
+    font-family: Lato, Arial, Helvetica, sans-serif;
+    font-weight: 400;
+    color: #5a5a5a;
+    -webkit-font-smoothing: antialiased !important;
+    -webkit-text-size-adjust: 100% !important;
+    transition: background-color .5s;
 }
-.container-table {
-    display: table;
+
+/* === Top navigation === */
+@media screen and (min-width: 768px) {
+    #top_nav {
+        background-color: palegoldenrod !important;
+        border: 0 !important;
+        border-radius: unset !important;
+        box-shadow: 0 0 30px 30px palegoldenrod;
+        background-image: unset;
+        color: #5a5a5a !important;
+    }
+
+    #top_nav a{ color: #5a5a5a; }
+
+    #top_nav .active>a, #top_nav .open>a{ color: #333; }
 }
-.vertical-center-row {
-    display: table-cell;
-    vertical-align: middle;
+
+@media screen and (max-width: 767px) {
+    #nav-side-header, #top_nav.navbar-default {
+        background-color: palegoldenrod !important;
+        border: 0 !important;
+        border-radius: unset !important;
+        box-shadow: 0 0 30px 30px palegoldenrod;
+        background-image: unset;
+        color: #5a5a5a !important;
+    }
+
+    .nav-side {
+        background-color: black !important;
+        border: 0 !important;
+        border-radius: unset !important;
+        box-shadow: none;
+        background-image: unset;
+        color: lightyellow !important;
+    }
+
+    #top_nav.nav-side a{ color: lightyellow; }
+    #top_nav.navbar-default a{ color: #5a5a5a; }
+
+    #top_nav.nav-side .active, #top_nav.nav-side .open{
+        background-color: maroon !important;
+    }
+
+    #top_nav.nav-side .active > ul, #top_nav.nav-side .open > ul{
+        background-color: black;
+    }
+
+    #top_nav .dropdown-menu > li a:hover {
+        background-color: maroon !important;
+    }
+    /*#top_nav.navbar-default .active>a, #top_nav .open>a{ color: #333;}*/
+
+    /* A bootstrap problem for Safari */
+    .btn-group-vertical>.btn-group:after, .btn-group-vertical>.btn-group:before, .btn-toolbar:after, .btn-toolbar:before, .clearfix:after, .clearfix:before, .container-fluid:after, .container-fluid:before, .container:after, .container:before, .dl-horizontal dd:after, .dl-horizontal dd:before, .form-horizontal .form-group:after, .form-horizontal .form-group:before, .modal-footer:after, .modal-footer:before, .nav:after, .nav:before, .navbar-collapse:after, .navbar-collapse:before, .navbar-header:after, .navbar-header:before, .navbar:after, .navbar:before, .pager:after, .pager:before, .panel-body:after, .panel-body:before, .row:after, .row:before {
+        display: inline !important;
+    }
+
+    .nav-side .unread-count {
+        display: none;
+    }
+
+    #nav-side-header .notification-count{
+        color: transparent;
+        border-radius: 50%;
+        padding: 1px;
+        position: absolute;
+        left: 10px;
+        top: 15px;
+        width: 5px;
+        height: 5px;
+        background: darkgoldenrod;
+    }
+
+    #notification_bar {
+        padding-left: 15px;
+    }
+}
+
+#top_nav .active>a, #top_nav .open>a,
+#top_nav .nav > li > a{
+    background: unset;
+}
+
+.navbar-brand img.logo{
+    display: inline-block;
+    width: 20px;
+    position: relative;
+    top: -2px;
 }
 
 
-.title a{
-    color: unset;
-    text-decoration: none !important;
-}
-
-td, th{
-    vertical-align: middle !important;
-}
-
-th{
-    width: max-content;
-}
-
-a.link{
-    text-decoration: underline;
-}
-
-a, a:hover, a:active, a:visited{
-    color: #111;
-}
-
-.navbar-brand {
-    font-family: monospace;
+/* Fix a nav bar error */
+@media (min-width: 768px) {
+    .nav > li {
+        display: inline-block!important;
+    }
 }
 
 .navbar-toggle {
@@ -100,8 +137,218 @@ a, a:hover, a:active, a:visited{
     left: -5px;
 }
 
-.center{
-    text-align: center;
+@media (max-width: 479px) {
+    #notification_bar{
+        width: unset !important;
+    }
+}
+
+/** Table */
+.table-striped>tbody>tr:nth-child(odd) {
+    background-color: lemonchiffon !important;
+}
+
+thead>tr:first-child{
+    background-color: lavender;
+}
+
+td, th{
+    vertical-align: middle !important;
+}
+
+th{
+    width: max-content;
+}
+
+/** Others */
+html, body, .container-table {
+    height: 100%;
+    width: 100%;
+}
+.container-table {
+    display: table;
+}
+.vertical-center-row {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.alert{
+    line-height: 28px;
+}
+
+.margin-auto{
+    margin: auto;
+}
+
+a.override{
+    text-decoration: inherit !important;
+    color: inherit !important;
+}
+
+.pipe:after{
+    content: ' | ';
+}
+
+.middle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+/* text-muted */
+.text-muted {
+    opacity: 0.5;
+    color: inherit !important;
+}
+a.text-muted:hover{
+    opacity: 1;
+}
+
+/** Some colors */
+.bg-palegoldenrod { background-color: palegoldenrod !important; }
+.bg-lightyellow { background-color: lightyellow !important; }
+.bg-maroon { background-color: maroon !important; }
+.bg-black { background-color: black !important; }
+
+.bc-palegoldenrod { border-color: palegoldenrod !important; }
+.bc-gray { border-color: #4b4e53 !important; }
+
+.palegoldenrod { color: palegoldenrod !important; }
+.golden-rod { color: goldenrod !important; }
+.lightyellow { color: lightyellow !important; }
+.maroon { color: maroon !important; }
+.golden { color: gold !important; }
+
+/** Title */
+.title a{
+    color: unset;
+    text-decoration: none !important;
+}
+
+h3.title{
+    font-weight: 300;
+    margin: 5px 0;
+}
+
+.adact-title{
+    font-family: monospace;
+}
+
+/* === Form === */
+/* form-control */
+.form-control{
+    background-color: lightgoldenrodyellow !important;
+    padding: 5px 10px !important;
+    color: #333;
+}
+.form-control:focus{
+    background-color: palegoldenrod !important;
+    color: #4b4e53;
+}
+/* material-switch */
+.material-switch > label::before{
+    background-color: #535961 !important;
+    margin-top: -12px !important;
+}
+.material-switch > label::after{
+    margin-top: -12px !important;
+}
+
+.material-switch > .label-adact{
+    background-color: #535961;
+}
+
+/* custom radio */
+.radio-adact input[type="radio"] + label::after {
+    background-color: #535961;
+}
+.radio-adact input[type="radio"]:checked + label::before {
+    border-color: #535961;
+}
+.radio-adact input[type="radio"]:checked + label::after {
+    background-color: #535961;
+}
+
+/* form-control placeholders */
+.form-control::-webkit-input-placeholder { color: #4b4e53 }
+.form-control::-moz-placeholder { color: #4b4e53 }
+.form-control:-moz-placeholder { color: #4b4e53 }
+.form-control:-ms-input-placeholder { color: #4b4e53 }
+
+.form-control:focus::-webkit-input-placeholder { color: #7e8082 }
+.form-control:focus::-moz-placeholder { color: #7e8082 }
+.form-control:focus:-moz-placeholder { color: #7e8082 }
+.form-control:focus:-ms-input-placeholder { color: #7e8082 }
+
+/* button: whitish (default), gray (primary), green(success), blue (info), deeporange (danger), orange (warning) */
+.button.blue:hover {
+    background-color: #2d6ca2 !important;
+}
+
+.button.green:hover {
+    background-color: darkgreen !important;
+}
+
+.button.whitish {
+    color: #4b4e53;
+    background-color: navajowhite;
+}
+
+.button.whitish:hover {
+    background-color: burlywood;
+    color: #4b4e53;
+    cursor: pointer
+}
+
+.button.thin.palegoldenrod {
+    border-color: palegoldenrod !important;
+    color: palegoldenrod !important;
+}
+
+.button.thin.palegoldenrod:hover {
+    background-color: palegoldenrod !important;
+    color: #4b4e53 !important;
+}
+
+.button.thin.whitish {
+    border-color: navajowhite !important;
+    color: navajowhite !important;
+}
+
+.button.thin.whitish:hover {
+    background-color: navajowhite !important;
+    color: #4b4e53 !important;
+}
+
+.button.deeporange:hover {
+    background-color: #c12e2a !important;
+    cursor: pointer
+}
+
+.button.orange {
+    color: #4b4e53;
+    background-color: orange;
+}
+
+.button.orange:hover {
+    background-color: #eb9316;
+    color: #4b4e53;
+    cursor: pointer
+}
+
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn{
+    cursor: not-allowed !important;
+}
+
+/** Link */
+
+a.link{
+    text-decoration: underline;
+}
+
+a, a:hover, a:active, a:visited{
+    color: #111;
 }
 
 #accn_gin {
@@ -111,6 +358,20 @@ a, a:hover, a:active, a:visited{
 .pagination>.active>a, .pagination>.active>a:focus, .pagination>.active>a:hover, .pagination>.active>span, .pagination>.active>span:focus, .pagination>.active>span:hover {
     background-color: #f5f5f5;
     border-color: #ddd;
+}
+
+/* Loader */
+.no-js #loader { display: none;  }
+.js #loader { display: block; position: absolute; left: 100px; top: 0; }
+.pre-loader {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    background-color: lightyellow;
+    /*background: url(/css/images/spinner.gif) center no-repeat #fff;*/
 }
 
 /** Material Switch */

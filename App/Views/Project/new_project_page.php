@@ -136,11 +136,11 @@ if($isForked){
 <div class="row">
     <div class="col-md-3"></div>
     <div class="col-md-6">
-        <div class="h1" id="p_name">New Project</div>
+        <h3 class="title" id="p_name">New Project</h3>
         <small class="text text-danger">[Fields with * (star) sign are mandatory.]</small>
         <div style="margin: 5px 0">
-            <button type="button" class="btn btn-default btn-xs" onclick="ExampleOne()">Example 1</button>
-            <button type="button" class="btn btn-default btn-xs" onclick="ExampleTwo()">Example 2</button>
+            <button type="button" class="btn-4 button small whitish uppercase" onclick="ExampleOne()">Example 1</button>
+            <button type="button" class="btn-4 button small whitish uppercase" onclick="ExampleTwo()">Example 2</button>
         </div>
         <div class="form form-horizontal">
             <!-- Project Name -->
@@ -150,7 +150,7 @@ if($isForked){
             </fieldset>
             <!-- FASTA File Source -->
             <fieldset class="form-wrapper">
-                <label for="method">FASTA file source *</label>
+                <label for="method" class="control-label">FASTA file source *</label>
                 <select id="method" name="method" class="form-control input-sm"
                         style="display: inline-block;width: unset;" onchange="InputMethod.setCurrent($(this).val())">
                     <option value="" selected disabled>Choose One</option>
@@ -203,13 +203,13 @@ if($isForked){
             <fieldset class="form-wrapper">
                 <!-- Absent Word Type -->
                 <fieldset>
-                    <span>Absent Word Type *: </span>
-                    <div class="radio radio-info" style="display: inline-block;">
+                    <label class="control-label">Absent Word Type *: </label>
+                    <div class="radio radio-adact" style="display: inline-block;">
                         <input id="aw_type_maw" type="radio" name="aw_type" value="maw"
                                onchange="$('.maw_dissimilarity').show();$('.raw_dissimilarity').hide();$('#dissimilarity_index').val('');" />
                         <label for="aw_type_maw"><abbr title="Minimal Absent Words">MAW</abbr></label>
                     </div>
-                    <div class="radio radio-info" style="display: inline-block;">
+                    <div class="radio radio-adact" style="display: inline-block;">
                         <input id="aw_type_raw" type="radio" name="aw_type" value="raw"
                                onchange="$('.maw_dissimilarity').hide();$('.raw_dissimilarity').show();$('#dissimilarity_index').val('');"/>
                         <label for="aw_type_raw"><abbr title="Relative Absent Words">RAW</abbr></label>
@@ -217,7 +217,7 @@ if($isForked){
                 </fieldset>
                 <!-- K-Mer Size -->
                 <fieldset>
-                    <label>
+                    <label class="control-label">
                         <span>K-Mer Size *: </span>
                         <i data-toggle="tooltip" class="glyphicon glyphicon-info-sign"
                            title="Be careful when choosing kmer size: they are not checked on the server side!"></i>
@@ -229,13 +229,13 @@ if($isForked){
                 </fieldset>
                 <!-- MAW Type -->
                 <fieldset style="margin-bottom: 10px">
-                    <span>Sequence Type *: </span>
-                    <div class="radio radio-info" style="display: inline-block;">
+                    <label class="control-label">Sequence Type *: </label>
+                    <div class="radio radio-adact" style="display: inline-block;">
                         <input type="radio" id="seq_type_nu" class="seq_type" name="seq_type" value="nucleotide"
                                onchange="$('#inversion_box').show()" checked  />
                         <label for="seq_type_nu">Nucleotide</label>
                     </div>
-                    <div class="radio radio-info" style="display: inline-block;">
+                    <div class="radio radio-adact" style="display: inline-block;">
                         <input type="radio" id="seq_type_pr" class="seq_type" name="seq_type" value="protein"
                                       onchange="$('#inversion_box').hide()" />
                         <label for="seq_type_pr">Protein</label>
@@ -245,13 +245,13 @@ if($isForked){
                 <fieldset id="inversion_box">
                     <div class="material-switch pull-left">
                         <input id="inversion" name="inversion" type="checkbox"/>
-                        <label for="inversion" class="label-success"></label>
+                        <label for="inversion" class="label-adact"></label>
                     </div>
-                    <label for="inversion" style="padding-left: 10px; font-weight: normal;">Reverse Complement</label>
+                    <label for="inversion" class="control-label" style="padding-left: 10px; padding-top: 0;">Reverse Complement</label>
                 </fieldset>
                 <!-- Dissimilarity Index -->
                 <fieldset>
-                    <label for="dissimilarity_index">Dissimilarity Index *</label>
+                    <label class="control-label" for="dissimilarity_index">Dissimilarity Index *</label>
                     <select id="dissimilarity_index" name="dissimilarity_index" class="form-control input-sm">
                         <option value="" disabled selected>Select One</option>
                         <?php
@@ -267,7 +267,7 @@ if($isForked){
                     </select>
                 </fieldset>
             </fieldset>
-            <button type="button" id="p_btn" class="btn btn-primary btn-sm" onclick="Project.result.send()">
+            <button type="button" id="p_btn" class="btn-4 button small gray" onclick="Project.result.send()">
                 <i class="fa fa-paper-plane" aria-hidden="true"></i> Run
             </button>
         </div>

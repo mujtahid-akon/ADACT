@@ -1,0 +1,137 @@
+/*!
+ * nav-side.css - v1.0
+ * Side navigation for Bootstrap formatted navigation panel
+ * https://github.com/MuntashirAkon/nav-side
+ * @author Muntashir Al-Islam <muntashir.islam96@gmail.com>
+ * @license MIT
+ */
+
+@media screen and (max-width: 767px) {
+    .nav-side {
+        height: 100%;
+        width: 0;
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        background-color: black;
+        overflow-x: hidden;
+        transition: 0.5s;
+        border-radius: 0;
+    }
+
+    .nav-side > .container {
+        padding: 0 25px;
+    }
+
+    .nav-side .navbar-nav>.active > a,
+    .nav-side .navbar-nav>.active > a:hover,
+    .nav-side .navbar-nav>.active > a:focus,
+    .nav-side .open > a,
+    .nav-side .navbar-nav li a:hover,
+    .nav-side .navbar-nav li a:hover,
+    .nav-side .navbar-nav li a:focus,
+    .nav-side .navbar-nav li a:focus {
+        color: gold;
+        background-color: maroon;
+    }
+
+    .nav-side .btn-close {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 25px;
+        font-size: 36px;
+        margin-left: 50px;
+        padding: 0;
+        line-height: 36px;
+    }
+    .nav-side { padding-top: 0; }
+    .nav-side.nav-side-width-full { padding-top: 50px; }
+    .nav-side-width-full .btn-close{ display: block; }
+
+    .nav-side .dropdown-menu > li > a{
+        color: palegoldenrod;
+    }
+
+    .nav-side a {
+        padding: 8px 8px 8px 32px;
+        text-decoration: none;
+        /*font-size: 25px;*/
+        color: palegoldenrod;
+        display: block;
+        transition: 0.3s;
+    }
+
+    .nav-side .divider {
+        margin-left: 25px;
+        background-color: palegoldenrod;
+    }
+
+    #nav-side-overlay {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: #000;
+        opacity: 0.5;
+        display: none;
+        /*transition: opacity .5s;*/
+    }
+
+    #nav-side-opener {
+        float: left;
+        font-size: 18px;
+        color: #4b4e53;
+        padding: 6px 8px 8px 8px;
+        /*border: 1px solid;*/
+        margin: 8px 0 8px 0;
+        cursor: pointer;
+        line-height: 20px;
+        position: absolute;
+        left: -9px;
+    }
+
+    #nav-side-opener:hover, #nav-side-opener.open {
+        color: black;
+    }
+
+    #nav-side-header {
+        display: block;
+        transition: 0.5s;
+    }
+    #nav-side-header .navbar-header{
+        /*transition:  0.5s;*/
+        position: absolute;
+        left: 37px;
+    }
+
+    .navbar.nav-side .navbar-header{
+        display: none;
+    }
+
+    #nav-side-slider {
+        height: 100%;
+        width: 10px;
+        position: absolute;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    #nav-side-header {display: none;}
+    .nav-side .btn-close { display: none; }
+}
+
+
+body > .container {
+    transition: margin-left .5s;
+    /*padding: 16px;*/
+}
+
+@media screen and (max-height: 450px) and (max-width: 767px) {
+    .nav-side {padding-top: 15px;}
+    .nav-side a {font-size: 18px;}
+}

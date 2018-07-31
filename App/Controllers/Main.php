@@ -25,6 +25,7 @@ class Main extends Controller
         $this->set('title', Config::SITE_TITLE);
         $this->set('logged_in', $logged_in);
         $this->set('active_tab', 'home');
+        if(!$logged_in) $this->set('standalone', true);
     }
 
     /**

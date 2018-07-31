@@ -9,7 +9,7 @@
 <div class="row">
     <div class="col-md-3"></div>
     <div class="col-md-6">
-        <h3>Feedback</h3>
+        <h3 class="title">Feedback</h3>
         <?php
         if(isset($_SESSION['feedback_error'])){
             print "<div class=\"alert alert-danger\">{$_SESSION['feedback_error']}</div>";
@@ -26,7 +26,9 @@
             <input class="form-control" name="email" placeholder="E-mail address" value="<?php print (!isset($_SESSION['feedback_info']) ? '' : $_SESSION['feedback_info']['email']) ?>"  /><br />
             <input class="form-control" name="subject" placeholder="Subject" value="<?php print (!isset($_SESSION['feedback_info']) ? '' : $_SESSION['feedback_info']['subject']) ?>"  /><br />
             <textarea class="form-control" name="feedback" placeholder="Your feedback" style="height: 300px;" ><?php print (!isset($_SESSION['feedback_info']) ? '' : $_SESSION['feedback_info']['feedback']) ?></textarea><br />
-            <input class="btn btn-primary" type="submit" value="Submit" />
+            <button class="btn btn-4 button small gray" type="submit">
+                <i class="fa fa-paper-plane" aria-hidden="true"></i> Submit
+            </button>
         </form>
         <?php if(isset($_SESSION['feedback_info'])) unset($_SESSION['feedback_info']); ?>
     </div>

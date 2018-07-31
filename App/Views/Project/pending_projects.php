@@ -41,7 +41,7 @@ $project_count = count($projects);
 </script>
 <div class="row">
     <div class="col-md-12">
-        <h1>Pending projects</h1>
+        <h3 class="title">Pending projects</h3>
         <h4><a href='./projects/new'>Create a new project</a></h4>
         <?php if($project_count == 0): ?>
         <div>You don't have any pending projects.</div>

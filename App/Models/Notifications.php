@@ -13,7 +13,7 @@ class Notifications extends Model{
     function getAll(){
         $user_id = $_SESSION['user_id'];
         $projects = [];
-        if(@$stmt = $this->mysqli->prepare('SELECT a.project_id, a.project_name, CONVERT_TZ(a.date_created,\'SYSTEM\',\'UTC\') AS date_created FROM projects AS a LEFT OUTER JOIN pending_projects AS b ON a.project_id = b.project_id WHERE a.user_id = ? AND a.seen IS FALSE AND b.project_id IS NULL ORDER BY a.project_id DESC')){
+        if(@$stmt = $this->mysqli->prepare('SELECT a.project_id, a.project_name, CONVERT_TZ(a.date_created,\'SYSTEM\',\'UTC\') AS date_created FROM projects AS a LEFT OUTER JOIN pending_projects AS b ON a.project_id = b.project_id WHERE a.user_id = ? AND a.seen IS FALSE AND (b.project_id IS NULL OR b.status_code = 0) ORDER BY a.project_id DESC')){
             $stmt->bind_param('i', $user_id);
             $stmt->execute();
             $stmt->store_result();

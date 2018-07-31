@@ -46,9 +46,14 @@ class Route
      * @var array Saves the last route
      */
     static $last_route;
-    
+    /**
+     * @var array Matched URLs
+     */
     static $matches = [];
-
+    /**
+     * @var int|null Force status code
+     */
+    static $status_code = null;
     /**
      * InputMethod add.
      *
@@ -97,7 +102,12 @@ class Route
         return false;
     }
 
+    /**
+     * Load content
+     * @param bool     $verified           If the URL exist
+     */
     public static function load($verified){
+        $forced_status_code = self::$status_code;
         if($verified){
             // Transfer request to the controller and then method specific to the REQUEST_METHOD and QUERY_STRING
             $tmp = explode('@', self::$last_route['action']);
@@ -107,7 +117,13 @@ class Route
             $controller_class = '\\ADACT\\App\\Controllers\\' . $controller;
             if(class_exists($controller_class)){
                 if(method_exists($controller_class, $action)){
-                    (new $controller_class($controller, $action, self::$last_route['method'], self::$last_route['params'], self::$matches))->$action();
+                    /** @var Controller $controller */
+                    $controller = new $controller_class($controller, $action, self::$last_route['method'], self::$last_route['params'], self::$matches);
+                    $controller->$action();
+                    if($forced_status_code){
+                        $controller->set('status', $forced_status_code);
+                        $controller->response($forced_status_code);
+                    }
                     return;
                 }else{
                     error_log("Error: Missing $controller::$action method.");
@@ -117,8 +133,8 @@ class Route
             }
         }
         $controller = new Controller('Controller', null, null, [], []);
-        $controller->set('status', HttpStatusCode::NOT_FOUND);
-        $controller->response(HttpStatusCode::NOT_FOUND);
+        $controller->set('status', $forced_status_code ? $forced_status_code : HttpStatusCode::NOT_FOUND);
+        $controller->response($forced_status_code ? $forced_status_code : HttpStatusCode::NOT_FOUND);
         return;
     }
 }

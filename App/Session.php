@@ -19,28 +19,56 @@ class Session implements \SessionHandlerInterface {
      */
     private $_db;
 
+    /**
+     * Session constructor.
+     * @throws \Exception
+     */
+    public function __construct(){
+        @$this->_db = new \Mysqli(Config::MYSQL_HOST, Config::MYSQL_USER, Config::MYSQL_PASS, Config::MYSQL_DB, Config::MYSQL_PORT);
+        if ($this->_db->connect_error) {
+            error_log("Unable to connect to mysql.");
+            throw new \Exception("Unable to connect to MySQL");
+        }
+        @$this->_db->set_charset("utf8");
+    }
+
+    /**
+     * @return bool
+     * @throws \Exception
+     */
     public static function start() {
         if(empty(self::$_instance)) {
-            self::$_instance = new self();
-            session_set_save_handler(self::$_instance,true);
-            session_start();
+            try {
+                self::$_instance = new self();
+                session_set_save_handler(self::$_instance, true);
+                return session_start();
+            } catch (\Exception $exception){
+                throw new \Exception("Cannot start session. Reason: " . $exception->getMessage());
+            }
         }
+        return true;
     }
+
+    /**
+     * @throws \Exception
+     */
     public static function save() {
         if(empty(self::$_instance)) {
             throw new \Exception("You cannot save a session before starting the session");
         }
         self::$_instance->write(session_id(),session_encode());
     }
+
+    /**
+     * @param string $save_path
+     * @param string $name
+     * @return bool
+     * @throws \Exception
+     */
     public function open($save_path, $name) {
-        @$this->_db = new \Mysqli(Config::MYSQL_HOST, Config::MYSQL_USER, Config::MYSQL_PASS, Config::MYSQL_DB, Config::MYSQL_PORT);
-        if ($this->_db->connect_error) {
-            error_log("Unable to connect to mysql.");
-            return false;
-        }
-        @$this->_db->set_charset("utf8");
         return true;
     }
+
     public function close() {
         return true;
     }

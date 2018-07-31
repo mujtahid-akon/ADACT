@@ -45,11 +45,25 @@ class Template {
      */
     function render(){
         extract($this->_var);
+        /**
+         * Extracted default variable(s)
+         * @var bool $standalone Whether to render standalone HTML or not
+         */
         $__controller     = $this->_controller;
         $__action         = $this->_action;
         $__commonsDir     = __DIR__ . '/__Commons';                // Common view
         $__viewDir        = __DIR__ . '/' . $__controller;         // Controller specific view directory
         $__actionView     = $__viewDir . '/' . $__action . '.php'; // Controller specific action view
+        $__standaloneHTML = isset($standalone) AND $standalone ? true : false;
+
+        // First check whether standalone html is requested
+        if($__standaloneHTML){
+            // Include only the $action view
+            /** @noinspection PhpIncludeInspection */
+            require_once $__actionView;
+            return;
+        }
+        // Continue otherwise
 
         // Common head: Required
         $__common_head = $__viewDir . '/' . self::HEAD_FILE;
