@@ -19,13 +19,13 @@ class User extends Controller
         else $status = $this->{$this->_model}->register($name, $email, $pass);
         switch($status){
             case UserModel::ACCOUNT_EXISTS:
-                $_SESSION['register_error'] = "<strong>Account already exists!</strong> There's already an account associated with this email. If this email is really yours, <a href=\"./reset_pass\">reset your password</a>.";
+                $_SESSION['register_error'] = "<strong>Account already exists!</strong> There's already an account associated with this email. If this email is really yours, you can <a href=\"./reset_pass\">reset your password</a>.";
                 break;
             case UserModel::REGISTER_FAILURE:
-                $_SESSION['register_error'] = "<strong>Failed!</strong> Account creation failed due to technical difficulties, please try again.";
+                $_SESSION['register_error'] = "<strong>Failed!</strong> Account creation failed due to some technical difficulties, please try again.";
                 break;
             case UserModel::SHORTAGE_OF_ARGUMENTS:
-                $_SESSION['register_error'] = "<strong>Failed!</strong> You need to provide your name, email and password (ie. fill up all the boxes) to register.";
+                $_SESSION['register_error'] = "<strong>Failed!</strong> Please fill out <em>all the fields</em> and try again.";
         }
         if($status == UserModel::LOGIN_SUCCESS){
             $_SESSION['register_success'] = true;
@@ -70,10 +70,10 @@ class User extends Controller
         else $status = $user->login($email, $pass);
         switch($status){
             case UserModel::LOGIN_LOCKED:
-                $_SESSION['login_error'] = "<strong>Your account is locked!</strong> An email was sent to your account, use that email to unlock your account.";
+                $_SESSION['login_error'] = "<strong>Your account is locked!</strong> An email had been sent to your email address, use the email to unlock your account.";
                 break;
             case UserModel::LOGIN_FAILURE:
-                $_SESSION['login_error'] = "<strong>Login failed!</strong> Please try again with your email and password or create an account if you don't have one.";
+                $_SESSION['login_error'] = "<strong>Login failed!</strong> Please try again with valid email and password or <a href=\"./reg\">create an account</a> if you don't have one.";
                 break;
             case UserModel::SHORTAGE_OF_ARGUMENTS:
                 $_SESSION['login_error'] = "<strong>Login failed!</strong> You need to provide both email and password to login.";
