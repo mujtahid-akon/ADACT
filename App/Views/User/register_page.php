@@ -7,8 +7,7 @@
  */
 ?>
 <div class="row">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
+    <div class="col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
         <h3 class="title">Register</h3>
         <?php if(isset($_SESSION['register_error'])): ?>
         <div class="alert alert-danger">
@@ -26,5 +25,4 @@
             </button>
         </form>
     </div>
-    <div class="col-md-3"></div>
 </div>

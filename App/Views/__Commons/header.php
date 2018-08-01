@@ -17,7 +17,7 @@ if($logged_in):
 <script>
     $(document).ready(function(){
         // Add notification counter for small devices
-        $('#nav-side-header').prepend('<sup class="notification-count dev-sm"></sup>');
+        $('#nav-side-header').prepend('<sup class="notification-count dev-sm-header"></sup>');
         // Checks for notifications in every 1 minute.
         Project.notification_handler();
         setInterval(function(){
@@ -25,7 +25,7 @@ if($logged_in):
         }, 60000);
     });
 </script>
-<nav id="top_nav" role="navigation" class="navbar nav-side nav-side-touch">
+<nav id="top_nav" role="navigation" class="navbar nav-side nav-side-touch nav-side-width-full">
     <div class="container">
         <div class="btn-close">&times;</div>
         <div class="navbar-header">
@@ -37,21 +37,22 @@ if($logged_in):
         </div>
         <div class="nav navbar-nav navbar-right">
             <ul class="nav navbar-nav">
-                <li>
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="hidden-xs fa fa-bell"></b><span class="visible-xs"><span class="notification-count">0</span> Notifications</span><sup class='notification-count'></sup></a>
+                <li class="dropdown notification-bar">
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><b class="hidden-xs fa fa-bell"></b><sup class='hidden-xs notification-count dev-md-navbar'></sup><span class="notification-count dev-sm-navbar"></span></a>
                     <ul id="notification_bar" role="menu" class="dropdown-menu"></ul>
                 </li>
                 <li <?php if($active_tab == 'home') print $active ?>><a href="./home">Home</a></li>
-                <li class="<?php if($active_tab == 'projects') print "active " ?>dropdown">
-                    <a href="./projects" style="display: inline-block; padding-right: 0;">Projects&nbsp;</a><a data-toggle="dropdown" class="dropdown-toggle" href="#"  style="display: inline-block;padding-left: 0"><b class="caret"></b></a>
+                <li class="<?php if($active_tab == 'projects') print "active " ?>dropdown disable">
+                    <a href="./projects" class="inline-right">Projects&nbsp;</a>
+                    <a data-toggle="dropdown" class="dropdown-toggle inline-left hidden-xs" href="#"><b class="caret"></b></a>
                     <ul role="menu" class="dropdown-menu">
-                        <li><a href="./projects/new" style="color: #a94442;">New Project</a></li>
+                        <li><a href="./projects/new">New Project</a></li>
                         <li class="divider"></li>
                         <li><a href="./projects">All Projects</a></li>
                         <li><a href="./projects/pending">Pending Projects</a></li>
                     </ul>
                 </li>
-                <li class="dropdown">
+                <li class="<?php if($active_tab == 'settings') print "active " ?>dropdown disable">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">Settings <b class="caret"></b></a>
                     <ul role="menu" class="dropdown-menu">
                         <li><a href="./reset_pass">Change Password</a></li>
@@ -81,8 +82,8 @@ if($logged_in):
         </div>
         <div class="collapse navbar-collapse nav navbar-nav navbar-right">
             <ul class="nav navbar-nav">
-                <li><a href="./login">Login</a></li>
-                <li><a href="./reg">Register</a></li>
+                <li <?php if($active_tab == 'login') print $active ?>><a href="./login">Login</a></li>
+                <li <?php if($active_tab == 'reg') print $active ?>><a href="./reg">Register</a></li>
             </ul>
         </div>
     </div>

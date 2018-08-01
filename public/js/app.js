@@ -758,6 +758,7 @@ Project.result = {
     submit_btn: null,
     config: {},
     project_id: null,
+    btn_msg_pre: null,
     /**
      * Prepare before publishing result
      *
@@ -829,6 +830,7 @@ Project.result = {
                 btn.removeClass('btn-primary');
                 btn.addClass('btn-default disabled');
                 btn.attr('onclick', null);
+                this.btn_msg_pre = btn.html();
                 btn.html("<i class=\"fa fa-spinner fa-pulse\" aria-hidden=\"true\"></i> " + Messages.Project.LOADING_TEXT);
             },
             success: function(res){
@@ -856,7 +858,7 @@ Project.result = {
         btn.removeClass('btn-default disabled');
         btn.addClass('btn-primary');
         btn.attr('onclick', 'Project.result.send()');
-        btn.html("Show Result");
+        btn.html(this.btn_msg_pre);
     }
 };
 
@@ -966,11 +968,12 @@ Project.delete = function (project_id, project_name, reload) {
  */
 Project.notification_handler = function () {
     let selector  = $("#notification_bar");
+    let not_bar   = $('.dropdown.notification-bar');
     let notification_count  = ".notification-count";
     let count_sel = $(notification_count);
-    let count_sel_xs = $('#nav-side-header').find('.dev-sm' + notification_count).eq(0);
-    let count_sel_zero = $('.nav-side').find('span' + notification_count).eq(0);
-    let count_sel_sm = $('.nav-side .navbar-nav').find('sup' + notification_count).eq(0);
+    let count_sel_xs = $('#nav-side-header').find('.dev-sm-header' + notification_count).eq(0);
+    let count_sel_zero = $('.nav-side').find('.dev-sm-navbar' + notification_count).eq(0);
+    let count_sel_sm = $('.nav-side .navbar-nav').find('.dev-md-navbar' + notification_count).eq(0);
     // Get unseen
     $.ajax({
         method: 'post',
@@ -985,21 +988,31 @@ Project.notification_handler = function () {
         success: function(res){
             if(res.projects && res.projects.length > 0){
                 let rows = [];
-                count_sel.text(res.projects.length);
+                let not_count = res.projects.length;
+                count_sel.text(not_count);
                 count_sel_sm.addClass('unread-count');
                 count_sel_xs.fadeIn(500);
+                not_bar.show();
+                count_sel_zero.text(not_count + " notification" + (not_count === 1 ? "" : "s"));
                 /**
                  * @var {int}    project.id
                  * @var {string} project.name
                  * @var {string} project.date_created
                  */
                 for(let project of res.projects){
-                    rows.push("<li><a href='./projects/" + project.id + "'>#" + project.id + " " + project.name + "</a></li>");
+                    rows.push("<li>" +
+                        "<a href='./projects/" + project.id + "'>" +
+                        "<span class='space-after small'>view project#" + project.id + "</span>" +
+                        "<span class='space-after'>" + project.name + "</span>" +
+                        // "<span class='small'>completed</span>" +
+                        "</a>" +
+                        "</li>"
+                    );
                 }
                 selector.html(rows.join("<li class='divider'></li>"));
             }else{
+                not_bar.hide();
                 count_sel.text('');
-                count_sel_zero.text(0);
                 count_sel_sm.removeClass('unread-count');
                 count_sel_xs.fadeOut(500);
                 selector.html("<li style=\"padding: 5px 10px\"><em>" + Messages.Project.Notification.NO_NOTIFICATION + "</em></li>");

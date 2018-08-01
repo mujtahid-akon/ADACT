@@ -7,8 +7,7 @@
  */
 ?>
 <div class="row">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
+    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-6 col-md-offset-3">
         <h3 class="title">Feedback</h3>
         <?php
         if(isset($_SESSION['feedback_error'])){
@@ -32,5 +31,4 @@
         </form>
         <?php if(isset($_SESSION['feedback_info'])) unset($_SESSION['feedback_info']); ?>
     </div>
-    <div class="col-md-3"></div>
 </div>

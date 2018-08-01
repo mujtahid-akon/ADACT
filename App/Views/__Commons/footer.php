@@ -1,4 +1,19 @@
-    <footer style="border-top: 1px solid #ccc;margin-top: 5px;">
-        <div class="pull-left"><a href="./about">About</a> | <a href="./feedback">Feedback</a> | <a href="//github.com/mujtahid-akon/ADACT/wiki">API</a></div>
-        <div class="pull-right"><?php print date('Y') . ' &copy; ' . \ADACT\Config::SITE_TITLE ?></div>
+    <!-- Contact -->
+    <footer class="page-section" id="contact">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <span>
+                        <span class="pipe"><a href="./about">About</a></span>
+                        <span class="pipe"><a href="./feedback">Feedback</a></span>
+                        <span><a href="//github.com/mujtahid-akon/ADACT/wiki" target="_blank">API</a></span>
+                    </span>
+                    <span class="pipe"></span>
+                    <span class="inline-block"><?php echo date('Y') . ' &copy; ' . \ADACT\Config::SITE_TITLE ?></span>
+                </div>
+            </div>
+        </div>
     </footer>
+    <!-- have to load at the end -->
+    <script src="./js/creative.js"></script>
+

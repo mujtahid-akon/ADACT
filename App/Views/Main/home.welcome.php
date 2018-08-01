@@ -15,62 +15,18 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="The Alignment-free Dissimilarity Analysis & Comparison Tool">
-    <title><?php echo $title ?></title>
-    <base href="<?php echo $DIR ?>">
-    <link rel="icon" href="/logos/favicon_white.ico" type="image/x-icon">
-    <!-- FONTS -->
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
-    <!-- jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <!-- Bootstrap -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous" />
-    <!-- Animate -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.3.1/animate.min.css">
-    <!-- jQuery Easing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
-    <!-- WOW -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
-    <!-- FitText -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FitText.js/1.2.0/jquery.fittext.min.js"></script>
-    <!-- Modernizr -->
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.2/modernizr.js"></script>
-    <!-- Custom CSS/JS -->
-    <link rel="stylesheet" href="./css/creative.css" type="text/css">
-    <link rel="stylesheet" href="./css/main.css" type="text/css">
-    <link rel="stylesheet" href="./css/style.css" type="text/css">
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
+    <?php require_once __DIR__ . '/../__Commons/head.php'; ?>
     <!-- Special Logo CSS -->
     <style>
-        .affix-top img.logo-dark { display: none;}
+        .affix-top img.logo-dark { display: none; }
         .affix-top img.logo-light { display: inline-block; }
         .affix img.logo-light { display: none; }
         .affix img.logo-dark { display: inline-block; }
     </style>
-    <script>
-        // Run loader
-        $(document).ready(function(){
-            $(window).load(function() {
-                $(".pre-loader").fadeOut("slow").promise();
-            });
-        });
-    </script>
 </head>
 <body>
 <!-- Loader -->
-<div class="pre-loader"
-     style="background-color: darkslategray; color: lightyellow;">
+<div class="pre-loader" style="background-color: darkslategray; color: lightyellow;">
     <i class="fa fa-spinner fa-pulse middle"></i>
 </div>
 <!-- Navigation Bar -->
@@ -108,10 +64,10 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
                 </div>
                 <!-- Button -->
                 <div class="center-0-478">
-                    <a class="button medium thin palegoldenrod" href="./login">
+                    <a class="button medium thin palegoldenrod margin-5-10" href="./login">
                         <i class="fa fa-sign-in" aria-hidden="true"></i> Login
                     </a>
-                    <a class="button medium thin palegoldenrod ml-20" href="./reg">
+                    <a class="button medium thin palegoldenrod margin-5-10" href="./reg">
                         <i class="fa fa-user-plus" aria-hidden="true"></i> Register
                     </a>
                 </div>
@@ -119,8 +75,8 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
         </div>
     </div>
     <!-- Scroll Icon -->
-    <div class="local-scroll-cont font-white">
-        <a href="<?php echo $_SERVER['REQUEST_URI'] ?>#about" class="scroll-down smooth-scroll">
+    <div class="local-scroll-cont">
+        <a href="<?php echo $_SERVER['REQUEST_URI'] ?>#about" class="scroll-down smooth-scroll palegoldenrod">
             <div class="fa fa-angle-down"></div>
         </a>
     </div>
@@ -210,22 +166,24 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
 <section class="page-section bg-black golden" id="services">
     <div class="container">
         <div class="row">
-            <div class="col-lg-4 col-md-4 text-center">
+            <div class="col-lg-4 col-md-4 col-sm-4 text-center">
                 <a class="service-box override display-block" href="./login" title="On the web">
                     <i class="fa fa-4x fa-globe wow bounceIn"></i>
                     <h3>Web App</h3>
                     <p class="text-muted">Run and check results on the web</p>
                 </a>
             </div>
-            <div class="col-lg-4 col-md-4 text-center">
-                <a class="service-box override display-block" href="//github.com/mujtahid-akon/ADACT/wiki" title="API Documentation">
-                    <i class="fa fa-4x wow bounceIn" data-wow-delay=".1s">{}</i>
+            <div class="col-lg-4 col-md-4 col-sm-4 text-center">
+                <a class="service-box override display-block" target="_blank"
+                   href="//github.com/mujtahid-akon/ADACT/wiki" title="API Documentation">
+                    <i class="fa fa-4x wow bounceIn fa-braces" data-wow-delay=".1s"></i>
                     <h3>API</h3>
                     <p class="text-muted">Use our API on your application</p>
                 </a>
             </div>
-            <div class="col-lg-4 col-md-4 text-center">
-                <a class="service-box override display-block" href="//github.com/mujtahid-akon/ADACT" title="Source code">
+            <div class="col-lg-4 col-md-4 col-sm-4 text-center">
+                <a class="service-box override display-block" target="_blank"
+                   href="//github.com/mujtahid-akon/ADACT" title="Source code">
                     <i class="fa fa-4x fa-code wow bounceIn" data-wow-delay=".2s"></i>
                     <h3>Source Code</h3>
                     <p class="text-muted">Source code for this app</p>
@@ -235,13 +193,13 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
     </div>
 </section>
 <!-- Contact -->
-<section class="page-section bg-black golden" id="contact" style="background-color: papayawhip">
+<section class="page-section bg-black golden" id="contact">
     <div class="container">
         <div class="row">
             <div class="col-lg-12 text-center">
                 <span class="pipe"><a class="text-muted" href="./about">About</a></span>
                 <span class="pipe"><a class="text-muted" href="./feedback">Feedback</a></span>
-                <span class="pipe"><a class="text-muted" href="//github.com/mujtahid-akon/ADACT/wiki">API</a></span>
+                <span class="pipe"><a class="text-muted" href="//github.com/mujtahid-akon/ADACT/wiki" target="_blank">API</a></span>
                 <span><?php echo date('Y') . ' &copy; ' . \ADACT\Config::SITE_TITLE ?></span>
             </div>
         </div>
