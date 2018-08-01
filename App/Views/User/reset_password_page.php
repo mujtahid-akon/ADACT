@@ -6,8 +6,7 @@
  */
 ?>
 <div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4">
+    <div class="col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
         <?php if($form_type == 'reset'){ ?>
             <script>
                 const check_pass = function(){
@@ -37,5 +36,4 @@
             </form>
         <?php } ?>
     </div>
-    <div class="col-md-4"></div>
 </div>

@@ -134,8 +134,7 @@ if($isForked){
 </style>
 
 <div class="row">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
+    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-6 col-md-offset-3">
         <h3 class="title" id="p_name">New Project</h3>
         <small class="text text-danger">[Fields with * (star) sign are mandatory.]</small>
         <div style="margin: 5px 0">
@@ -271,6 +270,5 @@ if($isForked){
                 <i class="fa fa-paper-plane" aria-hidden="true"></i> Run
             </button>
         </div>
-        <div class="col-md-3"></div>
     </div>
 </div>

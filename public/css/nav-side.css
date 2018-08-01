@@ -16,12 +16,18 @@
         left: 0;
         background-color: black;
         overflow-x: hidden;
-        transition: 0.5s;
+        transition: 0.25s;
         border-radius: 0;
+        border: 0;
     }
 
     .nav-side > .container {
         padding: 0 25px;
+    }
+
+    .nav-side .navbar-nav {
+        text-transform: uppercase;
+        color: dimgray;
     }
 
     .nav-side .navbar-nav>.active > a,
@@ -50,8 +56,55 @@
     .nav-side.nav-side-width-full { padding-top: 50px; }
     .nav-side-width-full .btn-close{ display: block; }
 
+    .nav-side li.dropdown.disable > a.dropdown-toggle,
+    .nav-side li.dropdown.disable > a.dropdown-toggle:focus,
+    .nav-side li.dropdown.disable > a.dropdown-toggle:hover {
+        background-color: unset;
+        color: inherit;
+    }
+
+    .nav-side li.dropdown.disable > a.dropdown-toggle,
+    .nav-side .navbar-nav li.active > a {
+        pointer-events: none !important;
+        cursor: default;
+    }
+
+    .nav-side .navbar-nav li.active > a.dropdown-toggle {
+        pointer-events: unset;
+        cursor: pointer;
+    }
+
+    .nav-side li.dropdown.disable > a,
+    .nav-side li.dropdown.disable > a:focus,
+    .nav-side li.dropdown.disable > a:hover {
+        display: block;
+    }
+
+    .nav-side li.dropdown.disable .dropdown-toggle .caret{
+        display: none;
+    }
+
+    .nav-side li.dropdown.disable .dropdown-menu {
+        display: block;
+        float: none;
+        position: unset;
+        background-color: unset;
+    }
+
+    .nav-side .dropdown-menu {
+        text-transform: none;
+        padding: 0;
+        border: 0;
+    }
+
+    .nav-side .navbar-nav .open .dropdown-menu .dropdown-header,
+    .nav-side .navbar-nav .open .dropdown-menu > li > a,
     .nav-side .dropdown-menu > li > a{
         color: palegoldenrod;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: 30px;
+        line-height: 20px;
     }
 
     .nav-side a {
@@ -64,8 +117,7 @@
     }
 
     .nav-side .divider {
-        margin-left: 25px;
-        background-color: palegoldenrod;
+        display: none;
     }
 
     #nav-side-overlay {

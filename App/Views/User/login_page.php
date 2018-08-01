@@ -1,6 +1,5 @@
 <div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4">
+    <div class="col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
         <h3 class="title">Login</h3>
         <?php if(isset($_SESSION['login_error'])): ?>
         <div class="alert alert-danger">
@@ -18,5 +17,4 @@
             <div style="margin-top: 10px">Forget password? <a href="./reset_pass">Reset</a>.</div>
         </form>
     </div>
-    <div class="col-md-4"></div>
 </div>

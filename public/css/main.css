@@ -35,7 +35,7 @@ body{
 }
 
 @media screen and (max-width: 767px) {
-    #nav-side-header, #top_nav.navbar-default {
+    #nav-side-header {
         background-color: palegoldenrod !important;
         border: 0 !important;
         border-radius: unset !important;
@@ -50,24 +50,35 @@ body{
         border-radius: unset !important;
         box-shadow: none;
         background-image: unset;
-        color: lightyellow !important;
+        /*color: lightyellow !important;*/
     }
 
-    #top_nav.nav-side a{ color: lightyellow; }
+    /*#top_nav.nav-side a{ color: lightyellow; }*/
     #top_nav.navbar-default a{ color: #5a5a5a; }
 
-    #top_nav.nav-side .active, #top_nav.nav-side .open{
+    #top_nav.nav-side .active > a, #top_nav.nav-side .open > a{
         background-color: maroon !important;
-    }
-
-    #top_nav.nav-side .active > ul, #top_nav.nav-side .open > ul{
-        background-color: black;
+        color: gold;
     }
 
     #top_nav .dropdown-menu > li a:hover {
         background-color: maroon !important;
+        background-image: none;
     }
-    /*#top_nav.navbar-default .active>a, #top_nav .open>a{ color: #333;}*/
+
+    #top_nav li.dropdown.disable > a {
+        display: block;
+    }
+
+    .nav-side li.dropdown.disable > a,
+    .nav-side li.dropdown.disable > a:focus,
+    .nav-side li.dropdown.disable > a:hover {
+        color: inherit;
+    }
+
+    .nav-side .btn-close {
+        color: lightyellow;
+    }
 
     /* A bootstrap problem for Safari */
     .btn-group-vertical>.btn-group:after, .btn-group-vertical>.btn-group:before, .btn-toolbar:after, .btn-toolbar:before, .clearfix:after, .clearfix:before, .container-fluid:after, .container-fluid:before, .container:after, .container:before, .dl-horizontal dd:after, .dl-horizontal dd:before, .form-horizontal .form-group:after, .form-horizontal .form-group:before, .modal-footer:after, .modal-footer:before, .nav:after, .nav:before, .navbar-collapse:after, .navbar-collapse:before, .navbar-header:after, .navbar-header:before, .navbar:after, .navbar:before, .pager:after, .pager:before, .panel-body:after, .panel-body:before, .row:after, .row:before {
@@ -78,7 +89,7 @@ body{
         display: none;
     }
 
-    #nav-side-header .notification-count{
+    #nav-side-header .notification-count {
         color: transparent;
         border-radius: 50%;
         padding: 1px;
@@ -89,15 +100,16 @@ body{
         height: 5px;
         background: darkgoldenrod;
     }
-
-    #notification_bar {
-        padding-left: 15px;
-    }
 }
 
-#top_nav .active>a, #top_nav .open>a,
-#top_nav .nav > li > a{
-    background: unset;
+#top_nav .dropdown .inline-right {
+    display: inline-block;
+    padding-right: 0;
+}
+
+#top_nav .dropdown .inline-left {
+    display: inline-block;
+    padding-left: 0;
 }
 
 .navbar-brand img.logo{
@@ -107,11 +119,37 @@ body{
     top: -2px;
 }
 
+.navbar-nav li.active > a {
+    pointer-events: none;
+    cursor: default;
+}
+
+.navbar-nav li.active > a.dropdown-toggle {
+    pointer-events: unset;
+    cursor: pointer;
+}
 
 /* Fix a nav bar error */
 @media (min-width: 768px) {
     .nav > li {
         display: inline-block!important;
+    }
+
+    .nav>li>a:focus, .nav>li>a:hover {
+        background-color: unset;
+    }
+
+    .nav .open>a, .nav .open>a:focus, .nav .open>a:hover {
+        background-color: unset;
+        border: none;
+    }
+
+    .dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
+        background-color: palegoldenrod;
+    }
+
+    .notification-count.dev-sm-navbar {
+        display: none;
     }
 }
 
@@ -135,12 +173,6 @@ body{
     position: relative;
     top: -10px;
     left: -5px;
-}
-
-@media (max-width: 479px) {
-    #notification_bar{
-        width: unset !important;
-    }
 }
 
 /** Table */
@@ -181,19 +213,35 @@ html, body, .container-table {
     margin: auto;
 }
 
-a.override{
+.margin-5-10 {
+    margin: 5px 10px;
+}
+
+a.override {
     text-decoration: inherit !important;
     color: inherit !important;
 }
 
-.pipe:after{
+.pipe:after {
     content: ' | ';
+}
+
+.space-after:after {
+    content: ' ';
+}
+
+.fa-braces:before {
+    content: '{}';
 }
 
 .middle {
     position: absolute;
     top: 50%;
     left: 50%;
+}
+
+.inline-block {
+    display: inline-block;
 }
 
 /* text-muted */
@@ -232,7 +280,7 @@ h3.title{
 }
 
 .adact-title{
-    font-family: monospace;
+    font-family: Courier, monospace;
 }
 
 /* === Form === */

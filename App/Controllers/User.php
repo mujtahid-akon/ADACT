@@ -47,7 +47,7 @@ class User extends Controller
             $this->redirect();
             exit();
         }
-        $this->set('logged_in', $logged_in);
+        $this->set(LOGGED_IN, $logged_in);
     }
     
     public function login(){
@@ -91,7 +91,8 @@ class User extends Controller
             $this->redirect();
             exit();
         }
-        $this->set('logged_in', $logged_in);
+        $this->set(LOGGED_IN, $logged_in);
+        $this->set(ACTIVE_TAB, 'reg');
     }
 
     public function login_page(){
@@ -110,7 +111,8 @@ class User extends Controller
         }
 
         $this->set('email', isset($email) ? $email : '');
-        $this->set('logged_in', $logged_in);
+        $this->set(LOGGED_IN, $logged_in);
+        $this->set(ACTIVE_TAB, 'login');
     }
     
     public function logout(){
@@ -129,7 +131,7 @@ class User extends Controller
          */
         $this->set('is_unlocked', $user->unlock($email, $key));
         $this->set('email', $email);
-        $this->set('logged_in', $user->login_check());
+        $this->set(LOGGED_IN, $user->login_check());
     }
     
     public function reset_password(){
@@ -151,7 +153,7 @@ class User extends Controller
                 $this->set('alert_type', 'reset');
             }else $this->redirect('reset_pass');
         }
-        $this->set('logged_in', $logged_in);
+        $this->set(LOGGED_IN, $logged_in);
     }
     
     public function reset_password_page(){ // FIXME: Check if the email really exists
@@ -180,6 +182,7 @@ class User extends Controller
         }
         $this->set('form_type', $form_type);
         $this->set('email', $email);
-        $this->set('logged_in', $logged_in);
+        $this->set(LOGGED_IN, $logged_in);
+        $this->set(ACTIVE_TAB, 'settings');
     }
 }
