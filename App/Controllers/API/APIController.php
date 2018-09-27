@@ -30,7 +30,7 @@ class APIController extends Controller{
     }
 
     function handle_default(){
-        $this->status(HttpStatusCode::BAD_REQUEST, "Invalid request.");
+        $this->status(HttpStatusCode::BAD_REQUEST, "Bad request.");
     }
 
     protected function status($code, $message){
