@@ -3,6 +3,7 @@
 namespace ADACT\App\Controllers\API;
 
 use ADACT\App\HttpStatusCode;
+use ADACT\App\Models\FileException;
 use ADACT\App\Models\FileUploader;
 use ADACT\App\Models\Notifications;
 use ADACT\App\Models\PendingProjects;
@@ -110,8 +111,12 @@ class Project extends APIController{
         /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model('Project');
         if($project->login_check()){
-            $this->set('projects', $project->addMultiple($contents));
-            $this->status(HttpStatusCode::OK, "Success!");
+            try {
+                $this->set('projects', $project->addMultiple($contents));
+                $this->status(HttpStatusCode::OK, "Success!");
+            } catch (FileException $e) {
+                $this->status(HttpStatusCode::BAD_REQUEST, "Bad request");
+            }
         }
     }
 

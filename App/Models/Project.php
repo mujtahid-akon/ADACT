@@ -23,6 +23,9 @@ class Project extends ProjectPrivilegeHandler {
     const EXPORT_UPGMA_TREE       = 4;
     const EXPORT_ALL              = 0;
 
+    /** Number of config.json allowed per JSON request */
+    const MAX_CONFIG_ALLOWED      = 5;
+
     /** @var null|int Current user ID */
     private $_user_id;
 
@@ -83,12 +86,20 @@ class Project extends ProjectPrivilegeHandler {
     function addMultiple($config){
         $project_info = [];
         $config = json_decode(htmlspecialchars_decode($config), true);
+        if(!$this->is_array($config)) throw new FileException("The json file is not an array", FileException::E_FILE_FORMAT_ERROR);
+        $i = 0;
         foreach ($config as $conf){
-            $project = [
-                'name' => isset($conf['project_name']) ? $conf['project_name'] : "#project",
-                'id' => $this->add($conf)
-            ];
-            array_push($project_info, $project);
+            ++$i;
+            try{
+                $project_id = $this->add($conf);
+                if($project_id == null) throw new FileException("Malformed config.json", FileException::E_FILE_FORMAT_ERROR);
+                $project = [
+                    'name' => isset($conf['project_name']) ? $conf['project_name'] : "#project",
+                    'id' => $project_id
+                ];
+                array_push($project_info, $project);
+            } catch (FileException $e) {}
+            if($i == self::MAX_CONFIG_ALLOWED) break;
         }
         return $project_info;
     }
@@ -517,5 +528,17 @@ class Project extends ProjectPrivilegeHandler {
             array_push($table_rows, $table_row);
         }
         return $table_rows;
+    }
+
+    /**
+     * Whether the given data is a dictionary or an array
+     * @param array $arr
+     * @return bool
+     */
+    function is_array(array $arr) {
+        if (array() === $arr)
+            return true;
+        ksort($arr);
+        return !(array_keys($arr) !== range(0, count($arr) - 1));
     }
 }
