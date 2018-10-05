@@ -112,6 +112,10 @@ body{
     padding-left: 0;
 }
 
+#top_nav .notification-bar .dropdown-toggle:after {
+    content: none;
+}
+
 .navbar-brand img.logo{
     display: inline-block;
     width: 20px;
@@ -246,7 +250,7 @@ a.override {
 
 /* text-muted */
 .text-muted {
-    opacity: 0.5;
+    opacity: 0.7;
     color: inherit !important;
 }
 a.text-muted:hover{

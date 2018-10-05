@@ -175,7 +175,7 @@ class Project extends ProjectPrivilegeHandler {
     function getAll($formatted = false){
         $projects = [];
         // Get projects info in descending order
-        if(@$stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, pen.cancel AS cancel, pen.status_code AS status_code FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? GROUP BY p.project_id ORDER BY p.date_created DESC;')){
+        if(@$stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, pen.cancel AS cancel, pen.status_code AS status_code, p.project_started AS started, p.project_finished AS finished FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? GROUP BY p.project_id ORDER BY p.date_created DESC;')){
             $stmt->bind_param('i', $this->_user_id);
             $stmt->execute();
             $stmt->store_result();
@@ -203,7 +203,7 @@ class Project extends ProjectPrivilegeHandler {
             $project_id = '(' . $project_id . ')';
         }
         $project_ids = implode(',', $project_ids); // Make them comma separated
-        if($stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, pen.cancel AS cancel, pen.status_code AS status_code FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? AND p.project_id IN (' . $project_ids . ') GROUP BY p.project_id ORDER BY p.date_created DESC;')){
+        if($stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, pen.cancel AS cancel, pen.status_code AS status_code, p.project_started AS started, p.project_finished AS finished FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? AND p.project_id IN (' . $project_ids . ') GROUP BY p.project_id ORDER BY p.date_created DESC;')){
             $stmt->bind_param('i', $this->_user_id);
             $stmt->execute();
             $stmt->store_result();
@@ -226,7 +226,7 @@ class Project extends ProjectPrivilegeHandler {
      */
     function get($project_id, $formatted = false){
         // Get projects info in descending order
-        if(@$stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, pen.cancel AS cancel, pen.status_code AS status_code FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? AND p.project_id = '.$project_id)){
+        if(@$stmt = $this->mysqli->prepare('SELECT p.project_id, p.project_name, CONVERT_TZ(p.date_created, \'SYSTEM\', \'UTC\') AS date_created, count(last.project_id) AS editable, pen.cancel AS cancel, pen.status_code AS status_code, p.project_started AS started, p.project_finished AS finished FROM projects AS p LEFT OUTER JOIN pending_projects AS pen ON p.project_id = pen.project_id LEFT OUTER JOIN last_projects AS last ON p.project_id = last.project_id WHERE p.user_id = ? AND p.project_id = '.$project_id)){
             $stmt->bind_param('i', $this->_user_id);
             $stmt->execute();
             $stmt->store_result();
@@ -467,18 +467,25 @@ class Project extends ProjectPrivilegeHandler {
     /* Private functions */
 
     /**
-     * Helper for get() and getAll()
+     * Helper for get(), getAll() and getMultiple()
      * @param \mysqli_stmt $stmt
      * @param bool         $formatted Return formatted data instead of raw data (for API)
      * @return array
      */
     private function _fetch_project_overview(&$stmt, $formatted){
-        $project = ['id' => null, 'name' => null, 'date_created' => null, 'editable' => false, 'last' => false, 'result_type' => self::RT_SUCCESS];
-        $stmt->bind_result($project['id'], $project['name'], $project['date_created'], $project['last'], $cancel, $status_code);
+        $project = ['id' => null, 'name' => null, 'date_created' => null, 'editable' => false, 'last' => false, 'result_type' => self::RT_SUCCESS, 'exec_duration' => null];
+        $stmt->bind_result($project['id'], $project['name'], $project['date_created'], $project['last'], $cancel, $status_code, $s, $e);
         $stmt->fetch();
         $cancel = $cancel === 1 ? true : false;
         $project['result_type'] = ($status_code === null OR $cancel === null) ? self::RT_SUCCESS : $this->getResultType($status_code, $cancel);
         $project['last'] = $project['last'] === 1 ? true : false;
+        if($project['result_type'] == self::RT_SUCCESS) {
+            // Get project duration
+            $s = \DateTime::createFromFormat('Y-m-d H:i:s', $s);
+            $e = \DateTime::createFromFormat('Y-m-d H:i:s', $e);
+            $d = $e->getTimestamp() - $s->getTimestamp();
+            $project['exec_duration'] = $d;
+        }
         // A project is editable if it is the last project, the project was successful and the ‘Files’ directory exists
         $project['editable'] = ($project['last'] AND $project['result_type'] === self::RT_SUCCESS AND file_exists(Config::PROJECT_DIRECTORY . '/' . $project['id'] . '/Files')) ? true : false;
         if($formatted){ // Formatted output [id, name, date_created, editable, success, pending, failed, cancelled]

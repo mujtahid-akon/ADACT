@@ -1,6 +1,6 @@
 <?php
 // Load resources
-if(preg_match('/^\/(logos|profile|sponsor|Treant|vendor|css|ico|fonts|js)/', $_SERVER['REQUEST_URI'], $matches)){
+if(preg_match('/^\/(logos|profile|sponsor|Treant|vendor|css|ico|fonts|js|manifest.webmanifest|sw\.min\.js|cache-polyfill\.min\.js)/', $_SERVER['REQUEST_URI'], $matches)){
     // Local directories
     $file = __DIR__ . '/public' . $_SERVER['REQUEST_URI'];
     if(file_exists($file) AND !is_dir($file)){
@@ -12,7 +12,7 @@ if(preg_match('/^\/(logos|profile|sponsor|Treant|vendor|css|ico|fonts|js)/', $_S
                 $mime = mime_content_type($file);
         }
         header('Content-Type: ' . $mime);
-        header('Cache-Control: Public, max-age: 3600');
+        header('Cache-Control: Public, max-age: 31536000');
         readfile($file);
         exit();
     }
