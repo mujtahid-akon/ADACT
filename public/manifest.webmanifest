@@ -1,0 +1,53 @@
+{
+  "name": "ADACT",
+  "short_name": "ADACT",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffe0",
+  "theme_color": "#eee8aa",
+  "description": "The Alignment-free Dissimilarity Analysis & Comparison Tool",
+  "dir": "ltr",
+  "lang": "en-US",
+  "orientation": "any",
+  "icons": [{
+    "src": "logos/ADACT_Logo@16x.png",
+    "sizes": "16x16",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@24x.png",
+    "sizes": "24x24",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@32x.png",
+    "sizes": "32x32",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@48x.png",
+    "sizes": "48x48",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@64x.png",
+    "sizes": "64x64",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@96x.png",
+    "sizes": "96x96",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@128x.png",
+    "sizes": "128x128",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@192x.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@256x.png",
+    "sizes": "256x256",
+    "type": "image/png"
+  }, {
+    "src": "logos/ADACT_Logo@512x.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }]
+}

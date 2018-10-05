@@ -76,7 +76,7 @@ class Template {
         if(!file_exists($__common_body)) $__common_body = $__commonsDir . '/' . self::BODY_FILE;
 
         print "<!DOCTYPE html>\n";
-        print "<html>\n";
+        print "<html lang=\"en\">\n";
         print "  <head>\n";
             /** @noinspection PhpIncludeInspection */
             require_once $__common_head;

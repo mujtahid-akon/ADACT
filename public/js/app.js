@@ -1,10 +1,11 @@
+"use strict";
+
 // Run loader
 $(document).ready(function(){
     $(window).load(function() {
         $(".pre-loader").fadeOut("slow").promise();
     });
 });
-
 /**
  * ProgressBar class constructor
  *
@@ -62,6 +63,7 @@ function ProgressBar(selector, max_value, init_value, text){
 /**
  * Message Object
  */
+let Messages;
 Object.freeze(Messages = {
     ShortName : {
         CHAR_CONSTRAINT     : "Short names must contain a to z (uppercase or lower case) letters, underscores, hyphens or commas.",
@@ -158,7 +160,7 @@ Object.freeze(Messages = {
  *
  * @type {{FILE: string, ACCN_GIN: string, current: null|string, setCurrent: InputMethod.setCurrent, getCurrent: InputMethod.getCurrent}}
  */
-InputMethod = {
+let InputMethod = {
     // Constants
     FILE     : "file",
     SEQ_TEXT : "seq_text",
@@ -207,7 +209,7 @@ InputMethod = {
  *
  * @type {{GIN: string, ACCN: string, NUCLEOTIDE: string, PROTEIN: string, DB_NUCCORE: string, DB_PROTEIN: string, inputs: Array, selector: null, progress: null, results: Array, file_id: null, init: InputAnalyzer.init, addShortNames: InputAnalyzer.addShortNames, getMetaData: InputAnalyzer.getMetaData, renderer: InputAnalyzer.renderer, upload: InputAnalyzer.upload, buildTable: InputAnalyzer.buildTable, getShortName: InputAnalyzer.getShortName}}
  */
-InputAnalyzer = {
+let InputAnalyzer = {
     // ID Constants
     GIN  : "gin",
     ACCN : "accn",
@@ -718,13 +720,13 @@ InputAnalyzer = {
             if(name_parts[0].length > this.CHAR_LIMIT){
                 return name_parts[0].substring(0, this.CHAR_LIMIT);
             }else{
-                let name = [];
+                let tmp_name = [];
                 let count = 0;
                 for(let parts of name_parts){
                     count += parts.length;
-                    if(count <= this.CHAR_LIMIT) name.push(parts);
+                    if(count <= this.CHAR_LIMIT) tmp_name.push(parts);
                 }
-                return name.join('_');
+                return tmp_name.join('_');
             }
         }else{
             return name.replace(/\s/g, '_');
@@ -745,7 +747,7 @@ InputAnalyzer = {
  * Project Object
  * @type {{config:Project.config, result: {Project.result}, process: {Project.process}, delete: {Project.delete}}}
  */
-Project = {};
+let Project = {};
 
 /**
  * Project Result
@@ -1038,4 +1040,21 @@ function elapsed_time(selector, date_created) {
     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((distance % (1000 * 60)) / 1000);
     selector.html(days + "d " + hours + "h " + minutes + "m " + seconds + "s ");
+}
+
+function show_formatted_date(selector, t_seconds){
+    const days = Math.floor(t_seconds / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((t_seconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((t_seconds % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((t_seconds % (1000 * 60)) / 1000);
+    let f_date = "";
+    if(days !== 0)
+        f_date = days + "d " + hours + "h " + minutes + "m " + seconds + "s";
+    else if (hours !== 0)
+        f_date = hours + "h " + minutes + "m " + seconds + "s";
+    else if(minutes !== 0)
+        f_date = minutes + "m " + seconds + "s";
+    else
+        f_date = seconds + " seconds";
+    selector.html(f_date);
 }

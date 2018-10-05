@@ -16,6 +16,15 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
 <html lang="en">
 <head>
     <?php require_once __DIR__ . '/../__Commons/head.php'; ?>
+    <!-- Animate -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.3.1/animate.min.css" rel="stylesheet" media="screen"/>
+    <!-- jQuery Easing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+    <!-- WOW -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+    <!-- FitText -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FitText.js/1.2.0/jquery.fittext.min.js"></script>
+    <!-- Application -->
     <!-- Special Logo CSS -->
     <style>
         .affix-top img.logo-dark { display: none; }
@@ -28,14 +37,25 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
 <!-- Loader -->
 <div class="pre-loader" style="background-color: darkslategray; color: lightyellow;">
     <i class="fa fa-spinner fa-pulse middle"></i>
+    <!-- Javascript Warning -->
+    <noscript class="container" style="display: block; text-align: center;">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-danger">
+                    Javascript is required to carry out certain operations.
+                    Please enable Javascript.
+                </div>
+            </div>
+        </div>
+    </noscript>
 </div>
 <!-- Navigation Bar -->
 <nav id="mainNav" class="navbar navbar-default navbar-fixed-top palegoldenrod">
     <div class="container">
         <div class="navbar-header">
             <a class="navbar-brand page-scroll adact-title" href="./home">
-                <img class="logo logo-light" src="./logos/ADACT_Logo_white_32x32.png" aria-hidden="true" />
-                <img class="logo logo-dark" src="./logos/ADACT_Logo_black_32x32.png" aria-hidden="true" />
+                <img class="logo logo-light" src="./logos/ADACT_Logo@24x.png" aria-hidden="true" />
+                <img class="logo logo-dark" src="./logos/ADACT_Logo@24x.png" aria-hidden="true" />
                 <?php echo $title ?>
             </a>
             <a class="navbar-brand hidden-sm hidden-md hidden-lg small" href="./login">Login</a>
@@ -77,7 +97,7 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
     <!-- Scroll Icon -->
     <div class="local-scroll-cont">
         <a href="<?php echo $_SERVER['REQUEST_URI'] ?>#about" class="scroll-down smooth-scroll palegoldenrod">
-            <div class="fa fa-angle-down"></div>
+            <div class="fa fa-angle-down"></div><span style="display: none">Go to About section</span>
         </a>
     </div>
 </section>
@@ -174,7 +194,7 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
                 </a>
             </div>
             <div class="col-lg-4 col-md-4 col-sm-4 text-center">
-                <a class="service-box override display-block" target="_blank"
+                <a class="service-box override display-block" target="_blank" rel="noreferrer"
                    href="//github.com/mujtahid-akon/ADACT/wiki" title="API Documentation">
                     <i class="fa fa-4x wow bounceIn fa-braces" data-wow-delay=".1s"></i>
                     <h3>API</h3>
@@ -182,7 +202,7 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
                 </a>
             </div>
             <div class="col-lg-4 col-md-4 col-sm-4 text-center">
-                <a class="service-box override display-block" target="_blank"
+                <a class="service-box override display-block" target="_blank" rel="noreferrer"
                    href="//github.com/mujtahid-akon/ADACT" title="Source code">
                     <i class="fa fa-4x fa-code wow bounceIn" data-wow-delay=".2s"></i>
                     <h3>Source Code</h3>
@@ -199,13 +219,21 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
             <div class="col-lg-12 text-center">
                 <span class="pipe"><a class="text-muted" href="./about">About</a></span>
                 <span class="pipe"><a class="text-muted" href="./feedback">Feedback</a></span>
-                <span class="pipe"><a class="text-muted" href="//github.com/mujtahid-akon/ADACT/wiki" target="_blank">API</a></span>
+                <span class="pipe"><a class="text-muted" href="//github.com/mujtahid-akon/ADACT/wiki" target="_blank" rel="noreferrer">API</a></span>
                 <span><?php echo date('Y') . ' &copy; ' . \ADACT\Config::SITE_TITLE ?></span>
             </div>
         </div>
     </div>
 </section>
 <!-- have to load at the end -->
-<script src="./js/creative.js"></script>
+<script src="./js/creative.min.js"></script>
+<!-- Service Worker -->
+<script>
+    if('serviceWorker' in navigator) {
+        navigator.serviceWorker
+            .register('/sw.min.js')
+            .then(function() { console.log("Service Worker Registered"); });
+    }
+</script>
 </body>
 </html>

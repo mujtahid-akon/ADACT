@@ -32,6 +32,7 @@ if(!$logged_in) exit();
  * @var bool    $editable
  * @var bool    $last
  * @var int     $result_type
+ * @var int     $exec_duration
  */
 extract($project_info);
 // FM
@@ -117,33 +118,34 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
 <!-- Project output begin -->
 <h3 class="title">Project: <?php print ucwords($config->project_name); ?></h3>
 <!-- Include Scripts and styles -->
-<script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="./js/phylotree.js"></script>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" charset="utf-8"></script>
+<script src="./js/phylotree.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.18/css/dataTables.bootstrap.min.css" />
-<link rel="stylesheet" type="text/css" href="./css/tabs.responsive.bootstrap.css" />
+<link rel="stylesheet" type="text/css" href="./css/tabs.responsive.bootstrap.min.css" />
 <script>
     (function($) {
         'use strict';
         $(document).on('show.bs.tab', '.nav-tabs-responsive [data-toggle="tab"]', function(e) {
-            let $target = $(e.target);
-            let $tabs = $target.closest('.nav-tabs-responsive');
-            let $current = $target.closest('li');
-            let $parent = $current.closest('li.dropdown');
-            $current = $parent.length > 0 ? $parent : $current;
-            let $next = $current.next();
-            let $prev = $current.prev();
-            let updateDropdownMenu = function($el, position){
-                $el
+            let target = $(e.target);
+            let tabs = target.closest('.nav-tabs-responsive');
+            let current = target.closest('li');
+            let parent = current.closest('li.dropdown');
+            current = parent.length > 0 ? parent : current;
+            let next = current.next();
+            let prev = current.prev();
+            let updateDropdownMenu = function(el, position){
+                el
                     .find('.dropdown-menu')
                     .removeClass('pull-xs-left pull-xs-center pull-xs-right')
                     .addClass('pull-xs-' + position);
             };
-            $tabs.find('>li').removeClass('next prev');
-            $prev.addClass('prev');
-            $next.addClass('next');
-            updateDropdownMenu($prev, 'left');
-            updateDropdownMenu($current, 'center');
-            updateDropdownMenu($next, 'right');
+            tabs.find('>li').removeClass('next prev');
+            prev.addClass('prev');
+            next.addClass('next');
+            updateDropdownMenu(prev, 'left');
+            updateDropdownMenu(current, 'center');
+            updateDropdownMenu(next, 'right');
         });
     })(jQuery);
 </script>
@@ -276,10 +278,20 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
 <div class="tab-content">
     <!-- Project Overview -->
     <div id="project_overview" class="tab-pane fade active in">
+        <?php if($result_type === Project::RT_SUCCESS): ?>
+        <script>
+            $(document).ready(function(){
+                show_formatted_date($("#exec_duration"), <?php print $exec_duration ?>)
+            });
+        </script>
+        <?php endif; ?>
         <table id="table_po" class="table table-bordered table-striped table-hover">
             <tbody>
             <?php
             print "<tr><th>Project Name</th><td>".ucwords($config->project_name)."</td></tr>";
+            if($result_type === Project::RT_SUCCESS){
+                print "<tr><th>Execution Duration</th><td id='exec_duration'>".$exec_duration." seconds</td></tr>";
+            }
             if($isAPendingProject){
                 print "<tr><th>Status</th><td id='process_status'></td></tr>";
                 print "<tr><th>Elapsed Time</th><td id='elapsed_time'></td></tr>";
@@ -612,7 +624,7 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
                     }, false);
                     tree.style_nodes(node_colorizer);
                     tree.style_edges(edge_colorizer);
-                    tree.selection_label(current_selection_name);
+                    // tree.selection_label(current_selection_name);
                     tree.node_circle_size(undefined);
                     tree.radial(false);
                 } catch (e) {}
