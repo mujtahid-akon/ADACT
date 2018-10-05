@@ -1043,10 +1043,10 @@ function elapsed_time(selector, date_created) {
 }
 
 function show_formatted_date(selector, t_seconds){
-    const days = Math.floor(t_seconds / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((t_seconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((t_seconds % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((t_seconds % (1000 * 60)) / 1000);
+    const seconds = t_seconds % 60;
+    const minutes = Math.floor(t_seconds / 60) % 60;
+    const hours   = Math.floor(t_seconds / 3600) % 24;
+    const days = Math.floor(t_seconds / (24 * 3600));
     let f_date = "";
     if(days !== 0)
         f_date = days + "d " + hours + "h " + minutes + "m " + seconds + "s";
