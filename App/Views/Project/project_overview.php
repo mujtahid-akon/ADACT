@@ -125,28 +125,33 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
 <link rel="stylesheet" type="text/css" href="./css/tabs.responsive.bootstrap.min.css" />
 <script>
     (function($) {
+
         'use strict';
+
         $(document).on('show.bs.tab', '.nav-tabs-responsive [data-toggle="tab"]', function(e) {
-            let target = $(e.target);
-            let tabs = target.closest('.nav-tabs-responsive');
-            let current = target.closest('li');
-            let parent = current.closest('li.dropdown');
-            current = parent.length > 0 ? parent : current;
-            let next = current.next();
-            let prev = current.prev();
-            let updateDropdownMenu = function(el, position){
-                el
+            var $target = $(e.target);
+            var $tabs = $target.closest('.nav-tabs-responsive');
+            var $current = $target.closest('li');
+            var $parent = $current.closest('li.dropdown');
+            $current = $parent.length > 0 ? $parent : $current;
+            var $next = $current.next();
+            var $prev = $current.prev();
+            var updateDropdownMenu = function($el, position){
+                $el
                     .find('.dropdown-menu')
                     .removeClass('pull-xs-left pull-xs-center pull-xs-right')
-                    .addClass('pull-xs-' + position);
+                    .addClass( 'pull-xs-' + position );
             };
-            tabs.find('>li').removeClass('next prev');
-            prev.addClass('prev');
-            next.addClass('next');
-            updateDropdownMenu(prev, 'left');
-            updateDropdownMenu(current, 'center');
-            updateDropdownMenu(next, 'right');
+
+            $tabs.find('>li').removeClass('next prev');
+            $prev.addClass('prev');
+            $next.addClass('next');
+
+            updateDropdownMenu( $prev, 'left' );
+            updateDropdownMenu( $current, 'center' );
+            updateDropdownMenu( $next, 'right' );
         });
+
     })(jQuery);
 </script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
@@ -193,9 +198,15 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
     .btn-toolbar > div {
         margin-bottom: 5px;
     }
+
+    @media screen and (max-width: 479px) {
+        .nav-tabs {
+            border-bottom: 0 !important;
+        }
+    }
 </style>
 <!-- Toolbar -->
-<div class="btn-toolbar" role="toolbar" style="margin-bottom: 5px">
+<div class="btn-toolbar" role="toolbar" style="margin-bottom: 5px; display: flex;">
     <div class="btn-group">
         <?php if($editable): ?>
         <a class="btn button small blue" href="<?php echo $base_url ?>/edit" title="Edit project">
@@ -240,35 +251,35 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
 </script>
 <?php endif; // isAPendingProject ?>
 <!-- Tab List -->
-<ul class="nav nav-tabs nav-tabs-responsive" role="tablist">
+<ul id="" class="nav nav-tabs nav-tabs-responsive" role="tablist" style="display: flex;">
     <li role="presentation" class="active">
-        <a data-toggle="tab" href="#project_overview">
+        <a href="#project_overview" role="tab" data-toggle="tab" aria-controls="overview" aria-expanded="true">
             <span class="text">Overview</span>
         </a>
     </li>
     <li role="presentation" class="next">
-        <a data-toggle="tab" href="#species_info">
+        <a href="#species_info" role="tab" data-toggle="tab" aria-controls="species_info">
             <span class="text">Species Info</span>
         </a>
     </li>
     <?php if($result_type === Project::RT_SUCCESS): ?>
     <li role="presentation">
-        <a data-toggle="tab" href="#distance_matrix">
+        <a href="#distance_matrix" role="tab" data-toggle="tab" aria-controls="distance_matrix">
             <span class="text">Distance Matrix</span>
         </a>
     </li>
     <li role="presentation">
-        <a data-toggle="tab" href="#sorted_species_relation">
+        <a href="#sorted_species_relation" role="tab" data-toggle="tab" aria-controls="sorted_species_relation">
             <span class="text">Sorted Species Relations</span>
         </a>
     </li>
     <li role="presentation">
-        <a data-toggle="tab" href="#phy_tree" id="tab_nj_tree">
+        <a href="#phy_tree" role="tab" data-toggle="tab" aria-controls="tab_nj_tree" id="tab_nj_tree">
             <span class="text">Neighbour Joining Tree</span>
         </a>
     </li>
     <li role="presentation">
-        <a data-toggle="tab" href="#phy_tree" id="tab_upgma_tree">
+        <a href="#phy_tree" role="tab" data-toggle="tab" aria-controls="tab_nj_tree" id="tab_upgma_tree">
             <span class="text">UPGMA Tree</span>
         </a>
     </li>
@@ -277,7 +288,7 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
 <!-- Tab Content -->
 <div class="tab-content">
     <!-- Project Overview -->
-    <div id="project_overview" class="tab-pane fade active in">
+    <div id="project_overview" class="tab-pane fade active in" role="tabpanel">
         <?php if($result_type === Project::RT_SUCCESS): ?>
         <script>
             $(document).ready(function(){
@@ -306,7 +317,7 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
         </table>
     </div>
     <!-- Species Info -->
-    <section id="species_info" class="tab-pane fade">
+    <section id="species_info" class="tab-pane fade" role="tabpanel">
         <script>
             $(document).ready(function() {
                 $('#table_pi').DataTable({
@@ -333,7 +344,7 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
     </section>
     <?php if($result_type === Project::RT_SUCCESS): ?>
     <!-- Sorted Species Relation -->
-    <section id="sorted_species_relation" class="tab-pane fade" style="text-align: left;width: 100%;">
+    <section id="sorted_species_relation" class="tab-pane fade" role="tabpanel" style="text-align: left;width: 100%;">
         <div style="margin-bottom: 5px">
             <a class="btn btn-default btn-sm" href="<?php print $download_url . '/' . FM::SPECIES_RELATION ?>">
                 <i class="fa fa-download"></i> Sorted Species Relation
@@ -363,9 +374,9 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
         </div>
     </section>
     <!-- PhyloTree -->
-    <section id="phy_tree" class="tab-pane fade" style="width: 100%;">
+    <section id="phy_tree" class="tab-pane fade" role="tabpanel" style="width: 100%;">
         <!-- Toolbar -->
-        <div class="row">
+        <div class="row" style="display: flex;">
             <div class="col-md-12">
                 <div class="btn-toolbar" role="toolbar">
                     <!-- Spacing Tools -->
@@ -919,7 +930,7 @@ $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
         </script>
     </section>
     <!-- Distance Matrix -->
-    <section id="distance_matrix" class="tab-pane fade" style="width: 100%;">
+    <section id="distance_matrix" class="tab-pane fade" role="tabpanel" style="width: 100%;">
         <div style="margin-bottom: 5px">
             <a class="btn btn-default btn-sm" href="<?php print $download_url . '/' . FM::DISTANCE_MATRIX ?>">
                 <i class="fa fa-download"></i> Distance Matrix
