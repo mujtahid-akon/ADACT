@@ -21,8 +21,15 @@ class User extends APIController{
             exit();
         }
         // First check the parameters
-        if(empty($email) OR empty($pass)) $status = $user::SHORTAGE_OF_ARGUMENTS;
-        else $status = $this->{$this->_model}->login($email, $pass);
+        if(empty($email) OR empty($pass)) {
+            $status = $user::SHORTAGE_OF_ARGUMENTS;
+            if($_SERVER['CONTENT_TYPE'] == 'application/json') {
+                $info = json_decode($this->get_contents(), true);
+                if(isset($info['email']) AND isset($info['pass'])){
+                    $status = $this->{$this->_model}->login($info['email'], $info['pass']);
+                }
+            }
+        }else $status = $this->{$this->_model}->login($email, $pass);
         switch($status){
             case $user::LOGIN_LOCKED:
                 $this->status(HttpStatusCode::FORBIDDEN, 'Account is locked.');
