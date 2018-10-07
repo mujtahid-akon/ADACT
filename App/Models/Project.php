@@ -272,6 +272,7 @@ class Project extends ProjectPrivilegeHandler {
         $this->_project_id = $project_id;
         $rt = $this->getResultType();
         $fm = new FM($this->_project_id);
+        $meta = $this->get($this->_project_id, false);
         if($rt === self::RT_SUCCESS){
             // Get Species Relations
             $species_relations = json_decode(file_get_contents($fm->get(FM::SPECIES_RELATION_JSON)), true);
@@ -292,6 +293,8 @@ class Project extends ProjectPrivilegeHandler {
         return [
             'config'    => ($rt === self::RT_CANCELLED) ? null : (new ProjectConfig($fm->get(FM::CONFIG_JSON)))->getConfigAssocArray(),
             'meta_data' => [
+                'date_created'  => $meta['date_created'],
+                'exec_duration' => $meta['exec_duration'],
                 'success'   => ($rt === self::RT_SUCCESS),
                 'editable'  => $this->isEditable(),
                 'pending'   => ($rt === self::RT_PENDING),
@@ -470,7 +473,7 @@ class Project extends ProjectPrivilegeHandler {
      * Helper for get(), getAll() and getMultiple()
      * @param \mysqli_stmt $stmt
      * @param bool         $formatted Return formatted data instead of raw data (for API)
-     * @return array
+     * @return array id, name, date_created, exec_duration, editable, success, pending, failed, cancelled
      */
     private function _fetch_project_overview(&$stmt, $formatted){
         $project = ['id' => null, 'name' => null, 'date_created' => null, 'editable' => false, 'last' => false, 'result_type' => self::RT_SUCCESS, 'exec_duration' => null];
@@ -480,11 +483,13 @@ class Project extends ProjectPrivilegeHandler {
         $project['result_type'] = ($status_code === null OR $cancel === null) ? self::RT_SUCCESS : $this->getResultType($status_code, $cancel);
         $project['last'] = $project['last'] === 1 ? true : false;
         if($project['result_type'] == self::RT_SUCCESS) {
-            // Get project duration
-            $s = \DateTime::createFromFormat('Y-m-d H:i:s', $s);
-            $e = \DateTime::createFromFormat('Y-m-d H:i:s', $e);
-            $d = $e->getTimestamp() - $s->getTimestamp();
-            $project['exec_duration'] = $d;
+            if($s != null AND $e != null) {
+                // Get project duration
+                $s = \DateTime::createFromFormat('Y-m-d H:i:s', $s);
+                $e = \DateTime::createFromFormat('Y-m-d H:i:s', $e);
+                $d = $e->getTimestamp() - $s->getTimestamp();
+                $project['exec_duration'] = $d;
+            }
         }
         // A project is editable if it is the last project, the project was successful and the ‘Files’ directory exists
         $project['editable'] = ($project['last'] AND $project['result_type'] === self::RT_SUCCESS AND file_exists(Config::PROJECT_DIRECTORY . '/' . $project['id'] . '/Files')) ? true : false;
