@@ -85,19 +85,3 @@
         right: 0;
     }
 }
-/**
- * Demo Styles
- */
-.wrapper {
-    padding: 15px 0;
-}
-
-.bs-example-tabs .nav-tabs {
-    margin-bottom: 15px;
-}
-
-@media (max-width: 479px) {
-    #narrow-browser-alert {
-        display: none;
-    }
-}
