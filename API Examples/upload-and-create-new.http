@@ -1,0 +1,143 @@
+### Upload a file ###
+POST http://localhost:8080/api/projects/upload
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="6 sequences.zip"
+Content-Type: application/zip
+
+< ./../Sample%20Input%20Files/6%20sequences.zip
+--WebAppBoundary--
+
+# Example output:
+#{
+#  "files": [
+#    {
+#      "name": "6 sequences.zip",
+#      "id": "77398cd61b9d9cdda78af04f1faadf4f0e4e412c21bd3fec56d36a6eb74ed5b5c06dc7253bff1c579ca69124a2df1903fd1f86f1150620e2df37c72f48076d38",
+#      "data": [
+#        {
+#          "header": "gi|5835540|ref|NC_001922.1| Alligator mississippiensis mitochondrion, complete genome",
+#          "id": 1538911051
+#        },
+#        {
+#          "header": "gi|312233122|ref|NC_014672.1| Solenopsis invicta mitochondrion, complete genome",
+#          "id": 1538911052
+#        },
+#        {
+#          "header": "gi|187250348|ref|NC_010641.1| Panthera pardus mitochondrion, complete genome",
+#          "id": 1538911053
+#        },
+#        {
+#          "header": "gi|8572562|ref|NC_002355.1| Bombyx mori mitochondrion, complete genome",
+#          "id": 1538911054
+#        },
+#        {
+#          "header": "gi|187250362|ref|NC_010642.1| Panthera tigris mitochondrion, complete genome",
+#          "id": 1538911055
+#        },
+#        {
+#          "header": "gi|17737322|ref|NC_002008.4| Canis lupus familiaris mitochondrion, complete genome",
+#          "id": 1538911056
+#        }
+#      ],
+#      "status": {
+#        "code": 0,
+#        "message": "Success!"
+#      }
+#    }
+#  ],
+#  "status": {
+#    "code": 200,
+#    "message": "Success."
+#  }
+#}
+
+### Create a new project ###
+PUT http://localhost:8080/api/projects/new
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+Content-Type: application/json
+
+[
+  {
+    "project_name": "API Test",
+    "aw_type": "maw",
+    "kmer": {
+      "min": 3,
+      "max": 9
+    },
+    "inversion": false,
+    "dissimilarity_index": "MAW_TVD",
+    "sequence_type": "nucleotide",
+    "type": "file",
+    "file_id": "77398cd61b9d9cdda78af04f1faadf4f0e4e412c21bd3fec56d36a6eb74ed5b5c06dc7253bff1c579ca69124a2df1903fd1f86f1150620e2df37c72f48076d38",
+    "data": [
+      {
+        "id": "1538911051",
+        "id_type": "file",
+        "title": "Alligator mississippiensis mitochondrion, complete genome",
+        "type": "file",
+        "gin": null,
+        "short_name": "alligator"
+      },
+      {
+        "id": "1538911052",
+        "id_type": "file",
+        "title": "Solenopsis invicta mitochondrion, complete genome",
+        "type": "file",
+        "gin": null,
+        "short_name": "ant"
+      },
+      {
+        "id": "1538911053",
+        "id_type": "file",
+        "title": "Panthera pardus mitochondrion, complete genome",
+        "type": "file",
+        "gin": null,
+        "short_name": "leopard"
+      },
+      {
+        "id": "1538911054",
+        "id_type": "file",
+        "title": "Bombyx mori mitochondrion, complete genome",
+        "type": "file",
+        "gin": null,
+        "short_name": "silkworm"
+      },
+      {
+        "id": "1538911055",
+        "id_type": "file",
+        "title": "Panthera tigris mitochondrion, complete genome",
+        "type": "file",
+        "gin": null,
+        "short_name": "tiger"
+      },
+      {
+        "id": "1538911056",
+        "id_type": "file",
+        "title": "Canis lupus familiaris mitochondrion, complete genome",
+        "type": "file",
+        "gin": null,
+        "short_name": "wolf"
+      }
+    ]
+  }
+]
+
+# Example output:
+#{
+#  "projects": [
+#    {
+#      "name": "API Test",
+#      "id": 9
+#    }
+#  ],
+#  "status": {
+#    "code": 200,
+#    "message": "Success!"
+#  }
+#}
+###

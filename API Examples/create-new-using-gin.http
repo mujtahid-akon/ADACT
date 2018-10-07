@@ -1,0 +1,88 @@
+### Create new project using GID ###
+# GIDs are: 5835540, 312233122, 187250348, 8572562, 187250362, 17737322
+# if you're using ACCN, convert them to GID
+PUT http://localhost:8080/api/projects/new
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+Content-Type: application/json
+
+[
+  {
+    "project_name": "API Test GID",
+    "aw_type": "maw",
+    "kmer": {
+      "min": 9,
+      "max": 13
+    },
+    "inversion": false,
+    "dissimilarity_index": "MAW_JD",
+    "sequence_type": "nucleotide",
+    "type": "accn_gin",
+    "data": [
+      {
+        "id": "187250348",
+        "id_type": "gin",
+        "title": "Panthera pardus mitochondrion, complete genome",
+        "type": "nucleotide",
+        "gin": "187250348",
+        "short_name": "leopard"
+      },
+      {
+        "id": "17737322",
+        "id_type": "gin",
+        "title": "Canis lupus familiaris mitochondrion, complete genome",
+        "type": "nucleotide",
+        "gin": "17737322",
+        "short_name": "wolf"
+      },
+      {
+        "id": "187250362",
+        "id_type": "gin",
+        "title": "Panthera tigris mitochondrion, complete genome",
+        "type": "nucleotide",
+        "gin": "187250362",
+        "short_name": "tiger"
+      },
+      {
+        "id": "5835540",
+        "id_type": "gin",
+        "title": "Alligator mississippiensis mitochondrion, complete genome",
+        "type": "nucleotide",
+        "gin": "5835540",
+        "short_name": "alligator"
+      },
+      {
+        "id": "8572562",
+        "id_type": "gin",
+        "title": "Bombyx mori mitochondrion, complete genome",
+        "type": "nucleotide",
+        "gin":"8572562",
+        "short_name": "silkworm"
+      },
+      {
+        "id": "312233122",
+        "id_type": "gin",
+        "title": "Solenopsis invicta mitochondrion, complete genome",
+        "type": "nucleotide",
+        "gin": "312233122",
+        "short_name": "ant"
+      }
+    ]
+  }
+]
+
+# Example output
+#{
+#  "projects": [
+#    {
+#      "name": "API Test GID",
+#      "id": 10
+#    }
+#  ],
+#  "status": {
+#    "code": 200,
+#    "message": "Success!"
+#  }
+#}
+
+###
