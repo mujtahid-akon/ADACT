@@ -1,0 +1,43 @@
+### Get project list (along with metadata) ###
+GET http://localhost:8080/api/projects
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+### Get project metadata by ID(s) ###
+GET http://localhost:8080/api/projects/9,10
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+### Get project status ###
+# Useful for currently running project(s)
+GET http://localhost:8080/api/projects/status
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+### Get project status by ID(s) ###
+# Useful for currently running project(s)
+GET http://localhost:8080/api/projects/status/9,10
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+### Get details of a project ###
+GET http://localhost:8080/api/projects/details/10
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+### Get the results as zip ###
+GET http://localhost:8080/api/projects/result/9
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+### Delete project by ID(s) ###
+DELETE http://localhost:8080/api/projects/delete/10,11
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+### Cancel project execution by ID(s) ###
+DELETE http://localhost:8080/api/projects/cancel/9,11
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+###

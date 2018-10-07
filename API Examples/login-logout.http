@@ -1,0 +1,36 @@
+### Login ###
+# Login using the email “alan@gmail.com”
+# and the password “ok”
+###
+
+### Send login request with json body
+POST http://localhost:8080/api/login
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+Content-Type: application/json
+
+{
+  "email": "alan@gmail.com",
+  "pass": "ok"
+}
+
+### Send login request with body as parameters
+POST http://localhost:8080/api/login
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+Content-Type: application/x-www-form-urlencoded
+
+email=alan@gmail.com&pass=ok
+
+### Send login request with url parameter
+POST http://localhost:8080/api/login?email=alan@gmail.com&pass=ok
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+
+# NOTE: Store the cookie for later requests
+
+### Logout ###
+DELETE http://localhost:8080/api/logout
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+###

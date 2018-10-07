@@ -1,0 +1,19 @@
+### Edit a project ###
+# Remember that only the last project is editable
+# if it was successfully executed
+PATCH http://localhost:8080/api/projects/edit/9
+Cache-Control: no-cache
+Cookie: PHPSESSID=32c7qm3l8guk0p79u83gj0qppa
+Content-Type: application/json
+
+{
+  "aw_type": "maw",
+  "kmer": {
+    "min": 3,
+    "max": 9
+  },
+  "inversion": false,
+  "dissimilarity_index": "MAW_JD"
+}
+
+###
