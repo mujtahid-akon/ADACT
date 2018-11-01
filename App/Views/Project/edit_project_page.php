@@ -26,6 +26,7 @@ $config->aw_type = strtoupper($config->aw_type);
 ?>
     <h3 class="title">Editing: <?php print ucwords($config->project_name); ?></h3>
     <script>
+        "use strict";
         // Initialize values
         $(document).ready(function () {
             // Set Absent Word type
@@ -45,67 +46,6 @@ $config->aw_type = strtoupper($config->aw_type);
             // Set Dissimilarity Index based on Absent Word type
             $('option[value=\'<?php print $config->dissimilarity_index ?>\']').attr('selected', true);
         });
-
-        // Manipulate project
-        Project.edit = {
-            MAW: 'maw',
-            RAW: 'raw',
-            info: {},
-            submit_btn: null,
-            collect: function(){
-                // Similar to Project.result.prepare()
-                this.info = {
-                    aw_type: $("input[name='aw_type'][value='raw']").is(':checked') ? this.RAW : this.MAW, // #1
-                    kmer: { // #2
-                        min: parseInt($('#kmer_min').val()),
-                        max: parseInt($('#kmer_max').val())
-                    },
-                    inversion: $('#inversion').is(":checked"), // #3
-                    dissimilarity_index: $('#dissimilarity_index').val(), // #4
-                };
-            },
-            send: function (p_id) {
-                this.collect();
-                this.submit_btn = $('#submit_btn');
-                const parent = this;
-                $.ajax({
-                    method: 'post',
-                    url: './projects/' + p_id + '/edit',
-                    data: {config: JSON.stringify(this.info)},
-                    cache: false,
-                    dataType: 'json',
-                    beforeSend: function() {
-                        const btn = parent.submit_btn;
-                        btn.removeClass('btn-primary');
-                        btn.addClass('btn-default disabled');
-                        btn.attr('onclick', null);
-                        btn.html("<i class=\"fa fa-spinner fa-pulse\" aria-hidden=\"true\"></i> "+ Messages.Project.LOADING_TEXT);
-                    },
-                    success: function(res){
-                        if(res && res.status === 0){
-                            parent.project_id = res.id;
-                            const url = './projects/' + p_id;
-                            const form = $('<form action="' + url + '" method="get"></form>');
-                            $('body').append(form);
-                            form.submit();
-                        }else{
-                            parent.restore();
-                        }
-                    },
-                    error: function(){
-                        parent.restore();
-                    }
-                });
-            },
-            restore: function(){
-                alert(Messages.Project.FAILURE_ALERT);
-                const btn = this.submit_btn;
-                btn.removeClass('btn-default disabled');
-                btn.addClass('btn-primary');
-                btn.attr('onclick', 'Project.edit.send(<?php print $project_id ?>)');
-                btn.html("Run & Show Result");
-            }
-        };
     </script>
     <div class="btn-group">
         <button class="btn btn-4 button small gray" id="submit_btn" title="Run project and show result"
