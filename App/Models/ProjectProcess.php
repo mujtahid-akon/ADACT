@@ -143,12 +143,12 @@ class ProjectProcess extends PendingProjects { // is_a
      * @throws \phpmailerException
      */
     function init(){
-        // Start process time
-        $this->_set_start();
         // Log project info
         $this->_log("Project: {$this->_config->project_name} ({$this->_project_id})", Logger::BG_RED.Logger::BOLD.Logger::WHITE);
         if($this->_edit_mode === null) return;  // Since PHP doesn't distinguish between null and 0 in a switch statement
-        switch ($this->_edit_mode){             // Deliberate fallthrough: DON'T add any break statement after the cases
+        // Start process time
+        $this->_set_start();
+        switch ($this->_edit_mode){             // Deliberate fallthrough: DO NOT add any break statement after each case, DO NOT alternate the cases
             /** @noinspection PhpMissingBreakStatementInspection */
             case self::EM_INIT_FROM_INIT:
                 $this->_log("@ProjectProcess::PROJECT_INIT_FROM_INIT", Logger::BOLD);
@@ -177,10 +177,10 @@ class ProjectProcess extends PendingProjects { // is_a
 //        $this->remove(); // Remove from the pending list FIXME Do this in a cron job to clean things up
         $this->setStatus(self::PROJECT_SUCCESS);
         $this->_log('The project was processed successfully.', Logger::BG_RED.Logger::BOLD.Logger::WHITE);
+        // Store process terminating time
+        $this->_set_end();
         // Send mail
         $this->send_mail();
-        // Store terminate process time
-        $this->_set_end();
     }
 
     public function __destruct(){
@@ -617,6 +617,7 @@ EOF;
             $this->_status = self::PROJECT_FAILURE;
             $this->setStatus($this->_status);
         }
+        $this->_set_end(); // Set termination time
         exit(); // TODO: Should I try and catch error? This may not be a good idea.
     }
 

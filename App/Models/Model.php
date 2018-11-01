@@ -18,7 +18,7 @@ class Model implements Config {
     function __construct(){
         @$this->mysqli = new \Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
         if ($this->mysqli->connect_error) {
-            error_log("Unable to connect to mysql.");
+            error_log("MySQL: [{$this->mysqli->connect_errno}] {$this->mysqli->connect_error}");
         }
         @$this->mysqli->set_charset("utf8");
     }
@@ -26,7 +26,7 @@ class Model implements Config {
     static function mysqli(){
         @$mysqli = new \Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
         if ($mysqli->connect_error) {
-            error_log("Unable to connect to mysql.");
+            error_log("MySQL: [{$mysqli->connect_errno}] {$mysqli->connect_error}");
         }
         @$mysqli->set_charset("utf8");
         return $mysqli;
