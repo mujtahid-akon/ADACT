@@ -547,7 +547,7 @@ let InputAnalyzer = {
                             '<strong>' + Messages.InputAnalyzer.Upload.SUCCESS_TEXT + '</strong> ' +
                             Messages.InputAnalyzer.Upload.SUCCESS_MESSAGE +
                             '</div>' +
-                            '<div class="btn btn-primary" id="upload_new" onclick="$(\'#filef_status\').hide();' +
+                            '<div class="btn-4 button small gray" id="upload_new" onclick="$(\'#filef_status\').hide();' +
                             '$(\'#upload_file\').show();$(\'#method\').removeAttr(\'disabled\');">' +
                             Messages.InputAnalyzer.Upload.UPLOAD_NEW_TEXT +
                             '</div>');

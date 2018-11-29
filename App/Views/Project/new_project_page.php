@@ -165,7 +165,7 @@ if($isForked){
                       enctype="multipart/form-data" onsubmit="return false;" style="display: none;">
                     <input type="hidden" name="MAX_FILE_SIZE"
                            value="<?php print \ADACT\Config::MAX_UPLOAD_SIZE ?>" />
-                    <label for="filef" class="btn btn-primary">Upload a file...</label>
+                    <label for="filef" class="btn-4 button small gray" style="display: inline-flex;">Upload a file...</label>
                     <i data-toggle="tooltip" class="glyphicon glyphicon-info-sign"
                        title="The zip file consists of a number of FASTA (the extension can be of any type)
                         files with no directories. Text file can contain multiple FASTA files separated by the standard header,
@@ -181,7 +181,7 @@ if($isForked){
                        title="The sequence must be in FASTA format, ie. separated by a header `>` and no hyphens."></i>
                     <textarea class="form-control" id="seq_text" name="seq_text" placeholder="Sequence in FASTA Format"
                               style="width: 100%; display: block;" rows="10" ></textarea><br />
-                    <button class="btn btn-primary" id="analyze_seq_text" onclick="InputAnalyzer.init()"
+                    <button class="btn-4 button small gray" id="analyze_seq_text" onclick="InputAnalyzer.init()"
                             style="vertical-align: top">Analyze</button>
                 </div>
                 <!-- ACCN/GIN -->
@@ -192,7 +192,7 @@ if($isForked){
                         (eg. NM_009417, NM_001003009, 224465210, 50978625, 9507198, A3R4N5)."></i>
                     <textarea class="form-control" id="accn_gin" name="accn_gin" placeholder="Input Accession/GI Numbers"
                               style="width: 100%; display: block;" ></textarea><br />
-                    <button class="btn btn-primary" id="analyze_accn_gin" onclick="InputAnalyzer.init()"
+                    <button class="btn-4 button small gray" id="analyze_accn_gin" onclick="InputAnalyzer.init()"
                             style="vertical-align: top">Analyze</button>
                 </div>
                 <!-- Analyze result table -->

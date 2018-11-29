@@ -20,8 +20,8 @@ print <<< EOF
     <meta name="Description" content="The Alignment-free Dissimilarity Analysis & Comparison Tool" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#eee8aa" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/logos/favicon.ico" type="image/x-icon" />
+    <link rel="manifest" href="{$DIR}manifest.webmanifest" />
+    <link rel="icon" href="${DIR}logos/favicon.ico" type="image/x-icon" />
     <!-- Fonts -->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" media="all" />
     <!-- jQuery -->
