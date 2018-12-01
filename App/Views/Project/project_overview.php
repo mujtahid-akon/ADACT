@@ -105,13 +105,13 @@ function get_distance_matrix($species, $fm){
 // Generate results if the project was executed successfully
 if($result_type === Project::RT_SUCCESS):
 $tree = new Tree($project_id);
-endif;
 
 /** @var string $download_url */
 /** @var array  $species */
 /** @var array  $species_relations */
 $neighbourTree = $download_url . '/' . str_replace(' ', '+', FM::NEIGHBOUR_TREE);
 $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
+endif;
 
 // Output begin
 ?>

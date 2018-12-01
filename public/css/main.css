@@ -148,8 +148,14 @@ body{
         border: none;
     }
 
+    .dropdown-menu {
+        border: 0;
+        background-color: transparent;
+        padding: 0;
+    }
+
     .dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
-        background-color: palegoldenrod;
+        background-color: darkkhaki;
     }
 
     .notification-count.dev-sm-navbar {
