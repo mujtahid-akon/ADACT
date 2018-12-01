@@ -293,6 +293,7 @@ h3.title{
     background-color: lightgoldenrodyellow !important;
     padding: 5px 10px !important;
     color: #333;
+    border-radius: 5px !important;
 }
 .form-control:focus{
     background-color: palegoldenrod !important;
