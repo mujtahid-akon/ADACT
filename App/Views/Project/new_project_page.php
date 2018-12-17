@@ -87,7 +87,7 @@ if($isForked){
         });
     });
 </script>
-<script src="/js/examples.min.js" defer></script>
+<script src="./js/examples.min.js" defer></script>
 <style>
     .tooltip-inner {
         max-width: 350px;
