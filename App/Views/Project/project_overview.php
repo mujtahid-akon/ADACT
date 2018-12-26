@@ -217,14 +217,17 @@ endif;
         <button type="button" class="btn button small orange" onclick="Project.process.cancel(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>)" title="Cancel project">
             <i class="fa fa-remove" aria-hidden="true"></i> Cancel
         </button>
-        <?php else: ?>
+        <?php endif; // isAPendingProject ?>
+        <?php if($result_type == Project::RT_SUCCESS): ?>
         <a class="btn button small gray" href="<?php echo $base_url ?>/download" title="Download entire project">
             <i class='fa fa-download'></i> Download
         </a>
+        <?php endif; // RT_SUCCESS ?>
+        <?php if(!$isAPendingProject): ?>
         <button type="button" class="btn button small deeporange" onclick="Project.delete(<?php print $project_id. ', \'' .$config->project_name . '\'' ?>, true)" title="Delete project">
             <i class="fa fa-trash" aria-hidden="true"></i> Delete
         </button>
-        <?php endif; // isAPendingProject ?>
+        <?php endif; // !isAPendingProject ?>
         <button type="button" class="btn button small whitish" <?php print (($isAFileIOProject OR $isAPendingProject) ? "disabled" : "href=\"./projects/{$project_id}/fork\"") ?> title="Fork this project">
             <i class="fa fa-code-fork" aria-hidden="true"></i> Fork
         </button>
