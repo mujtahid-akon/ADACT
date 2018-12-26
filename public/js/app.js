@@ -466,9 +466,13 @@ let InputAnalyzer = {
                 // UI Changes
                 if(type === parent.PROTEIN) {
                     $(".seq_type[value=protein]").prop("checked", true);
+                    $('#inversion_box').hide();
+                    $('.active.dis_gcc').hide();
                     $(".seq_type").prop("disabled", true);
                 }else if(type === parent.NUCLEOTIDE){
                     $(".seq_type[value=nucleotide]").prop("checked", true);
+                    $('#inversion_box').show();
+                    $('.active.dis_gcc').show();
                     $(".seq_type").prop("disabled", true);
                 }
 
@@ -577,8 +581,12 @@ let InputAnalyzer = {
                         // UI Changes
                         if(res.seq_type === parent.PROTEIN) {
                             $(".seq_type[value=protein]").prop("checked", true);
+                            $('#inversion_box').hide();
+                            $('.active.dis_gcc').hide();
                         }else if(res.seq_type === parent.NUCLEOTIDE){
                             $(".seq_type[value=nucleotide]").prop("checked", true);
+                            $('#inversion_box').show();
+                            $('.active.dis_gcc').show();
                         }
 
                         parent.buildTable();
@@ -651,8 +659,12 @@ let InputAnalyzer = {
                         // UI Changes
                         if(res.seq_type === parent.PROTEIN) {
                             $(".seq_type[value=protein]").prop("checked", true);
+                            $('#inversion_box').hide();
+                            $('.active.dis_gcc').hide();
                         }else if(res.seq_type === parent.NUCLEOTIDE){
                             $(".seq_type[value=nucleotide]").prop("checked", true);
+                            $('#inversion_box').show();
+                            $('.active.dis_gcc').show();
                         }
 
                         parent.buildTable();
