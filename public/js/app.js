@@ -255,11 +255,24 @@ let InputAnalyzer = {
             this.results = [];
             //console.log(this.inputs);
             this.progress = new ProgressBar(this.selector, this.inputs.length, 0, Messages.InputAnalyzer.ANALYZING_TEXT);
-            $.each(this.inputs, function (i, id) {
-                /** @type {string} Which type of ID the user inserted */
-                const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
-                parent.getMetaData(id, id_type);
-            });
+            // $.each(this.inputs, function (i, id) {
+            //     /** @type {string} Which type of ID the user inserted */
+            //     const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
+            //     parent.getMetaData(id, id_type);
+            // });
+            const len = this.inputs.length;
+            var i = 1;
+            const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN; 
+            var d = parent.getMetaData(this.inputs[0], id_type);
+            for(; i < len ; i++){
+                d.then((function (id) {
+                    return function () {
+                        const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
+                        return parent.getMetaData(id, id_type);
+                    };
+                })(this.inputs[i]));
+            }
+
         }else if(InputMethod.getCurrent() === InputMethod.FILE){
             // Upload file
             this.upload(form);
@@ -396,6 +409,7 @@ let InputAnalyzer = {
      */
     getMetaData: function(id, id_type){
         const parent = this;
+        var d = $.Deferred();
         /**
          * Response data
          * @type {{id: int|string, id_type: string, title: string|null, type: string|null, gin: int|null, short_name: string|null}}
@@ -487,11 +501,15 @@ let InputAnalyzer = {
                 parent.renderer(parent.DB_PROTEIN, id, function (db, data) {
                     processData(parent.DB_PROTEIN, data);
                     postProcess();
+                    d.resolve();
                 });
             }else{
                 postProcess();
+                d.resolve();
             }
         });
+
+        return d;
     },
     /**
      * AJAX handler for getting meta data from ncbi's website
