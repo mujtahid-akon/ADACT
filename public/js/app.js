@@ -95,10 +95,10 @@ Object.freeze(Messages = {
             /** @return {Array} */
             FAILURE_MESSAGE : function (file_limit) {
                 return [
-                'The text/zip file is valid and in the right format',
-                'In case of zip file, the size must be less than 100 MB',
-                'The size of each sequence is less than 20 MB',
-                'There cannot be more than ' + file_limit + ' sequence in a zip/text file'
+                    'The text/zip file is valid and in the right format',
+                    'In case of zip file, the size must be less than 100 MB',
+                    'The size of each sequence is less than 20 MB',
+                    'There cannot be more than ' + file_limit + ' sequence in a zip/text file'
                 ];
             }
         },
@@ -158,7 +158,7 @@ Object.freeze(Messages = {
  *
  * Defines FASTA source
  *
- * @type {{FILE: string, ACCN_GIN: string, current: null|string, setCurrent: InputMethod.setCurrent, getCurrent: InputMethod.getCurrent}}
+ * @type {{FILE: string, SEQ_TEXT: string, ACCN_GIN: string, current: null, setCurrent: InputMethod.setCurrent, getCurrent: (function(): string)}}
  */
 let InputMethod = {
     // Constants
@@ -207,7 +207,7 @@ let InputMethod = {
  *
  * Analyzes user input
  *
- * @type {{GIN: string, ACCN: string, NUCLEOTIDE: string, PROTEIN: string, DB_NUCCORE: string, DB_PROTEIN: string, inputs: Array, selector: null, progress: null, results: Array, file_id: null, init: InputAnalyzer.init, addShortNames: InputAnalyzer.addShortNames, getMetaData: InputAnalyzer.getMetaData, renderer: InputAnalyzer.renderer, upload: InputAnalyzer.upload, buildTable: InputAnalyzer.buildTable, getShortName: InputAnalyzer.getShortName}}
+ * @type {{GIN: string, ACCN: string, NUCLEOTIDE: string, PROTEIN: string, DB_NUCCORE: string, DB_PROTEIN: string, CHAR_LIMIT: number, FASTA_LIMIT: number, inputs: Array, selector: null, progress: null, results: Array, file_id: null, done: boolean, _handled: number, init: InputAnalyzer.init, addShortNames: InputAnalyzer.addShortNames, getMetaData: (function(string, string): (*|{})), renderer: InputAnalyzer.renderer, upload: InputAnalyzer.upload, upload_text: InputAnalyzer.upload_text, buildTable: InputAnalyzer.buildTable, getShortName: InputAnalyzer.getShortName, copyToShortNameField: InputAnalyzer.copyToShortNameField, copyAllShortNames: InputAnalyzer.copyAllShortNames}}
  */
 let InputAnalyzer = {
     // ID Constants
@@ -238,8 +238,11 @@ let InputAnalyzer = {
     results: [],
     /** @type {string|null} File id (only for InputMethod.FILE) */
     file_id: null,
-    /** @type boolean Whether analyzing input finished */
+    /** @type {boolean} Whether analyzing input finished */
     done: false,
+    /** @type {number} No. of handled accn/gin, to increase efficiency */
+    _handled: 1,
+    _two_req: false,
     /** @param [form] form Initialize analyzer based on current input method */
     init: function (form) {
         const parent = this;
@@ -255,11 +258,27 @@ let InputAnalyzer = {
             this.results = [];
             //console.log(this.inputs);
             this.progress = new ProgressBar(this.selector, this.inputs.length, 0, Messages.InputAnalyzer.ANALYZING_TEXT);
-            $.each(this.inputs, function (i, id) {
-                /** @type {string} Which type of ID the user inserted */
-                const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
-                parent.getMetaData(id, id_type);
-            });
+            // $.each(this.inputs, function (i, id) {
+            //     /** @type {string} Which type of ID the user inserted */
+            //     const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
+            //     parent.getMetaData(id, id_type);
+            // });
+            this._handled = 1; // reset handled accn/gin
+            this._two_req = false;
+            const len = this.inputs.length;
+            let i = 0;
+            let id = this.inputs[i++];
+            const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
+            let d = parent.getMetaData(id, id_type);
+            for( ; i < len ; i++){
+                d = d.then((function (id) {
+                    return function () {
+                        const id_type = /^[\d]+$/.test(id) ? parent.GIN : parent.ACCN;
+                        return parent.getMetaData(id, id_type);
+                    };
+                })(this.inputs[i]));
+            }
+
         }else if(InputMethod.getCurrent() === InputMethod.FILE){
             // Upload file
             this.upload(form);
@@ -396,6 +415,7 @@ let InputAnalyzer = {
      */
     getMetaData: function(id, id_type){
         const parent = this;
+        let d = $.Deferred();
         /**
          * Response data
          * @type {{id: int|string, id_type: string, title: string|null, type: string|null, gin: int|null, short_name: string|null}}
@@ -431,7 +451,7 @@ let InputAnalyzer = {
                 }
             }
         }
-        
+
         function postProcess() {
             parent.results.push(response);
             parent.progress.increment();
@@ -481,17 +501,25 @@ let InputAnalyzer = {
             }
         }
 
-        this.renderer(this.DB_NUCCORE, id, function (db, data) {
-            processData(parent.DB_NUCCORE, data); // Is it a nucleotide?
-            if(response.gin === null){ // Oh, Maybe it's a protein
-                parent.renderer(parent.DB_PROTEIN, id, function (db, data) {
-                    processData(parent.DB_PROTEIN, data);
+        setTimeout(function () {
+            parent._two_req = false;
+            parent.renderer(parent.DB_NUCCORE, id, function (db, data) {
+                processData(parent.DB_NUCCORE, data); // Is it a nucleotide?
+                if(response.gin === null){ // Oh, Maybe it's a protein
+                    parent._two_req = true;
+                    parent.renderer(parent.DB_PROTEIN, id, function (db, data) {
+                        processData(parent.DB_PROTEIN, data);
+                        postProcess();
+                        d.resolve();
+                    });
+                }else{
                     postProcess();
-                });
-            }else{
-                postProcess();
-            }
-        });
+                    d.resolve();
+                }
+            });
+        }, (parent._two_req || parent._handled % 3 === 0 ? 3000 : 0)); // Wait 3 seconds
+
+        return d;
     },
     /**
      * AJAX handler for getting meta data from ncbi's website
@@ -517,6 +545,8 @@ let InputAnalyzer = {
                     Messages.CONNECTION_PROBLEM +
                     '</div>');
             }
+        }).done(function(){
+            ++parent._handled;
         });
     },
     /**
