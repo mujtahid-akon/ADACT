@@ -28,6 +28,8 @@ Interface Config{
     .
     .
     .
+    const WEB_ADDRESS = 'www.example.com/ADACT';
+    const WEB_DIRECTORY = '/ADACT/'; // Notice the trailing slash
 }
 ```
 
