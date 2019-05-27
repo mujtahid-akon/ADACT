@@ -46,8 +46,12 @@ if($isForked){
 <script>
     $(document).ready(function(){
         // Set K-Mer
-        $('#kmer_min').val(<?php print ($isForked ? $config->kmer['min'] : 9) ?>);
-        $('#kmer_max').val(<?php print ($isForked ? $config->kmer['max'] : 13) ?>);
+        <?php
+            if($isForked) {
+                echo "$('#kmer_min').val({$config->kmer['min']});\n";
+                echo "$('#kmer_max').val({$config->kmer['max']});\n";
+            }
+        ?>
         // Set Absent Word type
         const aw_type = "<?php print ($isForked ? $config->aw_type : 'maw') ?>";
         $('input[name=\'aw_type\'][value=\'' + aw_type + '\']').attr('checked', true);
