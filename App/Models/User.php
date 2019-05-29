@@ -137,6 +137,7 @@ EOF;
         if($stmt = $this->mysqli->prepare('SELECT activation_key FROM users WHERE email = ?')){
             $stmt->bind_param('s', $email);
             $stmt->execute();
+            $stmt->store_result();
             if($stmt->num_rows == 1){
                 $stmt->bind_result($activation_key);
                 $stmt->fetch();
