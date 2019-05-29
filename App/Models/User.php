@@ -34,7 +34,7 @@ class User extends Model{
      *
      * @param string $email
      * @param string $pass
-     * @return int
+     * @return int LOGIN_LOCKED | LOGIN_SUCCESS | LOGIN_FAILURE
      * @throws \phpmailerException
      */
     function login($email, $pass){
@@ -45,7 +45,11 @@ class User extends Model{
             if($stmt->num_rows == 1){
                 $stmt->bind_result($user_id, $hash, $isLocked);
                 $stmt->fetch();
-                if($isLocked == 1) return self::LOGIN_LOCKED;
+                if($isLocked == 1){
+                    // Email user unlock key
+                    $this->email_unlock_key($email);
+                    return self::LOGIN_LOCKED;
+                }
                 if(password_verify($pass, $hash)){
                     $this->new_session($user_id, session_id());
                     return self::LOGIN_SUCCESS;
@@ -120,6 +124,26 @@ class User extends Model{
 <p>Please disregard this email if you didn't request for the password reset.</a>
 EOF;
         return self::formatted_email('User', $email, $subject, $body);
+    }
+
+    private function email_unlock_key($email){
+        if($stmt = $this->mysqli->prepare('SELECT activation_key FROM users WHERE email = ?')){
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            if($stmt->num_rows == 1){
+                $stmt->bind_result($activation_key);
+                $stmt->fetch();
+                $subject   = self::SITE_TITLE . ': Unlock your account';
+                $conf_link = self::WEB_ADDRESS . '/unlock' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
+                $conf_btn  = Emailer::button('Unlock Account', $conf_link);
+                $body      = <<< EOF
+<p>Unlock your account by clicking the following button:</p>
+<div>{$conf_btn}</div>
+EOF;
+                return self::formatted_email('User', $email, $subject, $body);
+            }
+        }
+        return false;
     }
     
     function reset_password($email, $pass){
