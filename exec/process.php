@@ -12,18 +12,21 @@
 
 require_once __DIR__ . '/../autoload.php';
 
+use ADACT\App\Models\FileException;
 use ADACT\App\Models\Logger;
+use ADACT\App\Models\PendingProjects;
+use ADACT\App\Models\ProjectProcess;
 
 // Get all the pending projects
-$pending_projects = (new \ADACT\App\Models\PendingProjects())->getAll();
+$pending_projects = (new PendingProjects())->getAll();
 $logger = new Logger(__DIR__ . "/../logs/process.log");
 
 if($pending_projects !== false AND count($pending_projects) > 0) {
     $logger->log("Running " . count($pending_projects) . " process(es)", Logger::GREEN)->flush();
     foreach ($pending_projects as $project) {
         try {
-            (new \ADACT\App\Models\ProjectProcess($project['id'], $project['user']))->init();
-        } catch (\ADACT\App\Models\FileException $e) {
+            (new ProjectProcess($project['id'], $project['user']))->init();
+        } catch (FileException $e) {
             $logger->log($e->getMessage(), Logger::RED)->flush();
         } catch (phpmailerException $e) {
             $logger->log($e->getMessage(), Logger::RED)->flush();

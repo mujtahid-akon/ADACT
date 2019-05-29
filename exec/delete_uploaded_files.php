@@ -10,14 +10,15 @@
  * Time: 10:00 PM
  */
 
+use ADACT\App\Models\FileUploader;
+
 require_once __DIR__ . '/../autoload.php';
 
 $datetime = new DateTime();
 $datetime->setTimestamp(strtotime('-7 days'));
 
-$file = new \ADACT\App\Models\FileUploader();
+$file = new FileUploader();
 $no_files = $file->deleteUploaded($datetime);
-
 
 // DEBUG output
 print "[ ".date('Y-m-d H:i:s')." ] ";
