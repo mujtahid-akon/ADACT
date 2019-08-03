@@ -147,5 +147,8 @@ EOF;
         }
         return false;
     }
-    
+
+    function __destruct(){
+        @$this->mysqli->close();
+    }
 }
