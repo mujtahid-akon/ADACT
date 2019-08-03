@@ -645,7 +645,7 @@ endif;
             }
 
             function saveNewick(name) {
-                let newickTree = tree.get_newick();
+                let newickTree = name[0] === "U" ? upgma_tree : nj_tree;
                 let treeBlob = new Blob([newickTree], {type:"text/plain;charset=utf-8"});
                 let treeUrl = URL.createObjectURL(treeBlob);
                 let downloadLink = document.createElement("a");
