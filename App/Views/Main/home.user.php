@@ -5,10 +5,17 @@
  * Date: 6/11/18
  * Time: 7:15 AM
  */
+
+/**
+ * @var bool $is_guest
+ */
 ?>
 <div class="row">
     <div class="col-md-12">
         <h3 class="title">Welcome to <span style="font-family: monospace;">ADACT</span>!</h3>
+        <?php if($is_guest): ?>
+        <p class="text-danger">You are free to do any experiments. <strong>All your data will be cleared after 24 hours!</strong></p>
+        <?php endif; ?>
     </div>
 </div>
 <div class="row">

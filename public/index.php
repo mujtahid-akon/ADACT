@@ -65,7 +65,7 @@ Route::add(Route::POST, '/login', 'User@login', ['email' => Route::EMAIL, 'pass'
 Route::add(Route::POST, '/logout', 'User@logout', ['all' => Route::BOOLEAN]); // FIXME: 'all' is not implemented
 Route::add(Route::POST, '/reset_pass', 'User@reset_password', ['email' => Route::EMAIL, 'pass' => Route::STRING]);
 Route::add(Route::GET,  '/register_success', 'User@register_success');
-Route::add(Route::GET,  '/login', 'User@login_page', ['email' => Route::EMAIL]);
+Route::add(Route::GET,  '/login', 'User@login_page', ['email' => Route::EMAIL, 'guest' => Route::BOOLEAN]);
 Route::add(Route::GET,  '/unlock', 'User@unlock', ['email' => Route::EMAIL, 'key' => Route::STRING]);
 Route::add(Route::GET,  '/reset_pass', 'User@reset_password_page', ['email' => Route::EMAIL, 'key' => Route::STRING]);
 Route::add(Route::GET,  '/logout', 'User@logout');

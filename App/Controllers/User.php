@@ -39,7 +39,7 @@ class User extends Controller
         }
         unset($_SESSION['register_success']);
         // else load the GUI
-        /** @var \ADACT\App\Models\User $user */
+        /** @var UserModel $user */
         $user = $this->set_model();
         $logged_in = $user->login_check();
         // Go home if already logged in
@@ -57,7 +57,7 @@ class User extends Controller
          * @var string $pass
          */
         /**
-         * @var \ADACT\App\Models\User $user
+         * @var UserModel $user
          */
         $user = $this->set_model();
         // Go home if already logged in
@@ -83,7 +83,7 @@ class User extends Controller
     }
 
     public function register_page(){
-        /** @var \ADACT\App\Models\User $user */
+        /** @var UserModel $user */
         $user = $this->set_model();
         $logged_in = $user->login_check();
         // Go home if already logged in
@@ -100,13 +100,19 @@ class User extends Controller
         /**
          * Parameters
          * @var string $email
+         * @var bool $guest
          */
-        /** @var \ADACT\App\Models\User $user */
+        /** @var UserModel $user */
         $user = $this->set_model();
         $logged_in = $user->login_check();
         // Go home if already logged in
         if($logged_in){
             $this->redirect();
+            exit();
+        }
+        if($guest){
+            $user->guest_login();
+            $this->redirect('');
             exit();
         }
 
@@ -122,7 +128,7 @@ class User extends Controller
     }
     
     public function unlock(){
-        /** @var \ADACT\App\Models\User $user */
+        /** @var UserModel $user */
         $user = $this->set_model();
         extract($this->get_params());
         /**
@@ -131,6 +137,7 @@ class User extends Controller
          */
         $this->set('is_unlocked', $user->unlock($email, $key));
         $this->set('email', $email);
+        $this->set('is_guest', $user->user != null ? $user->user['is_guest'] : null);
         $this->set(LOGGED_IN, $user->login_check());
     }
     
@@ -141,7 +148,7 @@ class User extends Controller
          * @var string $email
          * @var string $pass
          */
-        /** @var \ADACT\App\Models\User $user */
+        /** @var UserModel $user */
         $user = $this->set_model();
         $logged_in = $user->login_check();
         if(empty($pass)){    // If only email is provided, send an activation code to the email
@@ -163,9 +170,13 @@ class User extends Controller
          * @var string $email
          * @var string $key
          */
-        /** @var \ADACT\App\Models\User $user */
+        /** @var UserModel $user */
         $user = $this->set_model();
         $logged_in = $user->login_check();
+        if($user->user != null && $user->user['is_guest']){
+            $this->redirect('');
+            exit();
+        }
         if(empty($key) AND !$logged_in){ // load the password reset request form
             $form_type = 'request';
         }else{                           // load the password reset form if the reset request is valid
@@ -183,6 +194,7 @@ class User extends Controller
         $this->set('form_type', $form_type);
         $this->set('email', $email);
         $this->set(LOGGED_IN, $logged_in);
+        $this->set('is_guest', $user->user != null ? $user->user['is_guest'] : null);
         $this->set(ACTIVE_TAB, 'settings');
     }
 }

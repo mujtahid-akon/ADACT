@@ -5,6 +5,7 @@
  * @var string $title
  * @var string $active_tab
  * @var bool   $logged_in
+ * @var bool   $is_guest
  */
 $active = "class=\"active\"";
 if(!isset($logged_in)) $logged_in = false;
@@ -49,13 +50,16 @@ if($logged_in):
         </div>
         <div class="nav navbar-nav navbar-right">
             <ul class="nav navbar-nav">
+                <?php if(!@$is_guest): ?>
                 <li class="nav-item dropdown notification-bar">
                     <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#"><b class="hidden-xs fa fa-bell"></b><sup class='hidden-xs notification-count dev-md-navbar'></sup><span class="notification-count dev-sm-navbar"></span></a>
                     <ul id="notification_bar" role="menu" class="dropdown-menu"></ul>
                 </li>
+                <?php endif; ?>
                 <li class="nav-item<?php if($active_tab == 'home') print " active" ?>">
                     <a class="nav-link" href="./home">Home</a>
                 </li>
+                <?php if(!@$is_guest): ?>
                 <li class="nav-item dropdown disable<?php if($active_tab == 'projects') print " active" ?>">
                     <a class="nav-link inline-right" href="./projects">Projects&nbsp;</a>
                     <a  class="dropdown-toggle inline-left hidden-xs" data-toggle="dropdown" href="#"><b class="caret"></b></a>
@@ -71,6 +75,7 @@ if($logged_in):
                         <li><a class="dropdown-item" href="./reset_pass">Change Password</a></li>
                     </ul>
                 </li>
+                <?php endif; ?>
                 <li class="nav-item">
                     <a class="nav-link" href="./logout">Logout</a>
                 </li>

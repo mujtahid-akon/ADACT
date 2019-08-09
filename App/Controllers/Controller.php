@@ -99,8 +99,12 @@ class Controller{
                 $filter_type = $value;
                 switch($filter_type){
                     case Route::BOOLEAN:
-                        $value = isset($parameters[$param]) ?
-                            (preg_match(Route::BOOLEAN, $parameters[$param]) ? true : false) : false;
+                        $value = false;
+                        if(isset($parameters[$param])){
+                            if($value != '' || $value != 'false' || $value != 0 || $value != 'null'){
+                                $value = true;
+                            }
+                        }
                         break;
                     case Route::EMAIL:
                     case Route::FLOAT:

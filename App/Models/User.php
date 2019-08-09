@@ -61,6 +61,11 @@ class User extends Model{
         return self::LOGIN_FAILURE;
     }
 
+    function guest_login(){
+        $this->new_session(UserPrivilegeHandler::GUEST_USER_ID, session_id());
+        return self::LOGIN_SUCCESS;
+    }
+
     /**
      * Log out of the current session
      *

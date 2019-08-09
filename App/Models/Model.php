@@ -11,20 +11,32 @@ require_once __DIR__ . '/../../autoload.php';
 require_once __DIR__ . '/../../Libraries/PHPMailer/PHPMailerAutoload.php';
 
 use \ADACT\Config;
+use Mysqli;
+use PHPMailer;
+use phpmailerException;
 
 class Model implements Config {
     public $mysqli;
+    /** @var array|null Contains user info or null if not logged in */
+    public $user;
 
     function __construct(){
-        @$this->mysqli = new \Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
+        @$this->mysqli = new Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
         if ($this->mysqli->connect_error) {
             error_log("MySQL: [{$this->mysqli->connect_errno}] {$this->mysqli->connect_error}");
         }
         @$this->mysqli->set_charset("utf8");
+        // Check for user
+        if($this->login_check()){
+            $this->user['id'] = $_SESSION['user_id'];
+            $this->user['is_guest'] = (new UserPrivilegeHandler())->is_guest();
+        } else {
+            $this->user = null;
+        }
     }
         
     static function mysqli(){
-        @$mysqli = new \Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
+        @$mysqli = new Mysqli(self::MYSQL_HOST, self::MYSQL_USER, self::MYSQL_PASS, self::MYSQL_DB, self::MYSQL_PORT);
         if ($mysqli->connect_error) {
             error_log("MySQL: [{$mysqli->connect_errno}] {$mysqli->connect_error}");
         }
@@ -39,11 +51,11 @@ class Model implements Config {
      * @param string $subject
      * @param string $message
      * @return bool
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     static function email($name, $email, $subject, $message){
         //Create a new PHPMailer instance
-        $mail = new \PHPMailer;
+        $mail = new PHPMailer;
         //Tell PHPMailer to use SMTP
         $mail->isSMTP();
         //Enable SMTP debugging
@@ -94,7 +106,7 @@ class Model implements Config {
      * @param $subject
      * @param $body
      * @return bool
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     static function formatted_email($name, $email, $subject, $body){
         $site_title = self::SITE_TITLE;

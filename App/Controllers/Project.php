@@ -5,11 +5,10 @@ namespace ADACT\App\Controllers;
 use ADACT\App\HttpStatusCode;
 use ADACT\App\Models\FileManager;
 use ADACT\App\Models\FileUploader;
+use ADACT\App\Models\LastProjects;
 use ADACT\App\Models\Notifications;
 use ADACT\App\Models\PendingProjects;
 use ADACT\App\Models\ProjectConfig;
-use ADACT\App\Models\Remover;
-use \ADACT\Config;
 
 class Project extends Controller{
     /**
@@ -23,11 +22,16 @@ class Project extends Controller{
          * @var \ADACT\App\Models\Project $project
          */
         $project = $this->set_model();
+        if($project->user != null && $project->user['is_guest']){
+            $this->redirect('');
+            exit();
+        }
         $logged_in = $project->login_check();
         if($logged_in){
             $this->set('logged_in', $logged_in);
             $this->set('active_tab', 'projects');
             $this->set('projects', $project->getAll());
+            $this->set('is_guest', $project->user != null ? $project->user['is_guest'] : null);
         }else $this->redirect();
     }
 
@@ -81,9 +85,13 @@ class Project extends Controller{
      */
     function last_project(){
         /**
-         * @var \ADACT\App\Models\LastProjects $lastProject
+         * @var LastProjects $lastProject
          */
         $lastProject = $this->set_model('LastProjects');;
+        if($lastProject->user != null && $lastProject->user['is_guest']){
+            $this->redirect('');
+            exit();
+        }
         $logged_in = $lastProject->login_check();
         if($logged_in){
             $last_project_id = $lastProject->get();
@@ -134,12 +142,13 @@ class Project extends Controller{
         $this->set('logged_in', $logged_in);
         $this->set('active_tab', 'new');
         $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
+        $this->set('is_guest', $project->user != null ? $project->user['is_guest'] : null);
     }
     
     function file_upload(){
         $json = ['status' => FileUploader::FILE_UPLOAD_FAILED];
         /**
-         * @var \ADACT\App\Models\FileUploader $project
+         * @var FileUploader $project
          */
         $project = $this->set_model('FileUploader');
         $logged_in = $project->login_check();
@@ -162,7 +171,7 @@ class Project extends Controller{
          */
         $json = ['status' => FileUploader::FILE_UPLOAD_FAILED];
         /**
-         * @var \ADACT\App\Models\FileUploader $project
+         * @var FileUploader $project
          */
         $project = $this->set_model('FileUploader');
         $logged_in = $project->login_check();
@@ -244,6 +253,7 @@ class Project extends Controller{
                 $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
                 $this->set('isAPendingProject', $isPending);
                 $this->set('project_info', $project_info);
+                $this->set('is_guest', $project->user != null ? $project->user['is_guest'] : null);
                 if(!$isPending) (new Notifications())->set_seen($project_id);
             }else{
                 $this->redirect('projects');
@@ -256,11 +266,16 @@ class Project extends Controller{
     function pending_projects(){
         /** @var \ADACT\App\Models\Project $project */
         $project = $this->set_model();
+        if($project->user != null && $project->user['is_guest']){
+            $this->redirect('');
+            exit();
+        }
         $logged_in = $project->login_check();
         if($logged_in){
             $this->set('logged_in', $logged_in);
             $this->set('active_tab', 'projects');
             $this->set('projects', $project->getAllPending());
+            $this->set('is_guest', $project->user != null ? $project->user['is_guest'] : null);
         }else $this->redirect();
     }
 
@@ -335,6 +350,7 @@ class Project extends Controller{
                 $this->set('logged_in', $logged_in);
                 $this->set('project_id', $project_id);
                 $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
+                $this->set('is_guest', $project->user != null ? $project->user['is_guest'] : null);
             }else{
                 $this->redirect('projects/'. $project_id);
             }
