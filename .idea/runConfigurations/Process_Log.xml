@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Process Log" type="BashConfigurationType" factoryName="Bash" singleton="true">
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="INTERPRETER_PATH" value="/usr/bin/tail" />
+    <option name="WORKING_DIRECTORY" value="./" />
+    <option name="PARENT_ENVS" value="true" />
+    <option name="SCRIPT_NAME" value="-f" />
+    <option name="PARAMETERS" value="./logs/process.log" />
+    <module name="" />
+    <envs />
+    <method />
+  </configuration>
+</component>
