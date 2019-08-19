@@ -63,7 +63,7 @@ mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql
     ```
 
 #### SQL files
-See the README file inside the `sql` folder. Current sql file is `adact_v4.3.sql`.
+See the README file inside the `sql` folder. Current sql file is `adact_v4.5.sql`.
 
 #### Sample input files
 Sample files are located in the `Sample Input Files` folder

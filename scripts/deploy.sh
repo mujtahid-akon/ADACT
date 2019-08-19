@@ -34,7 +34,7 @@ function current_dir(){
 #
 MYSQL_DB="adact"
 MYSQL_USER="root"
-MYSQL_PASS="root"
+MYSQL_PASS="PASSWORD"
 
 VERSION=$1
 DIR=$(current_dir)
