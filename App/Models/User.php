@@ -3,6 +3,7 @@
 namespace ADACT\App\Models;
 
 use ADACT\Config;
+use phpmailerException;
 
 class User extends Model{
     const ACTIVATION_KEY_LENGTH = 16;   // Can be up to 50
@@ -34,8 +35,8 @@ class User extends Model{
      *
      * @param string $email
      * @param string $pass
-     * @return int
-     * @throws \phpmailerException
+     * @return int LOGIN_LOCKED | LOGIN_SUCCESS | LOGIN_FAILURE
+     * @throws phpmailerException
      */
     function login($email, $pass){
         if(@$stmt = $this->mysqli->prepare('SELECT `user_id`, `password`, `locked` FROM users WHERE email=?')){
@@ -45,7 +46,11 @@ class User extends Model{
             if($stmt->num_rows == 1){
                 $stmt->bind_result($user_id, $hash, $isLocked);
                 $stmt->fetch();
-                if($isLocked == 1) return self::LOGIN_LOCKED;
+                if($isLocked == 1){
+                    // Email user unlock key
+                    $this->email_unlock_key($email);
+                    return self::LOGIN_LOCKED;
+                }
                 if(password_verify($pass, $hash)){
                     $this->new_session($user_id, session_id());
                     return self::LOGIN_SUCCESS;
@@ -54,6 +59,11 @@ class User extends Model{
         }
         (new LoginAttempts($email, LoginAttempts::EMAIL))->add();
         return self::LOGIN_FAILURE;
+    }
+
+    function guest_login(){
+        $this->new_session(UserPrivilegeHandler::GUEST_USER_ID, session_id());
+        return self::LOGIN_SUCCESS;
     }
 
     /**
@@ -72,6 +82,7 @@ class User extends Model{
      * @param string $email
      * @param string $pass
      * @return int ACCOUNT_EXISTS | REGISTER_SUCCESS | REGISTER_FAILURE
+     * @throws phpmailerException
      */
     function register($name, $email, $pass){
         // Does the account already exist?
@@ -107,7 +118,7 @@ class User extends Model{
     /**
      * @param String $email
      * @return bool
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     function email_reset_request($email){
         $subject = self::SITE_TITLE . ': Password reset request';
@@ -120,6 +131,32 @@ class User extends Model{
 <p>Please disregard this email if you didn't request for the password reset.</a>
 EOF;
         return self::formatted_email('User', $email, $subject, $body);
+    }
+
+    /**
+     * @param $email
+     * @return bool
+     * @throws phpmailerException
+     */
+    private function email_unlock_key($email){
+        if($stmt = $this->mysqli->prepare('SELECT activation_key FROM users WHERE email = ?')){
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $stmt->store_result();
+            if($stmt->num_rows == 1){
+                $stmt->bind_result($activation_key);
+                $stmt->fetch();
+                $subject   = self::SITE_TITLE . ': Unlock your account';
+                $conf_link = self::WEB_ADDRESS . '/unlock' . URL_SEPARATOR . 'email=' . urlencode($email) . '&key=' . urlencode($activation_key);
+                $conf_btn  = Emailer::button('Unlock Account', $conf_link);
+                $body      = <<< EOF
+<p>Unlock your account by clicking the following button:</p>
+<div>{$conf_btn}</div>
+EOF;
+                return self::formatted_email('User', $email, $subject, $body);
+            }
+        }
+        return false;
     }
     
     function reset_password($email, $pass){
@@ -142,7 +179,14 @@ EOF;
         }
         return self::ACCOUNT_DOES_NOT_EXIST;
     }
-    
+
+    /**
+     * @param $name
+     * @param $email
+     * @param $activation_key
+     * @return bool
+     * @throws phpmailerException
+     */
     function email_new_ac($name, $email, $activation_key){
         $site_title = self::SITE_TITLE;
         $website = self::WEB_ADDRESS;

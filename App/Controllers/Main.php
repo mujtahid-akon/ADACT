@@ -21,9 +21,14 @@ class Main extends Controller
     public function home(){
         /** @var \ADACT\App\Models\User $user */
         $user = $this->set_model('User');
+        if($user->user != null && $user->user['is_guest']){
+            $this->redirect('projects/new');
+            exit();
+        }
         $logged_in = $user->login_check();
         $this->set('title', Config::SITE_TITLE);
         $this->set('logged_in', $logged_in);
+        $this->set('is_guest', $user->user != null ? $user->user['is_guest'] : null);
         $this->set('active_tab', 'home');
         if(!$logged_in) $this->set('standalone', true);
     }
@@ -38,6 +43,7 @@ class Main extends Controller
         $user = $this->set_model('User');
         $logged_in = $user->login_check();
         $this->set('logged_in', $logged_in);
+        $this->set('is_guest', $user->user != null ? $user->user['is_guest'] : null);
     }
 
     /**
@@ -83,5 +89,6 @@ class Main extends Controller
         $logged_in = $user->login_check();
         $this->set('title', Config::SITE_TITLE);
         $this->set('logged_in', $logged_in);
+        $this->set('is_guest', $user->user != null ? $user->user['is_guest'] : null);
     }
 }

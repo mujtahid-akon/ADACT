@@ -1,6 +1,6 @@
 # Remove project files
 .idea/
-.DS_Store
+*.DS_Store
 # Remove private project files
 PrivateConfig.php
 test.php
@@ -10,3 +10,6 @@ App/Models/DBQueryMaker.php
 closure-compiler.jar
 node_modules/
 package-lock.json
+Projects/*
+logs/*
+tmp/*

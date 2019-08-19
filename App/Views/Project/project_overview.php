@@ -204,9 +204,10 @@ endif;
             border-bottom: 0 !important;
         }
     }
+    #contact .container { padding-top: 0 !important; padding-bottom: 0 !important; }
 </style>
 <!-- Toolbar -->
-<div class="btn-toolbar" role="toolbar" style="margin-bottom: 5px; display: flex;">
+<div id="project_overview_toolbar" class="btn-toolbar" role="toolbar" style="margin-bottom: 5px; display: flex;">
     <div class="btn-group">
         <?php if($editable): ?>
         <a class="btn button small blue" href="<?php echo $base_url ?>/edit" title="Edit project">
@@ -254,7 +255,7 @@ endif;
 </script>
 <?php endif; // isAPendingProject ?>
 <!-- Tab List -->
-<ul id="" class="nav nav-tabs nav-tabs-responsive" role="tablist" style="display: flex;">
+<ul id="project_overview_tab" class="nav nav-tabs nav-tabs-responsive" role="tablist" style="display: flex;">
     <li role="presentation" class="active">
         <a href="#project_overview" role="tab" data-toggle="tab" aria-controls="overview" aria-expanded="true">
             <span class="text">Overview</span>
@@ -379,7 +380,7 @@ endif;
     <!-- PhyloTree -->
     <section id="phy_tree" class="tab-pane fade" role="tabpanel" style="width: 100%;">
         <!-- Toolbar -->
-        <div class="row" style="display: flex;">
+        <div id="phy_tree_toolbar" class="row" style="display: flex;">
             <div class="col-md-12">
                 <div class="btn-toolbar" role="toolbar">
                     <!-- Spacing Tools -->
@@ -629,23 +630,33 @@ endif;
             function default_tree_settings () {
                 try {
                     tree = d3.layout.phylotree();
-                    tree.branch_length(null);
-                    tree.branch_name(null);
-                    tree.node_span('equal');
                     tree.options({
+                        // 'left-right-spacing': 'fit-to-size',
+                        // 'top-bottom-spacing': 'fit-to-size',
+                        'collapsible': false,
+                        'transitions': false,
                         'draw-size-bubbles' : false,
                         zoom: true
                     }, false);
+                    tree.size([480, 720]);
+                    tree.branch_length(null);
+                    tree.branch_name(null);
+                    tree.node_span('equal');
                     tree.style_nodes(node_colorizer);
                     tree.style_edges(edge_colorizer);
                     // tree.selection_label(current_selection_name);
                     tree.node_circle_size(undefined);
                     tree.radial(false);
+                    $('#tree_container svg').width($('#project_overview_tab').width())
+                        .height($('body').height() - $('#project_overview_tab').height()
+                            - $('#project_overview_toolbar').height() - $('.title').eq(0).height()
+                            - $('#phy_tree_toolbar').height() - $('#contact').height() - $('#top_nav').height()
+                            - 45 - 58);
                 } catch (e) {}
             }
 
             function saveNewick(name) {
-                let newickTree = tree.get_newick();
+                let newickTree = name[0] === "U" ? upgma_tree : nj_tree;
                 let treeBlob = new Blob([newickTree], {type:"text/plain;charset=utf-8"});
                 let treeUrl = URL.createObjectURL(treeBlob);
                 let downloadLink = document.createElement("a");
@@ -828,7 +839,7 @@ endif;
             }
 
             const container_id = '#tree_container';
-            let width  = 800, //$(container_id).width(),
+            let width  = 1366, //$(container_id).width(),
                 height = 600, //$(container_id).height()
                 selection_set = ['Foreground'],
                 current_selection_name = $("#selection_name_box").val(),
@@ -837,8 +848,20 @@ endif;
             color_scheme = d3.scale.category10();
             selection_menu_element_action = "phylotree_menu_element_action";
 
-            let tree = d3.layout.phylotree("body")
+            let tree = d3.layout.phylotree()
                 .size([height, width])
+                .options({
+                    'left-right-spacing': 'fit-to-size',
+                    // fit to given size top-to-bottom
+                    'top-bottom-spacing': 'fit-to-size',
+                    // fit to given size left-to-right
+                    'selectable': false,
+                    // make nodes and branches not selectable
+                    'collapsible': false,
+                    // turn off the menu on internal nodes
+                    'transitions': false
+                    // turn off d3 animations
+                })
                 .separation (function (a,b) {return 0;});
 
             let svg = d3.select(container_id).append("svg")

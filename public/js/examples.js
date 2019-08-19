@@ -1,6 +1,8 @@
 // Example 1: https://github.com/combio-pl/bsb1_2018/blob/8f28619a4119b57a253a3addccf0f00723b4ab49/mito.fasta
 let ExampleOne = function () {
     $('#project_name').val("EXAMPLE_1");
+    $('#kmer_min').val(3);
+    $('#kmer_max').val(13);
     let method = $('#method');
     method.find('option[value="input_seq"]').attr('selected', 'selected');
     InputMethod.setCurrent(method.val());
@@ -31,6 +33,8 @@ let ExampleOne = function () {
 // Example 2: https://github.com/combio-pl/bsb1_2018/blob/8f28619a4119b57a253a3addccf0f00723b4ab49/HIV_data_set.fasta
 let ExampleTwo = function () {
     $('#project_name').val("EXAMPLE_2");
+    $('#kmer_min').val(3);
+    $('#kmer_max').val(13);
     let method = $('#method');
     method.find('option[value="input_seq"]').attr('selected', 'selected');
     InputMethod.setCurrent(method.val());
