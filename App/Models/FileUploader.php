@@ -52,7 +52,10 @@ class FileUploader extends Model{
             return self::SIZE_LIMIT_EXCEEDED;
         }
         // 2. MIME
-        if(!($up_file['type'] == 'application/zip' || $up_file['type'] == 'application/octet-stream' || $up_file['type'] == 'text/plain')) return self::INVALID_MIME_TYPE;
+        if(!($up_file['type'] == 'application/zip'
+            || $up_file['type'] == 'application/octet-stream'
+            || $up_file['type'] == 'text/plain')
+        ) return self::INVALID_MIME_TYPE;
         // 3. See if it can be moved
         $tmp_dir = $this->_create_tmp_dir();
         $tmp_file = $tmp_dir . '/' . basename($up_file['name']);
@@ -61,16 +64,23 @@ class FileUploader extends Model{
             return self::INVALID_FILE;
         }
         // 4. Is it a valid zip?
-        $zip_archive = new \ZipArchive();
-        if($zip_archive->open($tmp_file, \ZipArchive::CHECKCONS) === true) {
-            // Extract file to $tmp_dir
-            $zip_archive->extractTo($tmp_dir);
-            $zip_archive->close();
-            // Delete the $tmp_file
+        $exec = new Executor(['/usr/bin/unzip', '-t', "'$tmp_file'"]);
+        if($exec->execute()->returns() !== 0) {
             unlink($tmp_file);
+            return self::INVALID_FILE;
         }
+        // 5. Extract file to $tmp_dir
+        $exec->new(['/usr/bin/unzip', '-qqd', "'$tmp_dir'", "'$tmp_file'"]);
+        if($exec->execute()->returns() !== 0) {
+            unlink($tmp_file);
+            return self::INVALID_FILE;
+        }
+        // 6. Get file listing
+        exec("/usr/bin/zipinfo -1 '$tmp_file' 2> /dev/null", $file_list);
+        // Delete the $tmp_file
+        unlink($tmp_file);
         // Run further common checks and return result
-        return $this->_upload_helper($tmp_dir);
+        return $this->_upload_helper($tmp_dir, $file_list);
     }
 
     /**
@@ -88,15 +98,21 @@ class FileUploader extends Model{
         return $this->_upload_helper($tmp_dir);
     }
 
-    private function _upload_helper($tmp_dir){
+    private function _upload_helper($tmp_dir, $file_list = null){
         // 5. Is everything in order?
-        $files = $this->_dir_list($tmp_dir, true);
+        if($file_list != null) {
+            $files = [];
+            foreach ($file_list as &$file) array_push($files, $tmp_dir . '/' . $file);
+        } else {
+            $files = $this->_dir_list($tmp_dir, true);
+        }
         // Each file size limit & quantity check + extract FASTA from multi FASTA.
         // Some checks are done multiple times intentionally in order to
         // increase execution time.
         $data = [];
         $_file = '';
         foreach($files as $file){
+            if(is_dir($file)) continue;
             $tmp_data = $this->_extract_FASTA($file, $tmp_dir);
             // 5.1 Max files allowed exceeded
             if(is_int($tmp_data)){
