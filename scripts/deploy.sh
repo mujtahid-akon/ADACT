@@ -5,7 +5,7 @@
 # that is needed to be flushed before deployment
 #
 
-if [ "$#" -ne 1 ]; then
+if [[ "$#" -ne 1 ]]; then
     echo "SQL version string must be provided as argument!"
     exit 1
 fi
@@ -16,7 +16,7 @@ fi
 #
 function current_dir(){
     local SOURCE="${BASH_SOURCE[0]}"
-    while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+    while [[ -h "$SOURCE" ]]; do # resolve $SOURCE until the file is no longer a symlink
       local DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
       SOURCE="$(readlink "$SOURCE")"
       [[ ${SOURCE} != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
@@ -60,7 +60,9 @@ END
 #
 # Dump mysql database
 #
-mysqldump --user=${MYSQL_USER} --password=${MYSQL_PASS} ${MYSQL_DB} > "${DIR}/../sql/${MYSQL_DB}_v${VERSION}.sql"
+if [[ $# -eq 1 ]]; then
+    mysqldump --user=${MYSQL_USER} --password=${MYSQL_PASS} ${MYSQL_DB} > "${DIR}/../sql/${MYSQL_DB}_v${VERSION}.sql"
+fi
 
 #
 # Switch to the default configurations
