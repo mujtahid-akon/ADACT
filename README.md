@@ -50,6 +50,22 @@ php -S 127.0.0.1:8080 ./router.php
 ```
 (Also works with Apache2 when `htaccess` and `modrewrite` are enabled)
 
+#### Install GNU time
+GNU time is used to measure CPU and RAM usage.
+
+On Ubuntu: (you'll need root privilege)
+```bash
+apt-get install time
+```
+On CentOS:
+```bash
+yum install time
+```
+On macOS: (using Homebrew)
+```bash
+brew install gnu-time
+```
+
 #### Enable timezone to mysql
 ```bash
 mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql
