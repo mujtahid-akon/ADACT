@@ -10,6 +10,7 @@ namespace ADACT\App\Models;
 
 
 use ADACT\Config;
+use DateTime;
 
 class FileUploader extends Model{
     /* File upload related constants */
@@ -192,10 +193,10 @@ class FileUploader extends Model{
     /**
      * Delete upload files from server from a particular time.
      *
-     * @param \DateTime $leastTime
+     * @param DateTime $leastTime
      * @return int|false number of files that were deleted on success (returns 0 if no files) and False on failure
      */
-    public function deleteUploaded(\DateTime $leastTime){
+    public function deleteUploaded(DateTime $leastTime){
         $time = $leastTime->format('Y-m-d H:i:s');
         if($stmt = $this->mysqli->prepare('SELECT directory FROM uploaded_files WHERE date <= ?')){
             $stmt->bind_param('s', $time);
