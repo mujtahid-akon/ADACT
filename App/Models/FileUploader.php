@@ -249,6 +249,7 @@ class FileUploader extends Model{
                 array_push($data, $info);
             }
             $line = trim($line);
+            $line = str_replace('-', '', $line);
             if(!empty($line))
                 if(isset($target_fp)) fwrite($target_fp, $line . "\n");
         }
