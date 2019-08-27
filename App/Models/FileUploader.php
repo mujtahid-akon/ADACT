@@ -263,9 +263,11 @@ class FileUploader extends Model{
      */
     private function _check_sequence($seq){
         $seq = str_replace("\n", '', $seq);
-        preg_match_all('/A|T|C|G/', $seq, $matches);
+        $nuc_freq  = count_chars($seq, 1);
+        $count_nuc = $nuc_freq[ord('A')] + $nuc_freq[ord('T')]
+                   + $nuc_freq[ord('C')] + $nuc_freq[ord('G')];
 
-        if (count($matches[0]) / strlen($seq) >= 0.75)
+        if ($count_nuc / strlen($seq) >= 0.75)
             return 'nucleotide';
         else
             return 'protein';
