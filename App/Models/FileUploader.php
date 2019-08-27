@@ -33,6 +33,8 @@ class FileUploader extends Model{
     /**
      * upload method
      *
+     * User can upload either a text file or a zip file
+     *
      * Uploader checks against a number of indices to check the validity of
      * the uploaded file. These indices include:
      * - File size limit (`Config::MAX_UPLOAD_SIZE`)
@@ -52,9 +54,10 @@ class FileUploader extends Model{
             return self::SIZE_LIMIT_EXCEEDED;
         }
         // 2. MIME
-        if(!($up_file['type'] == 'application/zip'
-            || $up_file['type'] == 'application/octet-stream'
-            || $up_file['type'] == 'text/plain')
+        $mime_type = $up_file['type'];
+        if(!($mime_type == 'application/zip'
+            || $mime_type == 'application/octet-stream'
+            || $mime_type == 'text/plain')
         ) return self::INVALID_MIME_TYPE;
         // 3. See if it can be moved
         $tmp_dir = $this->_create_tmp_dir();
@@ -66,6 +69,11 @@ class FileUploader extends Model{
         // 4. Is it a valid zip?
         $exec = new Executor(['/usr/bin/unzip', '-t', "'$tmp_file'"]);
         if($exec->execute()->returns() !== 0) {
+            // 4.1 If it's a valid text file, process it
+            if($mime_type == 'application/octet-stream'
+                || $mime_type == 'text/plain') {
+                return $this->_upload_helper($tmp_dir, [basename($tmp_file)]);
+            }
             unlink($tmp_file);
             return self::INVALID_FILE;
         }
@@ -102,7 +110,7 @@ class FileUploader extends Model{
         // 5. Is everything in order?
         if($file_list != null) {
             $files = [];
-            foreach ($file_list as &$file) array_push($files, $tmp_dir . '/' . $file);
+            foreach ($file_list as $file) array_push($files, $tmp_dir . '/' . $file);
         } else {
             $files = $this->_dir_list($tmp_dir, true);
         }
@@ -117,7 +125,7 @@ class FileUploader extends Model{
             // 5.1 Max files allowed exceeded
             if(is_int($tmp_data)){
                 exec("rm -Rf {$tmp_dir}");
-                return self::FILE_LIMIT_EXCEEDED;
+                return $tmp_data; // returns one of the error constants
             }
             $data = array_merge($data, $tmp_data);
             // 5.2 Max files allowed exceeded, again
@@ -218,7 +226,10 @@ class FileUploader extends Model{
      * @return int|array associative array containing [header, id] or self::FILE_LIMIT_EXCEEDED
      */
     private function _extract_FASTA($filename, $target){
+        if(!file_exists($filename)) return self::INVALID_FILE;
+
         $source_fp = fopen($filename, 'r');
+        if($source_fp === false) return self::INVALID_FILE;
         $data = [];
         $count = 0;
         $sequence_count = 0;
