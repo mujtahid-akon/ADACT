@@ -91,7 +91,7 @@ if(!isset($title)) $title = \ADACT\Config::SITE_TITLE;
                         <i class="fa fa-user-plus" aria-hidden="true"></i> Register
                     </a>
                 </div>
-                <div class="palegoldenrod">Or, <a href="./login?guest=true" style="color: palegoldenrod; text-decoration: underline;">try it without login</a></div>
+                <div class="palegoldenrod">Or, <a href="<?php echo './login'. URL_SEPARATOR .'guest=true' ?>" style="color: palegoldenrod; text-decoration: underline;">try it without login</a></div>
             </div>
         </div>
     </div>
