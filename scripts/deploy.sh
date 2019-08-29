@@ -5,11 +5,6 @@
 # that is needed to be flushed before deployment
 #
 
-if [[ "$#" -ne 1 ]]; then
-    echo "SQL version string must be provided as argument!"
-    exit 1
-fi
-
 #
 # Get current directory
 # @source https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
