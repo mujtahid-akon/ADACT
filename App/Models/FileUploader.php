@@ -58,6 +58,8 @@ class FileUploader extends Model{
         $mime_type = $up_file['type'];
         if(!($mime_type == 'application/zip'
             || $mime_type == 'application/octet-stream'
+            || $mime_type == 'application/x-zip-compressed'
+            || $mime_type == 'multipart/x-zip'
             || $mime_type == 'text/plain')
         ) return self::INVALID_MIME_TYPE;
         // 3. See if it can be moved
