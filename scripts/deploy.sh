@@ -40,15 +40,27 @@ VERSION=$1
 DIR=$(current_dir)
 
 #
+# Run tests
+#
+python3 "$DIR/../tests/basic_test.py"
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+python3 "$DIR/../tests/new_project_test.py"
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+#
 # Remove files & directories
 #
-find "$DIR/../tmp/" \! -name 'readme.md' -delete
-find "$DIR/../Projects/" \! -name 'readme.md' -delete
+find "$DIR/../tmp/" \! -name 'readme.md' -delete 2> /dev/null
+find "$DIR/../Projects/" \! -name 'readme.md' -delete 2> /dev/null
 
 #
 # Flash mysql data
 #
-mysql --user=${MYSQL_USER} --password=${MYSQL_PASS} --database=${MYSQL_DB} << END
+mysql --user=${MYSQL_USER} --password=${MYSQL_PASS} --database=${MYSQL_DB} 2> /dev/null << END
 DELETE FROM active_sessions;
 DELETE FROM login_attempts;
 DELETE FROM pending_projects;
@@ -61,7 +73,7 @@ END
 # Dump mysql database
 #
 if [[ $# -eq 1 ]]; then
-    mysqldump --user=${MYSQL_USER} --password=${MYSQL_PASS} ${MYSQL_DB} > "${DIR}/../sql/${MYSQL_DB}_v${VERSION}.sql"
+    mysqldump --user=${MYSQL_USER} --password=${MYSQL_PASS} ${MYSQL_DB} > "${DIR}/../sql/${MYSQL_DB}_v${VERSION}.sql" 2> /dev/null
 fi
 
 #
