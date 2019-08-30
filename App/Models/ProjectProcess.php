@@ -678,7 +678,7 @@ EOF;
             $this->halt(self::E_DIRECTORY_NOT_FOUND);
             return [];
         }
-        return $this->_fm->getAll();
+        return $this->_fm->getAll(true);
     }
 
     /**
