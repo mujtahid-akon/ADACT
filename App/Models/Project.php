@@ -5,6 +5,7 @@ namespace ADACT\App\Models;
 use ADACT\App\HttpStatusCode;
 use \ADACT\Config;
 use ADACT\App\Models\FileManager as FM;
+use ZipArchive;
 
 class Project extends ProjectPrivilegeHandler {
     /* Input types */
@@ -354,16 +355,16 @@ class Project extends ProjectPrivilegeHandler {
                 $file['name'] = 'project_' . $project_id . '.zip'; // e.g. project_29
                 $file['path'] = Config::WORKING_DIRECTORY . '/' . $file['name'];
                 // Create zip
-                $zip = new \ZipArchive();
-                if ($zip->open($file['path'], \ZipArchive::CREATE)!==TRUE) {
+                $zip = new ZipArchive();
+                if ($zip->open($file['path'], ZipArchive::CREATE)!==TRUE) {
                     return null;
                 }
                 // Add files to zip
-                $zip->addFile($fm->get(FM::SPECIES_RELATION), '/' . FM::SPECIES_RELATION);
-                $zip->addFile($fm->get(FM::DISTANT_MATRIX_FORMATTED), '/'. FM::DISTANCE_MATRIX);
-                $zip->addFile($fm->get(FM::NEIGHBOUR_TREE), '/' . FM::NEIGHBOUR_TREE);
-                $zip->addFile($fm->get(FM::UPGMA_TREE), '/' . FM::UPGMA_TREE);
-                $zip->addFile($fm->get(FM::CONFIG_JSON), '/' . FM::CONFIG_JSON);
+                $zip->addFile($fm->get(FM::SPECIES_RELATION), FM::SPECIES_RELATION);
+                $zip->addFile($fm->get(FM::DISTANT_MATRIX_FORMATTED), FM::DISTANCE_MATRIX);
+                $zip->addFile($fm->get(FM::NEIGHBOUR_TREE), FM::NEIGHBOUR_TREE);
+                $zip->addFile($fm->get(FM::UPGMA_TREE), FM::UPGMA_TREE);
+                $zip->addFile($fm->get(FM::CONFIG_JSON), FM::CONFIG_JSON);
                 $zip->close();
         }
         // set $file to null if the file isn't found
@@ -384,8 +385,8 @@ class Project extends ProjectPrivilegeHandler {
             if($file !== null) array_push($files, $file);
         }
         // Create zip
-        $zip = new \ZipArchive();
-        if ($zip->open($file_path, \ZipArchive::CREATE)!==TRUE) {
+        $zip = new ZipArchive();
+        if ($zip->open($file_path, ZipArchive::CREATE)!==TRUE) {
             return null;
         }
         foreach ($files as $file){
