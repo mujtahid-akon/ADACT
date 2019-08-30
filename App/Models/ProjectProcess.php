@@ -135,6 +135,10 @@ class ProjectProcess extends PendingProjects { // is_a
         $this->_exec         = new Executor("", $this->_logger);
         $this->_platform     = exec('uname -s') == self::DARWIN ? self::DARWIN : self::LINUX;
         $this->_edit_mode    = $this->getEditMode();
+        # Check if there's already exec info
+        if(property_exists($this->_config, 'exec_info')){
+            $this->exec_info = $this->_config->exec_info;
+        }
     }
 
     /**
