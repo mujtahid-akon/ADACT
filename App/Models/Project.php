@@ -159,6 +159,7 @@ class Project extends ProjectPrivilegeHandler {
             // and add to pending list with one of the edit modes
             if(!((new PendingProjects())->add($this->_project_id, $modification_level) AND $base_cf->save())) return HttpStatusCode::INTERNAL_SERVER_ERROR;
             (new Notifications())->set_unseen($this->_project_id);
+            $this->_reset_project_date();
             return 0; // Success
         }
         return HttpStatusCode::BAD_REQUEST;
@@ -540,6 +541,20 @@ class Project extends ProjectPrivilegeHandler {
             array_push($table_rows, $table_row);
         }
         return $table_rows;
+    }
+
+    /**
+     * Reset project creation date to NOW()
+     * @return bool
+     */
+    private function _reset_project_date(){
+        if($stmt = $this->mysqli->prepare('UPDATE projects SET date_created = NOW() WHERE project_id = ?')){
+            $stmt->bind_param('i', $this->_project_id);
+            $stmt->execute();
+            $stmt->store_result();
+            if($stmt->affected_rows == 1) return true;
+        }
+        return false;
     }
 
     /**
