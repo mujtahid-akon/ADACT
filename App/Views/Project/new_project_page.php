@@ -22,13 +22,14 @@ if($isForked){
         foreach ($config->data as $datum){
             array_push($ids, $datum['id']);
         }
-    } catch (\Exception $e){
+    } catch (Exception $e){
         error_log($e->getCode() . ': ' . $e->getMessage());
         // Something's wrong which shouldn't be.
         // FIXME: Use this in the Project Controller instead of here
     }
 }
 ?>
+<!--suppress CssFloatPxLength -->
 <style>
     #filef{
         width: 0.1px;
@@ -110,8 +111,8 @@ if($isForked){
         <div class="form form-horizontal">
             <!-- Project Name -->
             <fieldset class="form-wrapper">
-                <input class="form-control input-sm" id="project_name" name="project_name"
-                       placeholder="Project Name *" />
+                <label for="project_name" class="sr-only">Project Name</label>
+                <input class="form-control input-sm" id="project_name" name="project_name" placeholder="Project Name *" />
             </fieldset>
             <!-- FASTA File Source -->
             <fieldset class="form-wrapper">
@@ -136,8 +137,7 @@ if($isForked){
                        title="The zip file consists of a number of FASTA (the extension can be of any type)
                         files with no directories. Text file can contain multiple FASTA files separated by the standard header,
                         ie. text string followed by a ‘>’ sign."></i>
-                    <input class="" type="file" id="filef" name="filef"
-                           onchange="InputAnalyzer.init(this.form)" accept="*/*" />
+                    <input class="" type="file" id="filef" name="filef" onchange="InputAnalyzer.init(this.form)" accept="*/*" />
                 </form>
                 <div class="fasta_method" id="filef_status" style="display: none;"></div>
                 <!-- SEQUENCE TEXT -->
