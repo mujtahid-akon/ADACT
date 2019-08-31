@@ -10,6 +10,7 @@ namespace ADACT\App\Models;
 
 
 use ADACT\Config;
+use DateTime;
 
 class FileUploader extends Model{
     /* File upload related constants */
@@ -33,6 +34,8 @@ class FileUploader extends Model{
     /**
      * upload method
      *
+     * User can upload either a text file or a zip file
+     *
      * Uploader checks against a number of indices to check the validity of
      * the uploaded file. These indices include:
      * - File size limit (`Config::MAX_UPLOAD_SIZE`)
@@ -52,7 +55,13 @@ class FileUploader extends Model{
             return self::SIZE_LIMIT_EXCEEDED;
         }
         // 2. MIME
-        if(!($up_file['type'] == 'application/zip' || $up_file['type'] == 'application/octet-stream' || $up_file['type'] == 'text/plain')) return self::INVALID_MIME_TYPE;
+        $mime_type = $up_file['type'];
+        if(!($mime_type == 'application/zip'
+            || $mime_type == 'application/octet-stream'
+            || $mime_type == 'application/x-zip-compressed'
+            || $mime_type == 'multipart/x-zip'
+            || $mime_type == 'text/plain')
+        ) return self::INVALID_MIME_TYPE;
         // 3. See if it can be moved
         $tmp_dir = $this->_create_tmp_dir();
         $tmp_file = $tmp_dir . '/' . basename($up_file['name']);
@@ -61,16 +70,28 @@ class FileUploader extends Model{
             return self::INVALID_FILE;
         }
         // 4. Is it a valid zip?
-        $zip_archive = new \ZipArchive();
-        if($zip_archive->open($tmp_file, \ZipArchive::CHECKCONS) === true) {
-            // Extract file to $tmp_dir
-            $zip_archive->extractTo($tmp_dir);
-            $zip_archive->close();
-            // Delete the $tmp_file
+        $exec = new Executor(['/usr/bin/unzip', '-t', "'$tmp_file'"]);
+        if($exec->execute()->returns() !== 0) {
+            // 4.1 If it's a valid text file, process it
+            if($mime_type == 'application/octet-stream'
+                || $mime_type == 'text/plain') {
+                return $this->_upload_helper($tmp_dir, [basename($tmp_file)]);
+            }
             unlink($tmp_file);
+            return self::INVALID_FILE;
         }
+        // 5. Extract file to $tmp_dir
+        $exec->new(['/usr/bin/unzip', '-qqd', "'$tmp_dir'", "'$tmp_file'"]);
+        if($exec->execute()->returns() !== 0) {
+            unlink($tmp_file);
+            return self::INVALID_FILE;
+        }
+        // 6. Get file listing
+        exec("/usr/bin/zipinfo -1 '$tmp_file' 2> /dev/null", $file_list);
+        // Delete the $tmp_file
+        unlink($tmp_file);
         // Run further common checks and return result
-        return $this->_upload_helper($tmp_dir);
+        return $this->_upload_helper($tmp_dir, $file_list);
     }
 
     /**
@@ -88,20 +109,26 @@ class FileUploader extends Model{
         return $this->_upload_helper($tmp_dir);
     }
 
-    private function _upload_helper($tmp_dir){
+    private function _upload_helper($tmp_dir, $file_list = null){
         // 5. Is everything in order?
-        $files = $this->_dir_list($tmp_dir, true);
+        if($file_list != null) {
+            $files = [];
+            foreach ($file_list as $file) array_push($files, $tmp_dir . '/' . $file);
+        } else {
+            $files = $this->_dir_list($tmp_dir, true);
+        }
         // Each file size limit & quantity check + extract FASTA from multi FASTA.
         // Some checks are done multiple times intentionally in order to
         // increase execution time.
         $data = [];
         $_file = '';
         foreach($files as $file){
+            if(is_dir($file)) continue;
             $tmp_data = $this->_extract_FASTA($file, $tmp_dir);
             // 5.1 Max files allowed exceeded
             if(is_int($tmp_data)){
                 exec("rm -Rf {$tmp_dir}");
-                return self::FILE_LIMIT_EXCEEDED;
+                return $tmp_data; // returns one of the error constants
             }
             $data = array_merge($data, $tmp_data);
             // 5.2 Max files allowed exceeded, again
@@ -168,10 +195,10 @@ class FileUploader extends Model{
     /**
      * Delete upload files from server from a particular time.
      *
-     * @param \DateTime $leastTime
+     * @param DateTime $leastTime
      * @return int|false number of files that were deleted on success (returns 0 if no files) and False on failure
      */
-    public function deleteUploaded(\DateTime $leastTime){
+    public function deleteUploaded(DateTime $leastTime){
         $time = $leastTime->format('Y-m-d H:i:s');
         if($stmt = $this->mysqli->prepare('SELECT directory FROM uploaded_files WHERE date <= ?')){
             $stmt->bind_param('s', $time);
@@ -202,7 +229,10 @@ class FileUploader extends Model{
      * @return int|array associative array containing [header, id] or self::FILE_LIMIT_EXCEEDED
      */
     private function _extract_FASTA($filename, $target){
+        if(!file_exists($filename)) return self::INVALID_FILE;
+
         $source_fp = fopen($filename, 'r');
+        if($source_fp === false) return self::INVALID_FILE;
         $data = [];
         $count = 0;
         $sequence_count = 0;
@@ -222,6 +252,7 @@ class FileUploader extends Model{
                 array_push($data, $info);
             }
             $line = trim($line);
+            $line = str_replace('-', '', $line);
             if(!empty($line))
                 if(isset($target_fp)) fwrite($target_fp, $line . "\n");
         }
@@ -236,9 +267,11 @@ class FileUploader extends Model{
      */
     private function _check_sequence($seq){
         $seq = str_replace("\n", '', $seq);
-        preg_match_all('/A|T|C|G/', $seq, $matches);
+        $nuc_freq  = count_chars($seq, 1);
+        $count_nuc = $nuc_freq[ord('A')] + $nuc_freq[ord('T')]
+                   + $nuc_freq[ord('C')] + $nuc_freq[ord('G')];
 
-        if (count($matches[0]) / strlen($seq) >= 0.75)
+        if ($count_nuc / strlen($seq) >= 0.75)
             return 'nucleotide';
         else
             return 'protein';

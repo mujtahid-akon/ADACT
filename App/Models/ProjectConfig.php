@@ -22,6 +22,7 @@ namespace ADACT\App\Models;
  * @property array  $data          Containing all the InputAnalyzer.results data
  * @property string $type          FASTA file getting method (file|accn_gin)
  * @property string $file_id       md5 sum of uploaded file directory
+ * @property array  $exec_info     Execution details after project execution
  */
 class ProjectConfig extends Model{
     private $_config_file;
@@ -91,10 +92,8 @@ class ProjectConfig extends Model{
     }
 
     function setConfig($title, $value){
-        if(isset($this->_config_data[$title])) {
-            $this->_config_data[$title] = $value;
-            $this->$title = $value;
-        }
+        $this->_config_data[$title] = $value;
+        $this->$title = $value;
     }
 
     function getConfigAssocArray(){

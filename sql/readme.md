@@ -2,7 +2,12 @@
 
    ***Only use the latest sql file***
    
-- `adact_v4.4.sql` [`current`]
+- `adact_v4.5.sql` [`current`]
+
+   Added guest account (as `users.user_id  = 0`). The default `user_id` for guest can be changed at
+   ADACT\App\Models\UserPrivilegeHandlerInterface::GUEST_USER_ID.
+   
+- `adact_v4.4.sql`
 
     - `projects` : `project_started` and `project_finished` columns added
 

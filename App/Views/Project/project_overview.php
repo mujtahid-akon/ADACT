@@ -304,9 +304,31 @@ endif;
             <tbody>
             <?php
             print "<tr><th>Project Name</th><td>".ucwords($config->project_name)."</td></tr>";
-            if($result_type === Project::RT_SUCCESS){
-                print "<tr><th>Execution Duration</th><td id='exec_duration'>".$exec_duration." seconds</td></tr>";
-            }
+            if($result_type === Project::RT_SUCCESS):
+                $aw_exec_info = $config->exec_info['AW'];
+                $dm_exec_info = $config->exec_info['DM'];
+            ?>
+                <tr><th>Execution Details</th>
+                    <td>
+                        <strong>Total Duration:</strong> <span id='exec_duration'><?php echo $exec_duration ?> seconds</span>
+                        <dl>
+                            <dt style="text-decoration: underline">Absent word:</dt>
+                            <dd>
+                                <strong>CPU:</strong> <?php echo $aw_exec_info['cpu'] ?>%
+                                <strong>RAM:</strong> <?php echo $aw_exec_info['memory'] ?>KB
+                                <strong>Execution Time:</strong> <?php echo $aw_exec_info['time'] ?>s
+                            </dd>
+                            <dt style="text-decoration: underline">Distance Matrix:</dt>
+                            <dd>
+                                <strong>CPU:</strong> <?php echo $dm_exec_info['cpu'] ?>%
+                                <strong>RAM:</strong> <?php echo $dm_exec_info['memory'] ?>KB
+                                <strong>Execution Time:</strong> <?php echo $dm_exec_info['time'] ?>s
+                            </dd>
+                        </dl>
+                    </td>
+                </tr>
+            <?php endif; ?>
+            <?php
             if($isAPendingProject){
                 print "<tr><th>Status</th><td id='process_status'></td></tr>";
                 print "<tr><th>Elapsed Time</th><td id='elapsed_time'></td></tr>";

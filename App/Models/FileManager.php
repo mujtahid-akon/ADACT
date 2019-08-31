@@ -123,10 +123,11 @@ class FileManager extends Model{
 
     /**
      * Load all the files from the present working directory
+     * @param bool $files_only Load only files, skip directories
      * @return $this
      * @throws FileException Directory doesn't exist
      */
-    function loadFiles(){
+    function loadFiles($files_only = false){
         // Flash previous files
         $this->_files = [];
         // Throw exception if pwd doesn't exist
@@ -135,7 +136,9 @@ class FileManager extends Model{
         $files = array_diff(scandir($this->_pwd), array('..', '.'));
         // Add directory at the end
         foreach ($files as $file){
-            $this->_files[$file] = $this->_pwd . '/' . $file;
+            $path = $this->_pwd . '/' . $file;
+            if($files_only && is_dir($path)) continue;
+            $this->_files[$file] = $path;
         }
         return $this;
     }
@@ -164,10 +167,12 @@ class FileManager extends Model{
 
     /**
      * Get all the file names
+     * @param bool $files_only List only files, skip directories
      * @return array
+     * @throws FileException
      */
-    function getAll(){
-        $this->loadFiles();
+    function getAll($files_only = False){
+        $this->loadFiles($files_only);
         return array_values($this->_files);
     }
 
@@ -288,6 +293,7 @@ class FileManager extends Model{
      * Use with cautions.
      *
      * @return bool
+     * @throws FileException
      */
     function self_destruct(){
         return $this->rmdir($this->root(), true);
@@ -299,6 +305,7 @@ class FileManager extends Model{
      * @param string $dir The directory to delete
      * @param bool $recursive Whether to delete files recursively
      * @return bool
+     * @throws FileException
      */
     private function rmdir($dir, $recursive = false){
         // CD to the requested directory

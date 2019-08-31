@@ -9,6 +9,8 @@
 namespace ADACT\App\Models;
 
 use ADACT\App\Models\FileManager as FM;
+use phpmailerException;
+
 /**
  * Class Process
  *
@@ -101,13 +103,25 @@ class ProjectProcess extends PendingProjects { // is_a
     private $_edit_mode;
     /** @var string The log file location */
     private $_log_file;
+    private $exec_info = [
+        "AW" => [
+            "cpu" => 0,
+            "memory" => 0,
+            "time" => 0.00
+        ],
+        "DM" => [
+            "cpu" => 0,
+            "memory" => 0,
+            "time" => 0.00
+        ]
+    ];
 
     /**
      * Process constructor.
      * @param int $project_id Current project id
      * @param int $user_id Current user id
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     function __construct($project_id, $user_id){
         parent::__construct($project_id, $user_id);
@@ -121,6 +135,10 @@ class ProjectProcess extends PendingProjects { // is_a
         $this->_exec         = new Executor("", $this->_logger);
         $this->_platform     = exec('uname -s') == self::DARWIN ? self::DARWIN : self::LINUX;
         $this->_edit_mode    = $this->getEditMode();
+        # Check if there's already exec info
+        if(property_exists($this->_config, 'exec_info')){
+            $this->exec_info = $this->_config->exec_info;
+        }
     }
 
     /**
@@ -140,7 +158,7 @@ class ProjectProcess extends PendingProjects { // is_a
      * 5. Copy/Move all the items to their respective directories
      * 6. Send an email to the user on success
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     function init(){
         // Log project info
@@ -189,7 +207,7 @@ class ProjectProcess extends PendingProjects { // is_a
         $this->_logger = null;
         // Also, add the debug log to the process.log
         // provided the DEBUG mode is enabled.
-        if(self::DEBUG_MODE) file_put_contents(__DIR__ . '/../../logs/process.log', file_get_contents($this->_log_file), FILE_APPEND);
+        if(self::DEBUG_MODE && file_exists($this->_log_file)) file_put_contents(__DIR__ . '/../../logs/process.log', file_get_contents($this->_log_file), FILE_APPEND);
         // Delete the debug log if the process was successful
         if($this->_status !== self::PROJECT_FAILURE) unlink($this->_log_file);
     }
@@ -199,11 +217,11 @@ class ProjectProcess extends PendingProjects { // is_a
     /**
      * Done all the actions
      *
-     * @param string $callback Callback function to be called
-     * @param string $failureMessage Failure message
+     * @param callable $callback Callback function to be called
+     * @param string   $failureMessage Failure message
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function _action($callback, $failureMessage){
         // Halt execution if project is cancelled
@@ -227,10 +245,13 @@ class ProjectProcess extends PendingProjects { // is_a
      * @param bool $moveOnly
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      * @noinspection PhpUnusedPrivateMethodInspection
      */
     private function takeCare($moveOnly = false){
+        // Save modified config file
+        $this->_config->setConfig('exec_info', $this->exec_info);
+        $this->_config->save();
         $fm  = new FM($this->_project_id, Project::PT_NEW);
         // Secondary fm
         $this->_tc_fm = $fm;
@@ -276,7 +297,7 @@ class ProjectProcess extends PendingProjects { // is_a
      * @param bool $isSuccess Which message to show up
      * @param int $error_constant
      * @return bool
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function send_mail($isSuccess = true, $error_constant = null){
         $user_info    = (new User())->get_info($this->_user_id);
@@ -322,7 +343,7 @@ EOF;
      *
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function fetchFiles(){
         if($this->_config->type == Project::INPUT_TYPE_FILE){
@@ -338,7 +359,7 @@ EOF;
     /**
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function generateAW(){
         if($this->_config->aw_type == 'maw'){
@@ -353,7 +374,7 @@ EOF;
     /**
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function generate_phylogenetic_trees(){
         try{
@@ -389,19 +410,28 @@ EOF;
         $this->_create_species_full();
         // Run Distance Matrix Generator
         $this->_config->aw_type = strtoupper($this->_config->aw_type);
-        return $this->_exec->new([
+        $this->_exec->new([
             $this->_quotify(self::EXECS['dm'][$this->_platform]),
             $this->_config->aw_type,
             $this->_config->dissimilarity_index,
             $this->_quotify($target),
             $this->_quotify($target)
-        ], $this->_logger)->execute()->returns() === 0 ? true : false;
+        ], $this->_logger)->execute();
+        if($this->_exec->returns() === 0){
+            $this->exec_info['DM'] = [
+                'cpu' => $this->_exec->get_cpu(),
+                'memory' => $this->_exec->get_memory(),
+                'time' => $this->_exec->get_time()
+            ];
+            return true;
+        }
+        return false;
     }
 
     /**
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function generate_maw(){
         $sequence_type = ($this->_config->sequence_type == 'nucleotide') ? 'DNA' : 'PROT';
@@ -422,6 +452,10 @@ EOF;
                 $this->_log("Generating maw failed for " . $file, Logger::RED);
                 $this->halt(self::E_FAILED_GENERATING_MAW);
                 return false;
+            } else {
+                if($this->exec_info['AW']['cpu'] < $this->_exec->get_cpu()) $this->exec_info['AW']['cpu'] = $this->_exec->get_cpu();
+                if($this->exec_info['AW']['memory'] < $this->_exec->get_memory()) $this->exec_info['AW']['memory'] += $this->_exec->get_memory();
+                $this->exec_info['AW']['time'] += $this->_exec->get_time();
             }
         }
         return true;
@@ -438,7 +472,7 @@ EOF;
      *
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
      private function generate_raw(){
          // Initial tasks
@@ -478,6 +512,10 @@ EOF;
              ], $this->_logger)->execute()->returns() != 0){
                  $this->halt(self::E_FAILED_GENERATING_RAW);
                  return false;
+             } else {
+                 if($this->exec_info['AW']['cpu'] < $this->_exec->get_cpu()) $this->exec_info['AW']['cpu'] = $this->_exec->get_cpu();
+                 if($this->exec_info['AW']['memory'] < $this->_exec->get_memory()) $this->exec_info['AW']['memory'] += $this->_exec->get_memory();
+                 $this->exec_info['AW']['time'] += $this->_exec->get_time();
              }
              // Move the *.raw.txt files to the /tmp/Projects/{project_id}/Files/generated/raw/{species_name} directory
              $this->_exec->new([
@@ -493,7 +531,7 @@ EOF;
     /**
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function move_uploaded_files(){
         $uploader = new FileUploader();
@@ -538,7 +576,7 @@ EOF;
      * @param string $sequence_type Which type of DB should be used (protein|nucleotide)
      * @return bool
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function download_fasta($sequence_type){
         $data        = $this->_config->data;
@@ -599,7 +637,7 @@ EOF;
      *
      * @param string|null $error_constant Processing-related error constants of the same class
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function halt($error_constant = null){
         if($error_constant !== null) $this->_log("ERROR: {$error_constant}", Logger::BOLD.Logger::BG_RED.Logger::WHITE);
@@ -637,14 +675,14 @@ EOF;
      * @param $dir
      * @return array
      * @throws FileException
-     * @throws \phpmailerException
+     * @throws phpmailerException
      */
     private function get_files($dir){
         if(!$this->_fm->cd($dir, true)){
             $this->halt(self::E_DIRECTORY_NOT_FOUND);
             return [];
         }
-        return $this->_fm->getAll();
+        return $this->_fm->getAll(true);
     }
 
     /**

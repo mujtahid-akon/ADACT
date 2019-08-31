@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectStartupSharedConfiguration">
+    <configurations>
+      <configuration id="Bash.Process Log" name="Process Log" />
+      <configuration id="Bash.Run Server" name="Run Server" />
+    </configurations>
+  </component>
+</project>

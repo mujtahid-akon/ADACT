@@ -22,12 +22,19 @@ use ADACT\Config;
  * @package ADACT\App\Models
  */
 class Executor{
+    const STATUS_FILE = '/tmp/adact_exec_stat';
     /** @var string Preserves log */
     private $_output;
     /** @var array Stores command as array */
     private $_command;
     /** @var Logger */
     private $_logger;
+    /** @var int Maximum Resident Memory in KB */
+    private $_memory;
+    /** @var int CPU usage in percentage */
+    private $_cpu;
+    /** @var float Execution time in seconds */
+    private $_time;
     /** @var mixed Return value */
     private $_return;
     private $_filename = null;
@@ -38,9 +45,16 @@ class Executor{
      * @param Logger|null  $logger
      */
     public function __construct($command, Logger &$logger = null){
-        $this->_command = [];
+        $this->_command = [
+            (exec('uname -s') == 'Darwin' ? '/usr/local/bin/gtime' : '/usr/bin/time'),
+            '-f', '\'[%M, "%P", "%e", %x]\'',
+            '-o', self::STATUS_FILE
+        ];
         $this->_logger  = $logger;
         $this->_output  = "";
+        $this->_memory  = 0;
+        $this->_cpu     = 0;
+        $this->_time    = 0.00;
         $this->_return  = null;
         if(is_array($command)){
             $this->_command = array_merge($this->_command, $command);
@@ -91,8 +105,13 @@ class Executor{
             $logger = new Logger($this->_filename, false);
             array_push($this->_command, $logger->extract());
         }
-        exec(implode(' ', $this->_command), $dummy_output, $this->_return);
-//        print "Command: " . implode(' ', $this->_command) . "\n";
+        array_push($this->_command, '2>&1');
+        exec(implode(' ', $this->_command), $dummy_output);
+        $info = json_decode(file_get_contents(self::STATUS_FILE), true);
+        $this->_memory = $info[0];
+        $this->_cpu    = (int) rtrim($info[1], '%');
+        $this->_time   = (float) $info[2];
+        $this->_return = $info[3];
         if($preserve_output){
             $this->_output = file_get_contents($this->_filename);
             unlink($this->_filename);
@@ -102,12 +121,28 @@ class Executor{
     }
 
     /**
+     * Return memory usage in KB e.g. 100K
+     * @return int
+     */
+    public function get_memory(){return $this->_memory;}
+
+    /**
+     * Return CPU usage in Percentage e.g. 30%
+     * @return int
+     */
+    public function get_cpu(){return $this->_cpu;}
+
+    /**
+     * Return execution time in seconds
+     * @return float
+     */
+    public function get_time(){return $this->_time;}
+
+    /**
      * Return the return value
      * @return mixed
      */
-    public function returns(){
-        return $this->_return;
-    }
+    public function returns(){return $this->_return;}
 
     /**
      * Return the output

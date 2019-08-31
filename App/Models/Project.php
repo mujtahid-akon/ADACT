@@ -5,6 +5,7 @@ namespace ADACT\App\Models;
 use ADACT\App\HttpStatusCode;
 use \ADACT\Config;
 use ADACT\App\Models\FileManager as FM;
+use ZipArchive;
 
 class Project extends ProjectPrivilegeHandler {
     /* Input types */
@@ -159,6 +160,7 @@ class Project extends ProjectPrivilegeHandler {
             // and add to pending list with one of the edit modes
             if(!((new PendingProjects())->add($this->_project_id, $modification_level) AND $base_cf->save())) return HttpStatusCode::INTERNAL_SERVER_ERROR;
             (new Notifications())->set_unseen($this->_project_id);
+            $this->_reset_project_date();
             return 0; // Success
         }
         return HttpStatusCode::BAD_REQUEST;
@@ -353,16 +355,16 @@ class Project extends ProjectPrivilegeHandler {
                 $file['name'] = 'project_' . $project_id . '.zip'; // e.g. project_29
                 $file['path'] = Config::WORKING_DIRECTORY . '/' . $file['name'];
                 // Create zip
-                $zip = new \ZipArchive();
-                if ($zip->open($file['path'], \ZipArchive::CREATE)!==TRUE) {
+                $zip = new ZipArchive();
+                if ($zip->open($file['path'], ZipArchive::CREATE)!==TRUE) {
                     return null;
                 }
                 // Add files to zip
-                $zip->addFile($fm->get(FM::SPECIES_RELATION), '/' . FM::SPECIES_RELATION);
-                $zip->addFile($fm->get(FM::DISTANT_MATRIX_FORMATTED), '/'. FM::DISTANCE_MATRIX);
-                $zip->addFile($fm->get(FM::NEIGHBOUR_TREE), '/' . FM::NEIGHBOUR_TREE);
-                $zip->addFile($fm->get(FM::UPGMA_TREE), '/' . FM::UPGMA_TREE);
-                $zip->addFile($fm->get(FM::CONFIG_JSON), '/' . FM::CONFIG_JSON);
+                $zip->addFile($fm->get(FM::SPECIES_RELATION), FM::SPECIES_RELATION);
+                $zip->addFile($fm->get(FM::DISTANT_MATRIX_FORMATTED), FM::DISTANCE_MATRIX);
+                $zip->addFile($fm->get(FM::NEIGHBOUR_TREE), FM::NEIGHBOUR_TREE);
+                $zip->addFile($fm->get(FM::UPGMA_TREE), FM::UPGMA_TREE);
+                $zip->addFile($fm->get(FM::CONFIG_JSON), FM::CONFIG_JSON);
                 $zip->close();
         }
         // set $file to null if the file isn't found
@@ -383,8 +385,8 @@ class Project extends ProjectPrivilegeHandler {
             if($file !== null) array_push($files, $file);
         }
         // Create zip
-        $zip = new \ZipArchive();
-        if ($zip->open($file_path, \ZipArchive::CREATE)!==TRUE) {
+        $zip = new ZipArchive();
+        if ($zip->open($file_path, ZipArchive::CREATE)!==TRUE) {
             return null;
         }
         foreach ($files as $file){
@@ -540,6 +542,20 @@ class Project extends ProjectPrivilegeHandler {
             array_push($table_rows, $table_row);
         }
         return $table_rows;
+    }
+
+    /**
+     * Reset project creation date to NOW()
+     * @return bool
+     */
+    private function _reset_project_date(){
+        if($stmt = $this->mysqli->prepare('UPDATE projects SET date_created = NOW() WHERE project_id = ?')){
+            $stmt->bind_param('i', $this->_project_id);
+            $stmt->execute();
+            $stmt->store_result();
+            if($stmt->affected_rows == 1) return true;
+        }
+        return false;
     }
 
     /**

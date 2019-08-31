@@ -1,0 +1,39 @@
+<component name="libraryTable">
+  <library name="Generated files" type="javaScript">
+    <properties>
+      <sourceFilesUrls>
+        <item url="file://$PROJECT_DIR$/node_modules/.bin/yuicompressor.min.js" />
+        <item url="file://$PROJECT_DIR$/node_modules/yuicompressor/nodejs/cli.min.js" />
+        <item url="file://$PROJECT_DIR$/node_modules/yuicompressor/nodejs/index.min.js" />
+        <item url="file://$PROJECT_DIR$/public/cache-polyfill.min.js" />
+        <item url="file://$PROJECT_DIR$/public/js/app.min.js" />
+        <item url="file://$PROJECT_DIR$/public/js/creative.min.js" />
+        <item url="file://$PROJECT_DIR$/public/js/creative.min.min.js" />
+        <item url="file://$PROJECT_DIR$/public/js/examples.min.js" />
+        <item url="file://$PROJECT_DIR$/public/js/jquery.bootstrap-touchspin.min.min.js" />
+        <item url="file://$PROJECT_DIR$/public/js/nav-side.min.js" />
+        <item url="file://$PROJECT_DIR$/public/js/phylotree.min.js" />
+        <item url="file://$PROJECT_DIR$/public/js/pure-swipe.min.min.js" />
+        <item url="file://$PROJECT_DIR$/public/sw.min.js" />
+        <item url="file://$PROJECT_DIR$/public/sw.min.min.js" />
+      </sourceFilesUrls>
+    </properties>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/node_modules/.bin/yuicompressor.min.js" />
+      <root url="file://$PROJECT_DIR$/node_modules/yuicompressor/nodejs/cli.min.js" />
+      <root url="file://$PROJECT_DIR$/node_modules/yuicompressor/nodejs/index.min.js" />
+      <root url="file://$PROJECT_DIR$/public/cache-polyfill.min.js" />
+      <root url="file://$PROJECT_DIR$/public/js/app.min.js" />
+      <root url="file://$PROJECT_DIR$/public/js/creative.min.js" />
+      <root url="file://$PROJECT_DIR$/public/js/creative.min.min.js" />
+      <root url="file://$PROJECT_DIR$/public/js/examples.min.js" />
+      <root url="file://$PROJECT_DIR$/public/js/jquery.bootstrap-touchspin.min.min.js" />
+      <root url="file://$PROJECT_DIR$/public/js/nav-side.min.js" />
+      <root url="file://$PROJECT_DIR$/public/js/phylotree.min.js" />
+      <root url="file://$PROJECT_DIR$/public/js/pure-swipe.min.min.js" />
+      <root url="file://$PROJECT_DIR$/public/sw.min.js" />
+      <root url="file://$PROJECT_DIR$/public/sw.min.min.js" />
+    </CLASSES>
+    <SOURCES />
+  </library>
+</component>
