@@ -337,16 +337,16 @@ class Project extends ProjectPrivilegeHandler {
                 break;
             case self::EXPORT_DISTANCE_MATRIX:
                 $file['mime'] = 'text/plain';
-                $file['name'] = FM::DISTANCE_MATRIX;
-                $file['path'] = $fm->get(FM::DISTANT_MATRIX_FORMATTED);
+                $file['name'] = FM::DISTANT_MATRIX_PHYLIP;
+                $file['path'] = $fm->get(FM::DISTANT_MATRIX_PHYLIP);
                 break;
             case self::EXPORT_NEIGHBOUR_TREE:
-                $file['mime'] = 'image/png';
+                $file['mime'] = 'text/plain';
                 $file['name'] = FM::NEIGHBOUR_TREE;
                 $file['path'] = $fm->get(FM::NEIGHBOUR_TREE);
                 break;
             case self::EXPORT_UPGMA_TREE:
-                $file['mime'] = 'image/png';
+                $file['mime'] = 'text/plain';
                 $file['name'] = FM::UPGMA_TREE;
                 $file['path'] = $fm->get(FM::UPGMA_TREE);
                 break;
@@ -355,13 +355,14 @@ class Project extends ProjectPrivilegeHandler {
                 $file['name'] = 'project_' . $project_id . '.zip'; // e.g. project_29
                 $file['path'] = Config::WORKING_DIRECTORY . '/' . $file['name'];
                 // Create zip
+                if(file_exists($file['path'])) unlink($file['path']);
                 $zip = new ZipArchive();
                 if ($zip->open($file['path'], ZipArchive::CREATE)!==TRUE) {
                     return null;
                 }
                 // Add files to zip
                 $zip->addFile($fm->get(FM::SPECIES_RELATION), FM::SPECIES_RELATION);
-                $zip->addFile($fm->get(FM::DISTANT_MATRIX_FORMATTED), FM::DISTANCE_MATRIX);
+                $zip->addFile($fm->get(FM::DISTANT_MATRIX_PHYLIP), FM::DISTANT_MATRIX_PHYLIP);
                 $zip->addFile($fm->get(FM::NEIGHBOUR_TREE), FM::NEIGHBOUR_TREE);
                 $zip->addFile($fm->get(FM::UPGMA_TREE), FM::UPGMA_TREE);
                 $zip->addFile($fm->get(FM::CONFIG_JSON), FM::CONFIG_JSON);

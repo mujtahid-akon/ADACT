@@ -280,7 +280,7 @@ class ProjectProcess extends PendingProjects { // is_a
         if($this->_move(FM::SPECIES_RELATION)
             AND $this->_move(FM::SPECIES_RELATION_JSON)
             AND $this->_move(FM::DISTANCE_MATRIX)
-            AND $this->_move(FM::DISTANT_MATRIX_FORMATTED)
+            AND $this->_move(FM::DISTANT_MATRIX_PHYLIP)
             AND $this->_move(FM::NEIGHBOUR_TREE)
             AND $this->_move(FM::UPGMA_TREE)
             // Store config.json
