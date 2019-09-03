@@ -45,7 +45,8 @@ $isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
 $base_url = './projects/'.$project_id;
 // Transform Absent Words type to uppercase
 $config->aw_type = strtoupper($config->aw_type);
-
+// Species count
+$species_count = count($config->data);
 // Preparing the outputs if the project isn't a pending one
 if($result_type === Project::RT_SUCCESS){
     // Info downloading url
@@ -669,11 +670,9 @@ endif;
                     // tree.selection_label(current_selection_name);
                     tree.node_circle_size(undefined);
                     tree.radial(false);
-                    $('#tree_container svg').width($('#project_overview_tab').width())
-                        .height($('body').height() - $('#project_overview_tab').height()
-                            - $('#project_overview_toolbar').height() - $('.title').eq(0).height()
-                            - $('#phy_tree_toolbar').height() - $('#contact').height() - $('#top_nav').height()
-                            - 45 - 58);
+                    $('#tree_container svg')
+                        .width($('#project_overview_tab').width())
+                        .height(<?php echo $species_count*15 ?>);
                 } catch (e) {}
             }
 
