@@ -210,7 +210,7 @@ endif;
 <!-- Toolbar -->
 <div id="project_overview_toolbar" class="btn-toolbar" role="toolbar" style="margin-bottom: 5px; display: flex;">
     <div class="btn-group">
-        <?php if($editable): ?>
+        <?php if(false and $editable): // FIXME: Temporarily disabled edit option ?>
         <a class="btn button small blue" href="<?php echo $base_url ?>/edit" title="Edit project">
             <i class='fa fa-edit'></i> Edit
         </a>

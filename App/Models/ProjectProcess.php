@@ -272,6 +272,8 @@ class ProjectProcess extends PendingProjects { // is_a
 
         if($moveOnly){ // Move only is requested
             $fm->store(FM::CONFIG_JSON, $this->_config->getConfigJSON(), FM::STORE_STRING);
+            // FIXME: Temporarily disabled edit option
+            $this->_exec->new(['rm', '-rf', $this->_quotify($fm->pwd() . '/Files')], $this->_logger)->execute();
             return true;
         }
         // CD to root directory
@@ -286,6 +288,8 @@ class ProjectProcess extends PendingProjects { // is_a
             // Store config.json
             AND $fm->store(FM::CONFIG_JSON, $this->_config->getConfigJSON(), FM::STORE_STRING)
         ){
+            // FIXME: Temporarily disabled edit option
+            $this->_exec->new(['rm', '-rf', $this->_quotify($fm->pwd() . '/Files')], $this->_logger)->execute();
             return true;
         }else{
             $this->halt(self::E_FAILED_COPYING_PROJECT_FILES);
