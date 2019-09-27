@@ -103,6 +103,7 @@ if($isForked){
 <div class="row">
     <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-6 col-md-offset-3">
         <h3 class="title" id="p_name">New Project</h3>
+        <a class="external" rel="noreferrer" href="https://github.com/mujtahid-akon/ADACT/wiki/Creating-a-new-project" target="_blank">Help page</a><br>
         <small class="text text-danger">[Fields with * (star) sign are mandatory.]</small>
         <div style="margin: 5px 0">
             <button type="button" class="btn-4 button small whitish uppercase" onclick="ExampleOne()">Example 1</button>
