@@ -52,14 +52,14 @@ namespace ADACT\App\Models;
  */
 class FileManager extends Model{
     /* File constants */
-    const SPECIES_RELATION         = 'SpeciesRelation.txt';
-    const SPECIES_RELATION_JSON    = 'SpeciesRelation.json';
-    const DISTANCE_MATRIX          = 'DistanceMatrix.txt';
-    const DISTANT_MATRIX_FORMATTED = 'Output.txt';
-    const NEIGHBOUR_TREE           = 'Neighbour tree.newick.txt';
-    const UPGMA_TREE               = 'UPGMA tree.newick.txt';
-    const CONFIG_JSON              = 'config.json';
-    const DEBUG_LOG                = 'debug.log';
+    const SPECIES_RELATION      = 'SpeciesRelation.txt';
+    const SPECIES_RELATION_JSON = 'SpeciesRelation.json';
+    const DISTANCE_MATRIX       = 'DistanceMatrix.txt';
+    const DISTANT_MATRIX_PHYLIP = 'DistanceMatrix.dist';
+    const NEIGHBOUR_TREE        = 'Neighbour tree.newick.txt';
+    const UPGMA_TREE            = 'UPGMA tree.newick.txt';
+    const CONFIG_JSON           = 'config.json';
+    const DEBUG_LOG             = 'debug.log';
 
     /* Store flags */
     /** Copy file/URL to the pwd */

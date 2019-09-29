@@ -340,36 +340,42 @@ class Project extends Controller{
     }
 
     function edit_project_page(){
-        extract($this->get_params());
-        /** @var string $project_id A JSON string containing all configurations */
-        /** @var \ADACT\App\Models\Project $project */
-        $project   = $this->set_model();
-        $logged_in = $project->login_check();
-        if($logged_in){
-            if($project->can_edit($project_id)){
-                $this->set('logged_in', $logged_in);
-                $this->set('project_id', $project_id);
-                $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
-                $this->set('is_guest', $project->user != null ? $project->user['is_guest'] : null);
-            }else{
-                $this->redirect('projects/'. $project_id);
-            }
-        }else $this->redirect();
+        // FIXME: Temporarily disabled edit option
+        $this->redirect();
+        exit();
+//        extract($this->get_params());
+//        /** @var string $project_id A JSON string containing all configurations */
+//        /** @var \ADACT\App\Models\Project $project */
+//        $project   = $this->set_model();
+//        $logged_in = $project->login_check();
+//        if($logged_in){
+//            if($project->can_edit($project_id)){
+//                $this->set('logged_in', $logged_in);
+//                $this->set('project_id', $project_id);
+//                $this->set('dissimilarity_index', (new ProjectConfig())->dissimilarity_indexes);
+//                $this->set('is_guest', $project->user != null ? $project->user['is_guest'] : null);
+//            }else{
+//                $this->redirect('projects/'. $project_id);
+//            }
+//        }else $this->redirect();
     }
 
     function edit_project(){
-        extract($this->get_params());
-        /**
-         * @var string $project_id A JSON string containing all configurations
-         * @var string $config
-         */
-        /** @var \ADACT\App\Models\Project $project */
-        $project   = $this->set_model();
-        $logged_in = $project->login_check();
-        if($logged_in){
-            $this->json();
-            $this->set('status', $project->edit(json_decode(htmlspecialchars_decode($config), true), $project_id));
-        }else $this->redirect();
+        // FIXME: Temporarily disabled edit option
+        $this->redirect();
+        exit();
+//        extract($this->get_params());
+//        /**
+//         * @var string $project_id A JSON string containing all configurations
+//         * @var string $config
+//         */
+//        /** @var \ADACT\App\Models\Project $project */
+//        $project   = $this->set_model();
+//        $logged_in = $project->login_check();
+//        if($logged_in){
+//            $this->json();
+//            $this->set('status', $project->edit(json_decode(htmlspecialchars_decode($config), true), $project_id));
+//        }else $this->redirect();
     }
 
     function get_unseen(){

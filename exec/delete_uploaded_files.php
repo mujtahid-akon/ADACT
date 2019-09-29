@@ -15,7 +15,7 @@ use ADACT\App\Models\FileUploader;
 require_once __DIR__ . '/../autoload.php';
 
 $datetime = new DateTime();
-$datetime->setTimestamp(strtotime('-7 days'));
+$datetime->setTimestamp(strtotime('-3 days'));
 
 $file = new FileUploader();
 $no_files = $file->deleteUploaded($datetime);

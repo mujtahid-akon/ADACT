@@ -90,7 +90,7 @@ Object.freeze(Messages = {
             SUCCESS_TEXT : "Upload success!",
             SUCCESS_MESSAGE : "The file was uploaded successfully.",
             FAILURE_ALERT : "Upload failed!",
-            CONNECTION_PROBLEM : this.CONNECTION_PROBLEM,
+            CONNECTION_PROBLEM : "Please try again. There may be connection problem.",
             MAKE_SURE : "Make sure,",
             /** @return {Array} */
             FAILURE_MESSAGE : function (file_limit) {
@@ -104,7 +104,7 @@ Object.freeze(Messages = {
         },
         Upload_text: {
             FAILURE_ALERT : "Analyzing failed! Please try again.",
-            CONNECTION_PROBLEM : this.CONNECTION_PROBLEM,
+            CONNECTION_PROBLEM : "Please try again. There may be connection problem.",
             MAKE_SURE : "Make sure,",
             FAILURE_MESSAGE : function (file_limit) {
                 return [
@@ -637,6 +637,7 @@ let InputAnalyzer = {
                     '<strong>' + Messages.InputAnalyzer.Upload.FAILURE_ALERT + '</strong> ' +
                     Messages.InputAnalyzer.Upload.CONNECTION_PROBLEM +
                     '</div>');
+                $("#filef").val('');
             }
         });
     },
@@ -874,6 +875,7 @@ Project.result = {
                 btn.removeClass('btn-primary');
                 btn.addClass('btn-default disabled');
                 btn.attr('onclick', null);
+                // noinspection JSUnusedGlobalSymbols
                 this.btn_msg_pre = btn.html();
                 btn.html("<i class=\"fa fa-spinner fa-pulse\" aria-hidden=\"true\"></i> " + Messages.Project.LOADING_TEXT);
             },
