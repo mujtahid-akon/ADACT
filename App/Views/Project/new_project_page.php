@@ -185,13 +185,17 @@ if($isForked){
                 <fieldset>
                     <label class="control-label">
                         <span>K-Mer Size *: </span>
-                        <i data-toggle="tooltip" class="glyphicon glyphicon-info-sign"
-                           title="Be careful when choosing kmer size: they are not checked on the server side!"></i>
+                        <a href="javascript:void(0)" class="glyphicon glyphicon-info-sign" style="text-decoration: unset" onmouseover="$('#kmer_info').show()" onmouseleave="$('#kmer_info').hide()" onclick="$('#kmer_info').toggle()"></a>
                     </label>
                     <input class="form-control input-sm" type="number" id="kmer_min" name="kmer_min" min="1"
-                           style="width: 100px;display: inline-block;" placeholder="Min" required />
+                           style="width: 100px;display: inline-block;" placeholder="Min" value="5" required />
                     <input class="form-control input-sm" type="number" id="kmer_max" name="kmer_max" min="1"
-                           style="width: 100px;display: inline-block" placeholder="Max" required />
+                           style="width: 100px;display: inline-block" placeholder="Max" value="25" required />
+                    <div style="display: none;" id="kmer_info">
+                        K-mer is a hyper parameter to determine MAWs & RAWs which should be adjusted experimentally.
+                        It is seen in our that for MAWs, k-mer of min: 5 & maximum 25 work better.
+                        <a class="external" href="https://github.com/mujtahid-akon/ADACT/wiki/Creating-a-new-project#k-mer-size" target="_blank">Learn more...</a>
+                    </div>
                 </fieldset>
                 <!-- MAW Type -->
                 <fieldset style="margin-bottom: 10px">
