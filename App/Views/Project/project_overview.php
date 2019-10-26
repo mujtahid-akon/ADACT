@@ -469,22 +469,24 @@ endif;
         <!-- Tree Script -->
         <script>
             "use strict";
+            // noinspection JSAnnotator
             const   container_id = '#tree_container',
                     font_size = 14,
-                    spacing_x = 25;
+                    spacing_x = 25,
+                    species_count = <?php echo $species_count; ?>,
+                    nj_tree = "<?php echo $tree->getNewickFormat(Tree::NJ) ?>",
+                    upgma_tree = "<?php echo $tree->getNewickFormat(Tree::UPGMA) ?>";
             let svg = d3.select(container_id).append("svg");
             let tree;
             let current_tree = null;
             // Load NJ Tree on click
-            const nj_tree = "<?php echo $tree->getNewickFormat(Tree::NJ) ?>";
-            $('#tab_nj_tree').on('click', function (e) {
+            $('#tab_nj_tree').on('click', function(){
                 default_tree_settings();
                 current_tree = 'NJ Tree';
                 showNewick(current_tree);
             });
             // Load UPGMA Tree on click
-            const upgma_tree = "<?php echo $tree->getNewickFormat(Tree::UPGMA) ?>";
-            $('#tab_upgma_tree').on('click', function (e) {
+            $('#tab_upgma_tree').on('click', function(){
                 default_tree_settings();
                 current_tree = 'UPGMA Tree';
                 showNewick(current_tree);
@@ -492,29 +494,36 @@ endif;
 
             // Tree branch type FIXME Not implemented
             // - Straight
-            $("#display_tree").on("click", function (e) {
-                tree.options ({'branches' : 'straight'}, true);
+            $("#display_tree").on("click", function(){
+                tree.options({'branches' : 'straight'}, true);
             });
             // - Step
-            $("#display_dengrogram").on ("click", function (e) {
+            $("#display_dengrogram").on("click", function(){
                 tree.options({'branches' : 'step'}, true);
             });
 
             // Label
-            $("#mp_label").on ("click", function (e) {
-                tree.max_parsimony (true);
+            $("#mp_label").on("click", function(){
+                tree.max_parsimony(true);
             });
 
-            $ ("[data-direction]").on ("click", function (e) {
-                let which_function = $(this).data("direction") === 'vertical' ? tree.spacing_x : tree.spacing_y;
-                which_function(which_function() + (+ $(this).data("amount"))).update();
+            $ ("[data-direction]").on("click", function(){
+                let svg = $('#tree_container svg');
+                let amount = $(this).data("amount");
+                if($(this).data("direction") === 'vertical'){
+                    svg.height(svg.height() + species_count * amount);
+                    tree.spacing_x(tree.spacing_x() + amount).update();
+                }else{
+                    // svg.width(svg.height() + amount);
+                    tree.spacing_y(tree.spacing_y() + amount).update();
+                }
             });
 
             // Change layout mode
-            $(".phylotree-layout-mode").on("change", function (e) {
-                if ($(this).is(':checked')) {
-                    if (tree.radial () !== ($(this).data ("mode") === "radial")) {
-                        tree.radial (!tree.radial ()).placenodes().update ();
+            $(".phylotree-layout-mode").on("change", function(){
+                if($(this).is(':checked')){
+                    if(tree.radial() !== ($(this).data("mode") === "radial")){
+                        tree.radial(!tree.radial()).placenodes().update();
                     }
                 }
             });
@@ -524,31 +533,31 @@ endif;
              * Sort nodes
              * @param asc
              */
-            function sort_nodes (asc) {
-                tree.traverse_and_compute (function (n) {
+            function sort_nodes(asc){
+                tree.traverse_and_compute(function(n){
                     let d = 1;
-                    if (n.children && n.children.length) {
-                        d += d3.max (n.children, function (d) { return d["count_depth"];});
+                    if(n.children && n.children.length){
+                        d += d3.max(n.children, function(d){return d["count_depth"];});
                     }
                     n["count_depth"] = d;
                 });
-                tree.resort_children (function (a,b) {
+                tree.resort_children(function(a,b){
                     return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
                 });
             }
             // - Original order
-            $("#sort_original").on ("click", function (e) {
-                tree.resort_children (function (a, b) {
+            $("#sort_original").on("click", function(){
+                tree.resort_children(function (a, b){
                     return a["original_child_order"] - b["original_child_order"];
                 });
             });
             // - Ascending order
-            $("#sort_ascending").on ("click", function (e) {
-                sort_nodes (true);
+            $("#sort_ascending").on("click", function(){
+                sort_nodes(true);
             });
             // - Descending order
-            $("#sort_descending").on ("click", function (e) {
-                sort_nodes (false);
+            $("#sort_descending").on("click", function(){
+                sort_nodes(false);
             });
 
             /**
@@ -557,18 +566,16 @@ endif;
              * All these settings have to be set every time tree
              * is changed and new tree is loaded
              */
-            function default_tree_settings () {
-                try {
+            function default_tree_settings(){
+                try{
                     tree = d3.layout.phylotree();
                     tree.options({
-                        // 'left-right-spacing': 'fit-to-size',
-                        // 'top-bottom-spacing': 'fit-to-size',
                         'selectable': false,
                         'collapsible': false,
                         'transitions': false,
                         'hide': false,
                         'reroot': false,
-                        zoom: true
+                        'zoom': true
                     }, false);
                     tree.size([480, 720]);
                     tree.font_size(font_size);
@@ -578,7 +585,7 @@ endif;
                     tree.node_span('equal');
                     tree.node_circle_size(undefined);
                     tree.radial(false);
-                } catch (e) {}
+                }catch(e){}
             }
 
             function showNewick(name){
@@ -586,10 +593,10 @@ endif;
                 tree(newick_tree).svg(svg).layout();
                 $('#tree_container svg')
                     .width($('#project_overview_tab').width())
-                    .height(<?php echo $species_count; ?> * (spacing_x + font_size - 14));
+                    .height(species_count * (spacing_x + font_size - 14));
             }
 
-            function saveNewick(name) {
+            function saveNewick(name){
                 let newickTree = name[0] === "U" ? upgma_tree : nj_tree;
                 let treeBlob = new Blob([newickTree], {type:"text/plain;charset=utf-8"});
                 let treeUrl = URL.createObjectURL(treeBlob);
@@ -627,7 +634,7 @@ endif;
             }
 
             /**
-             * Copy PhyloTree CSS inside SVG
+             * Copy Phylotree CSS inside SVG
              *
              * Without this, the svg file will have weird style
              */
