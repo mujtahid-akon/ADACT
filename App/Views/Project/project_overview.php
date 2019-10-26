@@ -5,6 +5,8 @@
  * Date: 6/7/17
  * Time: 6:40 PM
  */
+
+use ADACT\App\Models\FileException;
 use \ADACT\App\Models\FileManager as FM;
 use \ADACT\App\Models\ProjectConfig;
 use \ADACT\App\Models\Project;
@@ -35,29 +37,6 @@ if(!$logged_in) exit();
  * @var int     $exec_duration
  */
 extract($project_info);
-// FM
-$fm = new FM($project_id);
-// load config
-$config = new ProjectConfig($fm->get(FM::CONFIG_JSON));
-// Project type
-$isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
-// Base url
-$base_url = './projects/'.$project_id;
-// Transform Absent Words type to uppercase
-$config->aw_type = strtoupper($config->aw_type);
-// Species count
-$species_count = count($config->data);
-// Preparing the outputs if the project isn't a pending one
-if($result_type === Project::RT_SUCCESS){
-    // Info downloading url
-    $download_url = $base_url . '/get';
-    // Get Species Relation
-    $relation_file = $fm->get(FM::SPECIES_RELATION_JSON);
-    $species_relations = json_decode(file_get_contents($relation_file), true);
-    // Get Species names
-    $species = get_species_from_species_relation($species_relations);
-}
-
 /**
  * Get a list of species from the species relations
  * @param array $species_relations
@@ -77,43 +56,66 @@ function get_species_from_species_relation($species_relations){
  * @param array $species
  * @param FM $fm
  * @return array Each member is a table row
- * @throws \ADACT\App\Models\FileException
  */
 function get_distance_matrix($species, $fm){
-    $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
-    $distance_matrix = file($fm->get(FM::DISTANCE_MATRIX));
     $dm_i = 0; // Distance matrix pointer
     $table_rows = [];
-    for($row_i  = 0; $row_i < $total_species; ++$row_i){
-        $table_row = "<tr>";
-        // Header first
-        $table_row .= "<th>{$species[$row_i]}</th>";
-        // Blank columns
-        for($col_i = 0; $col_i <= $row_i; ++$col_i) $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'></td>";
-        // Now, the rest
-        for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
-            $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'>"
-                . trim($distance_matrix[$dm_i++])
-                . "</td>";
+    $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
+    try{
+        $distance_matrix = file($fm->get(FM::DISTANCE_MATRIX));
+        for($row_i  = 0; $row_i < $total_species; ++$row_i){
+            $table_row = "<tr>";
+            // Header first
+            $table_row .= "<th>{$species[$row_i]}</th>";
+            // Blank columns
+            for($col_i = 0; $col_i <= $row_i; ++$col_i) $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'></td>";
+            // Now, the rest
+            for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
+                $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'>"
+                    . trim($distance_matrix[$dm_i++])
+                    . "</td>";
+            }
+            $table_row .= "</tr>";
+            // Print the row
+            array_push($table_rows, $table_row);
         }
-        $table_row .= "</tr>";
-        // Print the row
-        array_push($table_rows, $table_row);
-    }
+    }catch(FileException $e){}
     return $table_rows;
 }
+try{
+    // FM
+    $fm = new FM($project_id);
+    // load config
+    $config = new ProjectConfig($fm->get(FM::CONFIG_JSON));
+    // Project type
+    $isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
+    // Base url
+    $base_url = './projects/'.$project_id;
+    // Transform Absent Words type to uppercase
+    $config->aw_type = strtoupper($config->aw_type);
+    // Species count
+    $species_count = count($config->data);
+    // Preparing the outputs if the project isn't a pending one
+    if($result_type === Project::RT_SUCCESS){
+        // Info downloading url
+        $download_url = $base_url . '/get';
+        // Get Species Relation
+        $relation_file = $fm->get(FM::SPECIES_RELATION_JSON);
+        $species_relations = json_decode(file_get_contents($relation_file), true);
+        // Get Species names
+        $species = get_species_from_species_relation($species_relations);
+    }
 
-// Generate results if the project was executed successfully
-if($result_type === Project::RT_SUCCESS):
-$tree = new Tree($project_id);
+    // Generate results if the project was executed successfully
+    if($result_type === Project::RT_SUCCESS):
+    $tree = new Tree($project_id);
 
-/** @var string $download_url */
-/** @var array  $species */
-/** @var array  $species_relations */
-$neighbourTree = $download_url . '/' . str_replace(' ', '+', FM::NEIGHBOUR_TREE);
-$UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
-endif;
-
+    /** @var string $download_url */
+    /** @var array  $species */
+    /** @var array  $species_relations */
+    $neighbourTree = $download_url . '/' . str_replace(' ', '+', FM::NEIGHBOUR_TREE);
+    $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
+    endif;
 // Output begin
 ?>
 <!-- Project output begin -->
@@ -126,9 +128,7 @@ endif;
 <link rel="stylesheet" type="text/css" href="./css/tabs.responsive.bootstrap.min.css" />
 <script>
     (function($) {
-
         'use strict';
-
         $(document).on('show.bs.tab', '.nav-tabs-responsive [data-toggle="tab"]', function(e) {
             var $target = $(e.target);
             var $tabs = $target.closest('.nav-tabs-responsive');
@@ -143,11 +143,9 @@ endif;
                     .removeClass('pull-xs-left pull-xs-center pull-xs-right')
                     .addClass( 'pull-xs-' + position );
             };
-
             $tabs.find('>li').removeClass('next prev');
             $prev.addClass('prev');
             $next.addClass('next');
-
             updateDropdownMenu( $prev, 'left' );
             updateDropdownMenu( $current, 'center' );
             updateDropdownMenu( $next, 'right' );
@@ -183,6 +181,7 @@ endif;
         }
     }*/
 </style>
+<!--suppress CssUnusedSymbol, CssRedundantUnit -->
 <style>
     @media (min-width: 479px) {
         .nav-tabs { border-bottom: 2px solid #DDD; }
@@ -663,10 +662,13 @@ endif;
                 </thead>
                 <tbody>
                     <?php foreach (get_distance_matrix($species, $fm) as $distance_matrix) print $distance_matrix ?>
-
                 </tbody>
             </table>
         </div>
     </section>
     <?php endif; ?>
 </div>
+<?php
+}catch(FileException $e){
+    require_once __DIR__ . '/../__ErrorDocuments/500Error.php';
+}
