@@ -574,7 +574,7 @@ try{
                         'transitions': false,
                         'hide': false,
                         'reroot': false,
-                        'zoom': true
+                        // 'zoom': true
                     }, false);
                     tree.size([480, 720]);
                     tree.font_size(font_size);
