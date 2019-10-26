@@ -185,7 +185,7 @@ if($isForked){
                 <fieldset>
                     <label class="control-label">
                         <span>K-Mer Size *: </span>
-                        <a href="javascript:void(0)" class="glyphicon glyphicon-info-sign" style="text-decoration: unset" onmouseover="$('#kmer_info').show()" onmouseleave="$('#kmer_info').hide()" onclick="$('#kmer_info').toggle()"></a>
+                        <a href="javascript:void(0)" class="glyphicon glyphicon-info-sign" style="text-decoration: unset" onmouseover="$('#kmer_info').toggle()" onclick="$('#kmer_info').toggle()"></a>
                     </label>
                     <input class="form-control input-sm" type="number" id="kmer_min" name="kmer_min" min="1"
                            style="width: 100px;display: inline-block;" placeholder="Min" value="5" required />
