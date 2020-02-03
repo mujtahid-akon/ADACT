@@ -5,6 +5,8 @@
  * Date: 6/7/17
  * Time: 6:40 PM
  */
+
+use ADACT\App\Models\FileException;
 use \ADACT\App\Models\FileManager as FM;
 use \ADACT\App\Models\ProjectConfig;
 use \ADACT\App\Models\Project;
@@ -35,29 +37,6 @@ if(!$logged_in) exit();
  * @var int     $exec_duration
  */
 extract($project_info);
-// FM
-$fm = new FM($project_id);
-// load config
-$config = new ProjectConfig($fm->get(FM::CONFIG_JSON));
-// Project type
-$isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
-// Base url
-$base_url = './projects/'.$project_id;
-// Transform Absent Words type to uppercase
-$config->aw_type = strtoupper($config->aw_type);
-// Species count
-$species_count = count($config->data);
-// Preparing the outputs if the project isn't a pending one
-if($result_type === Project::RT_SUCCESS){
-    // Info downloading url
-    $download_url = $base_url . '/get';
-    // Get Species Relation
-    $relation_file = $fm->get(FM::SPECIES_RELATION_JSON);
-    $species_relations = json_decode(file_get_contents($relation_file), true);
-    // Get Species names
-    $species = get_species_from_species_relation($species_relations);
-}
-
 /**
  * Get a list of species from the species relations
  * @param array $species_relations
@@ -77,43 +56,66 @@ function get_species_from_species_relation($species_relations){
  * @param array $species
  * @param FM $fm
  * @return array Each member is a table row
- * @throws \ADACT\App\Models\FileException
  */
 function get_distance_matrix($species, $fm){
-    $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
-    $distance_matrix = file($fm->get(FM::DISTANCE_MATRIX));
     $dm_i = 0; // Distance matrix pointer
     $table_rows = [];
-    for($row_i  = 0; $row_i < $total_species; ++$row_i){
-        $table_row = "<tr>";
-        // Header first
-        $table_row .= "<th>{$species[$row_i]}</th>";
-        // Blank columns
-        for($col_i = 0; $col_i <= $row_i; ++$col_i) $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'></td>";
-        // Now, the rest
-        for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
-            $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'>"
-                . trim($distance_matrix[$dm_i++])
-                . "</td>";
+    $total_species = count($species); // Number of rows and columns is the same as this + 1 for header
+    try{
+        $distance_matrix = file($fm->get(FM::DISTANCE_MATRIX));
+        for($row_i  = 0; $row_i < $total_species; ++$row_i){
+            $table_row = "<tr>";
+            // Header first
+            $table_row .= "<th>{$species[$row_i]}</th>";
+            // Blank columns
+            for($col_i = 0; $col_i <= $row_i; ++$col_i) $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'></td>";
+            // Now, the rest
+            for(/* $col_i has already been set above */; $col_i < $total_species; ++$col_i){
+                $table_row .= "<td title='({$species[$row_i]}, {$species[$col_i]})'>"
+                    . trim($distance_matrix[$dm_i++])
+                    . "</td>";
+            }
+            $table_row .= "</tr>";
+            // Print the row
+            array_push($table_rows, $table_row);
         }
-        $table_row .= "</tr>";
-        // Print the row
-        array_push($table_rows, $table_row);
-    }
+    }catch(FileException $e){}
     return $table_rows;
 }
+try{
+    // FM
+    $fm = new FM($project_id);
+    // load config
+    $config = new ProjectConfig($fm->get(FM::CONFIG_JSON));
+    // Project type
+    $isAFileIOProject = $config->type === Project::INPUT_TYPE_FILE;
+    // Base url
+    $base_url = './projects/'.$project_id;
+    // Transform Absent Words type to uppercase
+    $config->aw_type = strtoupper($config->aw_type);
+    // Species count
+    $species_count = count($config->data);
+    // Preparing the outputs if the project isn't a pending one
+    if($result_type === Project::RT_SUCCESS){
+        // Info downloading url
+        $download_url = $base_url . '/get';
+        // Get Species Relation
+        $relation_file = $fm->get(FM::SPECIES_RELATION_JSON);
+        $species_relations = json_decode(file_get_contents($relation_file), true);
+        // Get Species names
+        $species = get_species_from_species_relation($species_relations);
+    }
 
-// Generate results if the project was executed successfully
-if($result_type === Project::RT_SUCCESS):
-$tree = new Tree($project_id);
+    // Generate results if the project was executed successfully
+    if($result_type === Project::RT_SUCCESS):
+    $tree = new Tree($project_id);
 
-/** @var string $download_url */
-/** @var array  $species */
-/** @var array  $species_relations */
-$neighbourTree = $download_url . '/' . str_replace(' ', '+', FM::NEIGHBOUR_TREE);
-$UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
-endif;
-
+    /** @var string $download_url */
+    /** @var array  $species */
+    /** @var array  $species_relations */
+    $neighbourTree = $download_url . '/' . str_replace(' ', '+', FM::NEIGHBOUR_TREE);
+    $UPGMATree     = $download_url . '/' . str_replace(' ', '+', FM::UPGMA_TREE);
+    endif;
 // Output begin
 ?>
 <!-- Project output begin -->
@@ -126,9 +128,7 @@ endif;
 <link rel="stylesheet" type="text/css" href="./css/tabs.responsive.bootstrap.min.css" />
 <script>
     (function($) {
-
         'use strict';
-
         $(document).on('show.bs.tab', '.nav-tabs-responsive [data-toggle="tab"]', function(e) {
             var $target = $(e.target);
             var $tabs = $target.closest('.nav-tabs-responsive');
@@ -143,11 +143,9 @@ endif;
                     .removeClass('pull-xs-left pull-xs-center pull-xs-right')
                     .addClass( 'pull-xs-' + position );
             };
-
             $tabs.find('>li').removeClass('next prev');
             $prev.addClass('prev');
             $next.addClass('next');
-
             updateDropdownMenu( $prev, 'left' );
             updateDropdownMenu( $current, 'center' );
             updateDropdownMenu( $next, 'right' );
@@ -158,7 +156,7 @@ endif;
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap.min.js"></script>
 <style id="phylotree_css">
-    <?php echo file_get_contents(__DIR__ . '/../../../public/css/phylotree.css') ?>
+    <?php echo file_get_contents(__DIR__ . '/../../../public/css/phylotree.min.css') ?>
 </style>
 <style>
     .fa-rotate-45 {
@@ -183,6 +181,7 @@ endif;
         }
     }*/
 </style>
+<!--suppress CssUnusedSymbol, CssRedundantUnit -->
 <style>
     @media (min-width: 479px) {
         .nav-tabs { border-bottom: 2px solid #DDD; }
@@ -457,49 +456,6 @@ endif;
                             </li>
                         </ul>
                     </div>
-                    <!-- Selection Tools -->
-                    <div class="navbar-form hidden-xs" style="margin: 0 0 5px 5px;float: left;padding: 0;">
-                        <div class="input-group">
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
-                                    Tag <span class="caret"></span>
-                                </button>
-                                <ul class="dropdown-menu" id="selection_name_dropdown">
-                                    <li id="selection_new"><a>New selection set</a></li>
-                                    <li id="selection_delete" class="disabled"><a>Delete selection set</a></li>
-                                    <li id="selection_rename"><a>Rename selection set</a></li>
-                                    <li class="divider"></li>
-                                </ul>
-                            </span>
-                            <input type="text" class="form-control input-sm" value="Foreground" id="selection_name_box" disabled>
-                            <span class="input-group-btn" id="save_selection_name" style="display: none">
-                                <button type="button" class="btn btn-default btn-sm" id="cancel_selection_button">Cancel</button>
-                                <button type="button" class="btn btn-default btn-sm" id="save_selection_button">Save</button>
-                            </span>
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">Selection <span class="caret"></span></button>
-                                  <ul class="dropdown-menu">
-                                    <li><a id="filter_add">Add filtered nodes to selection</a></li>
-                                    <li><a id="filter_remove">Remove filtered nodes from selection</a></li>
-                                    <li class="divider"></li>
-                                    <li><a id="select_all">Select all</a></li>
-                                    <li><a id="select_all_internal">Select all internal nodes</a></li>
-                                    <li><a id="select_all_leaves">Select all leaf nodes</a></li>
-                                    <li><a id="clear_internal">Clear all internal nodes</a></li>
-                                    <li><a id="clear_leaves">Clear all leaves</a></li>
-                                    <li><a id="select_none">Clear selection</a></li>
-                                    <li class="divider"></li>
-                                    <li><a id="mp_label">Label internal nodes using maximum parsimony</a></li>
-                                    <li><a id="and_label">Label internal nodes using conjunction (AND) </a></li>
-                                    <li><a id="or_label">Label internal nodes using disjunction (OR) </a></li>
-                                 </ul>
-                            </span>
-                        </div>
-                    </div>
-                    <!-- Filter branches -->
-                    <div class="btn-group hidden-xs">
-                        <input type="text" id='branch_filter' class="form-control input-sm" placeholder="Filter branches">
-                    </div>
                 </div>
             </div>
         </div>
@@ -511,47 +467,62 @@ endif;
         </div>
         <!-- Tree Script -->
         <script>
+            "use strict";
+            // noinspection JSAnnotator
+            const   container_id = '#tree_container',
+                    font_size = 14,
+                    spacing_x = 25,
+                    species_count = <?php echo $species_count; ?>,
+                    nj_tree = "<?php echo $tree->getNewickFormat(Tree::NJ) ?>",
+                    upgma_tree = "<?php echo $tree->getNewickFormat(Tree::UPGMA) ?>";
+            let svg = d3.select(container_id).append("svg");
+            let tree;
             let current_tree = null;
             // Load NJ Tree on click
-            const nj_tree = "<?php echo $tree->getNewickFormat(Tree::NJ) ?>";
-            $('#tab_nj_tree').on('click', function (e) {
+            $('#tab_nj_tree').on('click', function(){
                 default_tree_settings();
                 current_tree = 'NJ Tree';
-                tree(nj_tree).svg(svg).layout();
+                showNewick(current_tree);
             });
             // Load UPGMA Tree on click
-            const upgma_tree = "<?php echo $tree->getNewickFormat(Tree::UPGMA) ?>";
-            $('#tab_upgma_tree').on('click', function (e) {
+            $('#tab_upgma_tree').on('click', function(){
                 default_tree_settings();
                 current_tree = 'UPGMA Tree';
-                tree(upgma_tree).svg(svg).layout();
+                showNewick(current_tree);
             });
 
             // Tree branch type FIXME Not implemented
             // - Straight
-            $("#display_tree").on("click", function (e) {
-                tree.options ({'branches' : 'straight'}, true);
+            $("#display_tree").on("click", function(){
+                tree.options({'branches' : 'straight'}, true);
             });
             // - Step
-            $("#display_dengrogram").on ("click", function (e) {
+            $("#display_dengrogram").on("click", function(){
                 tree.options({'branches' : 'step'}, true);
             });
 
             // Label
-            $("#mp_label").on ("click", function (e) {
-                tree.max_parsimony (true);
+            $("#mp_label").on("click", function(){
+                tree.max_parsimony(true);
             });
 
-            $ ("[data-direction]").on ("click", function (e) {
-                let which_function = $(this).data("direction") === 'vertical' ? tree.spacing_x : tree.spacing_y;
-                which_function(which_function() + (+ $(this).data("amount"))).update();
+            $ ("[data-direction]").on("click", function(){
+                let svg = $('#tree_container svg');
+                let amount = $(this).data("amount");
+                if($(this).data("direction") === 'vertical'){
+                    svg.height(svg.height() + species_count * amount);
+                    tree.spacing_x(tree.spacing_x() + amount).update();
+                }else{
+                    // svg.width(svg.height() + amount);
+                    tree.spacing_y(tree.spacing_y() + amount).update();
+                }
             });
 
             // Change layout mode
-            $(".phylotree-layout-mode").on("change", function (e) {
-                if ($(this).is(':checked')) {
-                    if (tree.radial () !== ($(this).data ("mode") === "radial")) {
-                        tree.radial (!tree.radial ()).placenodes().update ();
+            $(".phylotree-layout-mode").on("change", function(){
+                if($(this).is(':checked')){
+                    if(tree.radial() !== ($(this).data("mode") === "radial")){
+                        tree.radial(!tree.radial()).placenodes().update();
                     }
                 }
             });
@@ -561,87 +532,31 @@ endif;
              * Sort nodes
              * @param asc
              */
-            function sort_nodes (asc) {
-                tree.traverse_and_compute (function (n) {
+            function sort_nodes(asc){
+                tree.traverse_and_compute(function(n){
                     let d = 1;
-                    if (n.children && n.children.length) {
-                        d += d3.max (n.children, function (d) { return d["count_depth"];});
+                    if(n.children && n.children.length){
+                        d += d3.max(n.children, function(d){return d["count_depth"];});
                     }
                     n["count_depth"] = d;
                 });
-                tree.resort_children (function (a,b) {
+                tree.resort_children(function(a,b){
                     return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
                 });
             }
             // - Original order
-            $("#sort_original").on ("click", function (e) {
-                tree.resort_children (function (a, b) {
+            $("#sort_original").on("click", function(){
+                tree.resort_children(function (a, b){
                     return a["original_child_order"] - b["original_child_order"];
                 });
             });
             // - Ascending order
-            $("#sort_ascending").on ("click", function (e) {
-                sort_nodes (true);
+            $("#sort_ascending").on("click", function(){
+                sort_nodes(true);
             });
             // - Descending order
-            $("#sort_descending").on ("click", function (e) {
-                sort_nodes (false);
-            });
-
-            // Labels
-            // - AND label
-            $("#and_label").on ("click", function (e) {
-                tree.internal_label (function (d) { return d.reduce (function (prev, curr) { return curr[current_selection_name] && prev; }, true)}, true);
-            });
-            // - OR label
-            $("#or_label").on ("click", function (e) {
-                tree.internal_label (function (d) { return d.reduce (function (prev, curr) { return curr[current_selection_name] || prev; }, false)}, true);
-            });
-
-            // Filters
-            // - Add filter
-            $("#filter_add").on ("click", function (e) {
-                tree.modify_selection (function (d) { return d.tag || d[current_selection_name];}, current_selection_name, false, true)
-                    .modify_selection (function (d) { return false; }, "tag", false, false);
-            });
-            // - Remove filter
-            $("#filter_remove").on ("click", function (e) {
-                tree.modify_selection (function (d) { return !d.tag;});
-            });
-
-            // Selection modes
-            // - Select all nodes
-            $("#select_all").on ("click", function (e) {
-                tree.modify_selection (function (d) { return true;});
-            });
-            // - Select all internal nodes
-            $("#select_all_internal").on ("click", function (e) {
-                tree.modify_selection (function (d) { return !d3.layout.phylotree.is_leafnode (d.target);});
-            });
-            // - Select all the leave nodes
-            $("#select_all_leaves").on ("click", function (e) {
-                tree.modify_selection (function (d) { return d3.layout.phylotree.is_leafnode (d.target);});
-            });
-            // - Deselect all nodes
-            $("#select_none").on ("click", function (e) {
-                tree.modify_selection (function (d) { return false;});
-            });
-            // - Clear selection of internal nodes
-            $("#clear_internal").on ("click", function (e) {
-                tree.modify_selection (function (d) { return d3.layout.phylotree.is_leafnode (d.target) ? d.target[current_selection_name] : false;});
-            });
-            // - Deselect all the leave nodes
-            $("#clear_leaves").on ("click", function (e) {
-                tree.modify_selection (function (d) { return !d3.layout.phylotree.is_leafnode (d.target) ? d.target[current_selection_name] : false;});
-            });
-
-            // Filter branches
-            $("#branch_filter").on ("input propertychange", function (e) {
-                const filter_value = $(this).val();
-                const rx = new RegExp(filter_value, "i");
-                tree.modify_selection(function (n) {
-                    return filter_value.length && (tree.branch_name () (n.target).search (rx)) !== -1;
-                }, "tag");
+            $("#sort_descending").on("click", function(){
+                sort_nodes(false);
             });
 
             /**
@@ -650,33 +565,37 @@ endif;
              * All these settings have to be set every time tree
              * is changed and new tree is loaded
              */
-            function default_tree_settings () {
-                try {
+            function default_tree_settings(){
+                try{
                     tree = d3.layout.phylotree();
                     tree.options({
-                        // 'left-right-spacing': 'fit-to-size',
-                        // 'top-bottom-spacing': 'fit-to-size',
+                        'selectable': false,
                         'collapsible': false,
                         'transitions': false,
-                        'draw-size-bubbles' : false,
-                        zoom: true
+                        'hide': false,
+                        'reroot': false,
+                        // 'zoom': true
                     }, false);
                     tree.size([480, 720]);
+                    tree.font_size(font_size);
+                    tree.spacing_x(spacing_x);
                     tree.branch_length(null);
                     tree.branch_name(null);
                     tree.node_span('equal');
-                    tree.style_nodes(node_colorizer);
-                    tree.style_edges(edge_colorizer);
-                    // tree.selection_label(current_selection_name);
                     tree.node_circle_size(undefined);
                     tree.radial(false);
-                    $('#tree_container svg')
-                        .width($('#project_overview_tab').width())
-                        .height(<?php echo $species_count*15 ?>);
-                } catch (e) {}
+                }catch(e){}
             }
 
-            function saveNewick(name) {
+            function showNewick(name){
+                let newick_tree = name[0] === "U" ? upgma_tree : nj_tree;
+                tree(newick_tree).svg(svg).layout();
+                $('#tree_container svg')
+                    .width($('#project_overview_tab').width())
+                    .height(species_count * (spacing_x + font_size - 14));
+            }
+
+            function saveNewick(name){
                 let newickTree = name[0] === "U" ? upgma_tree : nj_tree;
                 let treeBlob = new Blob([newickTree], {type:"text/plain;charset=utf-8"});
                 let treeUrl = URL.createObjectURL(treeBlob);
@@ -697,6 +616,8 @@ endif;
              * @param name  Filename to save
              */
             function saveSvg(svgEl, name) {
+                default_tree_settings();
+                showNewick(current_tree);
                 copyCSSInsideSVG();
                 svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
                 const svgData = svgEl.outerHTML;
@@ -712,7 +633,7 @@ endif;
             }
 
             /**
-             * Copy PhyloTree CSS inside SVG
+             * Copy Phylotree CSS inside SVG
              *
              * Without this, the svg file will have weird style
              */
@@ -723,257 +644,6 @@ endif;
                 svg_css.innerText = document.getElementById('phylotree_css').innerText.replace(/\n/g, '');
                 document.getElementsByTagName('svg')[0].appendChild(svg_css);
             }
-
-            /**
-             * Colorize node
-             * @param element
-             * @param data
-             */
-            function node_colorizer (element, data) {
-                try{
-                    let count_class = 0;
-                    selection_set.forEach (function (d,i) { if (data[d]) {count_class ++; element.style ("fill", color_scheme(i), i == current_selection_id ?  "important" : null);}});
-                    if (count_class > 1) {
-                    } else {
-                        if (count_class === 0) {
-                            element.style ("fill", null);
-                        }
-                    }
-                } catch (e) {}
-            }
-
-            /**
-             * Colorize edge
-             * @param element
-             * @param data
-             */
-            function edge_colorizer (element, data) {
-                try {
-                    let count_class = 0;
-                    selection_set.forEach (function (d,i) { if (data[d]) {count_class ++; element.style ("stroke", color_scheme(i), i == current_selection_id ?  "important" : null);}});
-                    if (count_class > 1) {
-                        element.classed ("branch-multiple", true);
-                    } else
-                    if (count_class === 0) {
-                        element.style ("stroke", null)
-                            .classed ("branch-multiple", false);
-                    }
-                } catch (e) {}
-            }
-
-            let valid_id = new RegExp ("^[\\w]+$");
-            $("#selection_name_box").on ("input propertychange", function (e) {
-                const name = $(this).val();
-                let accept_name = (selection_set.indexOf (name) < 0) &&
-                    valid_id.exec (name) ;
-                d3.select ("#save_selection_button").classed ("disabled", accept_name ? null : true );
-            });
-
-            $("#selection_rename > a").on ("click", function (e) {
-                d3.select ("#save_selection_button")
-                    .classed ("disabled",true)
-                    .on ("click", function (e) { // save selection handler
-                        const old_selection_name = current_selection_name;
-                        selection_set[current_selection_id] = current_selection_name = $("#selection_name_box").val();
-                        if (old_selection_name !== current_selection_name) {
-                            tree.update_key_name (old_selection_name, current_selection_name);
-                            update_selection_names (current_selection_id);
-                        }
-                        send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
-                            {'detail' : ['save', this]}));
-                    });
-                d3.select ("#cancel_selection_button")
-                    .classed ("disabled",false)
-                    .on ("click", function (e) { // save selection handler
-                        $("#selection_name_box").val(current_selection_name);
-                        send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
-                            {'detail' : ['cancel', this]}));
-                    });
-                send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
-                    {'detail' : ['rename', this]}));
-                e.preventDefault();
-            });
-
-            $("#selection_delete > a").on ("click", function (e) {
-                tree.update_key_name (selection_set[current_selection_id], null);
-                selection_set.splice (current_selection_id, 1);
-                if (current_selection_id > 0) current_selection_id --;
-                current_selection_name = selection_set[current_selection_id];
-                update_selection_names(current_selection_id);
-                $("#selection_name_box").val(current_selection_name);
-                send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
-                    {'detail' : ['save', this]}));
-                e.preventDefault();
-            });
-
-            $("#selection_new > a").on("click", function (e) {
-                d3.select ("#save_selection_button")
-                    .classed ("disabled",true)
-                    .on ("click", function (e) { // save selection handler
-                        current_selection_name = $("#selection_name_box").val();
-                        current_selection_id = selection_set.length;
-                        selection_set.push(current_selection_name);
-                        update_selection_names(current_selection_id);
-                        send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
-                            {'detail' : ['save', this]}));
-                    });
-                d3.select ("#cancel_selection_button")
-                    .classed ("disabled",false)
-                    .on ("click", function (e) { // save selection handler
-                        $("#selection_name_box").val(current_selection_name);
-                        send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action, {'detail' : ['cancel', this]}));
-                    });
-                send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action, {'detail' : ['new', this]}));
-                e.preventDefault();
-            });
-
-            function send_click_event_to_menu_objects (e) {
-                $("#selection_new, #selection_delete, #selection_rename, #save_selection_name, #selection_name_box, #selection_name_dropdown").get().forEach (
-                    function (d) {
-                        d.dispatchEvent (e);
-                    }
-                );
-            }
-
-            function update_selection_names (id, skip_rebuild) {
-                skip_rebuild = skip_rebuild || false;
-                id = id || 0;
-                current_selection_name = selection_set[id];
-                current_selection_id = id;
-                if (!skip_rebuild) {
-                    d3.selectAll (".selection_set").remove();
-                    d3.select ("#selection_name_dropdown")
-                        .selectAll (".selection_set")
-                        .data (selection_set)
-                        .enter()
-                        .append ("li")
-                        .attr ("class", "selection_set")
-                        .append ("a")
-                        .text (function (d) { return d;})
-                        .style ("color", function (d,i) {return color_scheme(i);})
-                        .on ("click", function (d,i) {update_selection_names (i,true);});
-                }
-                d3.select ("#selection_name_box")
-                    .style ("color",  color_scheme(id))
-                    .property ("value", current_selection_name);
-                tree.selection_label (selection_set[id]);
-            }
-
-            const container_id = '#tree_container';
-            let width  = 1366, //$(container_id).width(),
-                height = 600, //$(container_id).height()
-                selection_set = ['Foreground'],
-                current_selection_name = $("#selection_name_box").val(),
-                current_selection_id = 0,
-                max_selections       = 10;
-            color_scheme = d3.scale.category10();
-            selection_menu_element_action = "phylotree_menu_element_action";
-
-            let tree = d3.layout.phylotree()
-                .size([height, width])
-                .options({
-                    'left-right-spacing': 'fit-to-size',
-                    // fit to given size top-to-bottom
-                    'top-bottom-spacing': 'fit-to-size',
-                    // fit to given size left-to-right
-                    'selectable': false,
-                    // make nodes and branches not selectable
-                    'collapsible': false,
-                    // turn off the menu on internal nodes
-                    'transitions': false
-                    // turn off d3 animations
-                })
-                .separation (function (a,b) {return 0;});
-
-            let svg = d3.select(container_id).append("svg")
-                .attr("width", width)
-                .attr("height", height);
-
-            function selection_handler_name_box(e) {
-                let name_box = d3.select(this);
-                switch (e.detail[0]) {
-                    case 'save':
-                    case 'cancel':
-                        name_box.property ("disabled", true)
-                            .style ("color",  color_scheme(current_selection_id));
-                        break;
-                    case 'new':
-                        name_box.property ("disabled", false)
-                            .property ("value", "new_selection_name")
-                            .style ("color",  color_scheme(selection_set.length));
-                        break;
-                    case 'rename':
-                        name_box.property ("disabled", false);
-                        break;
-                }
-            }
-
-            function selection_handler_new(e) {
-                let element = d3.select (this);
-                $(this).data('tooltip', false);
-                switch (e.detail[0]) {
-                    case 'save':
-                    case 'cancel':
-                        if (selection_set.length === max_selections) {
-                            element.classed ("disabled", true);
-                            $(this).tooltip ({'title' : 'Up to ' + max_selections + ' are allowed', 'placement' : 'left'});
-                        } else {
-                            element.classed ("disabled", null);
-                        }
-                        break;
-                    default:
-                        element.classed ("disabled", true);
-                        break;
-                }
-            }
-
-            function selection_handler_rename(e) {
-                let element = d3.select (this);
-                element.classed ("disabled", (e.detail[0] === "save" || e.detail[0] === "cancel") ? null : true);
-            }
-
-            function selection_handler_save_selection_name(e) {
-                let element = d3.select (this);
-                element.style ("display", (e.detail[0] === "save" || e.detail[0] === "cancel") ? "none" : null);
-            }
-
-            function selection_handler_name_dropdown(e) {
-                let element = d3.select (this).selectAll (".selection_set");
-                element.classed ("disabled", (e.detail[0] === "save" || e.detail[0] === "cancel") ? null : true);
-            }
-
-            function selection_handler_delete (e) {
-                let element = d3.select (this);
-                $(this).tooltip('destroy');
-                switch (e.detail[0]) {
-                    case 'save':
-                    case 'cancel':
-                        if (selection_set.length === 1) {
-                            element.classed ("disabled", true);
-                            $(this).tooltip ({'title' : 'At least one named selection set <br> is required;<br>it can be empty, however', 'placement' : 'bottom', 'html': true});
-                        } else {
-                            element.classed ("disabled", null);
-                        }
-                        break;
-                    default:
-                        element.classed ("disabled", true);
-                        break;
-                }
-            }
-
-            // Load tree-related settings on document load
-            $(document).ready(function () {
-                // default_tree_settings();
-                $("#selection_new").get(0).addEventListener(selection_menu_element_action, selection_handler_new, false);
-                $("#selection_rename").get(0).addEventListener(selection_menu_element_action, selection_handler_rename, false);
-                let selection_delete = $("#selection_delete");
-                selection_delete.get(0).addEventListener(selection_menu_element_action, selection_handler_delete, false);
-                selection_delete.get(0).dispatchEvent (new CustomEvent (selection_menu_element_action, {'detail' : ['cancel', null]}));
-                $("#selection_name_box").get(0).addEventListener(selection_menu_element_action, selection_handler_name_box, false);
-                $("#save_selection_name").get(0).addEventListener(selection_menu_element_action, selection_handler_save_selection_name, false);
-                $("#selection_name_dropdown").get(0).addEventListener(selection_menu_element_action, selection_handler_name_dropdown, false);
-                update_selection_names();
-            });
         </script>
     </section>
     <!-- Distance Matrix -->
@@ -992,10 +662,13 @@ endif;
                 </thead>
                 <tbody>
                     <?php foreach (get_distance_matrix($species, $fm) as $distance_matrix) print $distance_matrix ?>
-
                 </tbody>
             </table>
         </div>
     </section>
     <?php endif; ?>
 </div>
+<?php
+}catch(FileException $e){
+    require_once __DIR__ . '/../__ErrorDocuments/500Error.php';
+}
