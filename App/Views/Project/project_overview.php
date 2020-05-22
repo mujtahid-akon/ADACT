@@ -239,7 +239,8 @@ try{
 <p class="text text-danger"><i class="fa fa-spinner fa-pulse" aria-hidden="true"></i> <em>The project is currently running...</em></p>
 <script>
     $(document).ready(function(){
-        let date_created = new Date("<?php print $date_created ?> UTC").getTime();
+        const c_date = "<?php print $date_created ?>";
+        let date_created = new Date(c_date + " UTC").getTime() || new Date(c_date).getTime();
         let selector = $("#elapsed_time");
         // Show elapsed time
         elapsed_time(selector, date_created);
