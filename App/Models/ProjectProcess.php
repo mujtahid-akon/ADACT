@@ -60,6 +60,8 @@ class ProjectProcess extends PendingProjects { // is_a
     const E_NO_UPLOAD_DIRECTORY = 'E_NO_UPLOAD_DIRECTORY';
     /** Upload directory is empty. */
     const E_EMPTY_UPLOAD_DIRECTORY = 'E_EMPTY_UPLOAD_DIRECTORY';
+    /** Empty data section in config, ie. <PROJECT-ID>/Files/Original is empty */
+    const E_EMPTY_DATA_SECTION = 'E_EMPTY_DATA_SECTION';
     /** Failed to move one or more files. */
     const E_FAILED_MOVING_FILES = 'E_FAILED_MOVING_FILES';
     /** Failed to download one or more fasta files. */
@@ -350,6 +352,8 @@ EOF;
      * @throws phpmailerException
      */
     private function fetchFiles(){
+        // Project execution is failed if data section is empty
+        if(count($this->_config->data) == 0) $this->halt(self::E_EMPTY_DATA_SECTION);
         if($this->_config->type == Project::INPUT_TYPE_FILE){
             $this->_log("Input type: file upload", Logger::BOLD);
             return $this->move_uploaded_files();
