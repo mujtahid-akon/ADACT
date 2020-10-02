@@ -91,7 +91,7 @@ See the README file inside the `sql` folder. Current sql file is `adact_v4.5.sql
 Sample files are located in the `Sample Input Files` folder
 
 ## Dataset
-The following two public datasets have experimented on ADACT:
+The following two public datasets have been experimented on ADACT:
 - [AFProject](http://afproject.org/app/)
 - [GDS Dataset](https://www.cs.kent.ac.uk/projects/biasprofs/downloads.html)
 
